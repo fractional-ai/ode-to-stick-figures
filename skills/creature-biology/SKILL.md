@@ -1,6 +1,6 @@
 ---
 name: creature-biology
-description: Reference guide for writing the biology section of an invented-creature field guide entry, grounded in real animal biology and written for kids. Use whenever assigning anatomy, diet, life cycle, or physiology to a creature described by a Creature Spec, for a children's field guide.
+description: Reference guide for writing the biology section of an invented-creature field guide entry, grounded in real animal biology and written for kids. Use whenever assigning anatomy, diet, or adaptations to a creature described by a Creature Spec, for a children's field guide.
 ---
 
 # Creature Biology
