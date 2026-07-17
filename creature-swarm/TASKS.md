@@ -6,7 +6,7 @@
 > — checkboxes and names are regenerated and re-staged each commit. Full
 > task detail: `docs/superpowers/plans/2026-07-17-creature-swarm.md`.
 
-**V1 plan: 6/13 complete.** **Kickoff-notes workstreams: 2/4 complete.**
+**V1 plan: 9/13 complete.** **Kickoff-notes workstreams: 2/4 complete.**
 
 ## Prerequisite (merged separately)
 
@@ -20,9 +20,9 @@
   <br/>outputs: `creature-swarm/lib/spec.py`, `creature-swarm/tests/test_spec.py`
 - [ ] **Task 3** — Procedural 3D builder (trimesh -> glb)
   <br/>outputs: `creature-swarm/skills/procedural-creature-3d/build.py`, `creature-swarm/tests/test_creature3d.py`
-- [ ] **Task 4** — Field-guide HTML renderer + template
+- [ ] **Task 4** — Field-guide HTML renderer + template — _Angie Hsieh_
   <br/>outputs: `creature-swarm/skills/fieldguide-html/template.html`, `creature-swarm/skills/fieldguide-html/render.py`, `creature-swarm/tests/test_fieldguide.py`
-- [ ] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft_
+- [x] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft, Angie Hsieh_
   <br/>outputs: `creature-swarm/skills/creature-biology/SKILL.md`, `creature-swarm/skills/habitat-ecology/SKILL.md`, `creature-swarm/skills/folklore-society/SKILL.md`
 - [x] **Task 6** — Agent definitions (system prompts + roster config) — _AldenCraft, Nicholas Bindela_
   <br/>outputs: `creature-swarm/agents/definitions.py`
@@ -34,11 +34,11 @@
   <br/>outputs: `creature-swarm/upload_skills.py`
 - [x] **Task 10** — create_coordinator.py — _AldenCraft_
   <br/>outputs: `creature-swarm/create_coordinator.py`
-- [ ] **Task 11** — run_creature_swarm.py
+- [x] **Task 11** — run_creature_swarm.py — _Angie Hsieh_
   <br/>outputs: `creature-swarm/run_creature_swarm.py`
-- [ ] **Task 12** — download_deliverable.py
+- [x] **Task 12** — download_deliverable.py — _Angie Hsieh, rosscrooke_
   <br/>outputs: `creature-swarm/download_deliverable.py`
-- [ ] **Task 13** — Synthetic doodle, README, full-suite + live-run verification
+- [ ] **Task 13** — Synthetic doodle, README, full-suite + live-run verification — _Lauren Menon, rosscrooke_
   <br/>outputs: `creature-swarm/synthetic-data/doodle-example.png`, `creature-swarm/README.md`
 
 ## Additional workstreams (from kickoff notes)

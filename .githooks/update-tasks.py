@@ -88,19 +88,41 @@ def repo_root() -> str:
     ).strip()
 
 
+def candidates(f: str) -> list[str]:
+    """Where a declared output file might actually live.
+
+    The plan puts everything under creature-swarm/, but some lanes landed
+    the same files at the repo root. Check both so the checklist reflects
+    reality regardless of which layout a teammate used.
+    """
+    cands = [f]
+    prefix = "creature-swarm/"
+    if f.startswith(prefix):
+        cands.append(f[len(prefix):])
+    return cands
+
+
+def resolve(root: str, f: str) -> str | None:
+    for c in candidates(f):
+        if os.path.exists(os.path.join(root, c)):
+            return c
+    return None
+
+
 def done(root: str, files: list[str]) -> bool:
-    return all(os.path.exists(os.path.join(root, f)) for f in files)
+    return all(resolve(root, f) is not None for f in files)
 
 
 def authors(root: str, files: list[str]) -> list[str]:
     """Distinct commit authors across a task's existing output files."""
     names: set[str] = set()
     for f in files:
-        if not os.path.exists(os.path.join(root, f)):
+        r = resolve(root, f)
+        if r is None:
             continue
         try:
             out = subprocess.check_output(
-                ["git", "log", "--format=%an", "--", f],
+                ["git", "log", "--format=%an", "--", r],
                 cwd=root, text=True, stderr=subprocess.DEVNULL,
             )
         except subprocess.CalledProcessError:
