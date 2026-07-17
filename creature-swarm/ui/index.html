@@ -48,8 +48,13 @@
   .card .meta{margin-top:auto}
   .card.live{cursor:pointer}
   .card.live:hover{transform:translateY(-3px)}
+  /* flex:1 rather than a fixed aspect-ratio. The grid stretches every card to its
+     row's height; a fixed-ratio shot refuses to grow, so the slack fell through as a
+     white band under short/wide drawings (a bee, a very long millipede). Growing the
+     shot means the transparency checkerboard fills the card and the drawing stays
+     centred in it. min-height keeps tall drawings from squashing the row. */
   .shot{
-    aspect-ratio:4/3; display:grid; place-items:center; padding:.7rem;
+    flex:1; min-height:200px; display:grid; place-items:center; padding:.7rem;
     background:repeating-conic-gradient(#0000 0 25%, #00000008 0 50%) 0 0/16px 16px;
   }
   .shot img{max-width:100%; max-height:100%; object-fit:contain}
