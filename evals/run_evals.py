@@ -44,18 +44,100 @@ def get_spec(case: Case, target: str) -> dict:
     raise SystemExit(f"Unknown target: {target!r} (use 'fixture' or 'live')")
 
 
-def run_interpreter_live(case: Case) -> dict:
-    """STUB: call the Field Interpreter agent on case.drawing_path -> spec dict.
+_INTERPRETER_ID_PATH = Path("creature-swarm/.interpreter_id")
+_ENVIRONMENT_ID_PATH = Path("creature-swarm/.environment_id")
+_MANAGED_AGENTS_BETA = "managed-agents-2026-04-01"
 
-    Wire this to the managed-agents Interpreter once it exists (mirror the
-    session/stream pattern in run_deal_desk.py, send the drawing as an image
-    content block, parse the creature-spec.json it returns). Until then, --target
-    live is intentionally unsupported.
+
+def _load_doodle_as_image_block(path: Path) -> dict:
+    import base64
+    import mimetypes
+
+    media_type, _ = mimetypes.guess_type(str(path))
+    if media_type is None:
+        raise SystemExit(f"Could not determine media type for {path}")
+    data = base64.standard_b64encode(path.read_bytes()).decode("utf-8")
+    return {
+        "type": "image",
+        "source": {"type": "base64", "media_type": media_type, "data": data},
+    }
+
+
+def _parse_spec_text(text: str) -> dict:
+    """Parse the Interpreter's reply as JSON, tolerating an accidental ```json fence."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+        cleaned = cleaned.strip()
+    return json.loads(cleaned)
+
+
+def run_interpreter_live(case: Case) -> dict:
+    """Call the real Field Interpreter agent on case.drawing_path -> spec dict.
+
+    Requires ANTHROPIC_API_KEY plus creature-swarm/.environment_id and
+    creature-swarm/.interpreter_id (created by setup_environment.py and a
+    one-off interpreter-only agent create — see evals/README.md). Sends the
+    drawing as an image content block in a fresh session, streams the reply,
+    and parses the Interpreter's JSON output as the creature spec.
     """
-    raise NotImplementedError(
-        "Live target not wired yet: the Field Interpreter agent doesn't exist. "
-        "Use --target fixture. See run_deal_desk.py for the session pattern."
+    import os
+
+    from anthropic import Anthropic
+
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise SystemExit("Set ANTHROPIC_API_KEY before running --target live.")
+    if not _ENVIRONMENT_ID_PATH.exists() or not _INTERPRETER_ID_PATH.exists():
+        raise SystemExit(
+            f"Missing {_ENVIRONMENT_ID_PATH} or {_INTERPRETER_ID_PATH}. Run "
+            "creature-swarm/setup_environment.py and create the Interpreter "
+            "agent first (see evals/README.md)."
+        )
+
+    environment_id = _ENVIRONMENT_ID_PATH.read_text().strip()
+    interpreter_id = _INTERPRETER_ID_PATH.read_text().strip()
+
+    client = Anthropic(default_headers={"anthropic-beta": _MANAGED_AGENTS_BETA})
+    image_block = _load_doodle_as_image_block(Path(case.drawing_path))
+
+    session = client.beta.sessions.create(
+        agent=interpreter_id,
+        environment_id=environment_id,
+        title=f"Eval — {case.id}",
     )
+
+    final_text_parts: list[str] = []
+    with client.beta.sessions.events.stream(session.id) as stream:
+        client.beta.sessions.events.send(
+            session.id,
+            events=[
+                {
+                    "type": "user.message",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Here is the child's drawing. Emit the Creature "
+                                "Spec JSON now, per your system instructions."
+                            ),
+                        },
+                        image_block,
+                    ],
+                }
+            ],
+        )
+        for event in stream:
+            t = event.type
+            if t == "agent.message":
+                for block in event.content:
+                    if getattr(block, "type", None) == "text":
+                        final_text_parts.append(block.text)
+            elif t == "session.status_idle":
+                break
+
+    return _parse_spec_text("".join(final_text_parts))
 
 
 def run_case(case: Case, target: str, use_llm: bool) -> list[CheckResult]:
