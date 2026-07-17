@@ -6,7 +6,7 @@
 > — checkboxes and names are regenerated and re-staged each commit. Full
 > task detail: `docs/superpowers/plans/2026-07-17-creature-swarm.md`.
 
-**V1 plan: 9/13 complete.** **Kickoff-notes workstreams: 2/4 complete.**
+**V1 plan: 10/13 complete.** **Kickoff-notes workstreams: 2/4 complete.**
 
 ## Prerequisite (merged separately)
 
@@ -16,13 +16,13 @@
 
 - [x] **Task 1** — Scaffold folder, requirements, and shared managed-agents client — _AldenCraft_
   <br/>outputs: `creature-swarm/requirements.txt`, `creature-swarm/.env.example`, `creature-swarm/lib/client.py`
-- [x] **Task 2** — Creature Spec loader + validator
+- [x] **Task 2** — Creature Spec loader + validator — _Lauren_
   <br/>outputs: `creature-swarm/lib/spec.py`, `creature-swarm/tests/test_spec.py`
-- [x] **Task 3** — Procedural 3D builder (trimesh -> glb)
+- [x] **Task 3** — Procedural 3D builder (trimesh -> glb) — _Lauren_
   <br/>outputs: `creature-swarm/skills/procedural-creature-3d/build.py`, `creature-swarm/tests/test_creature3d.py`
 - [x] **Task 4** — Field-guide HTML renderer + template — _Lauren_
   <br/>outputs: `creature-swarm/skills/fieldguide-html/template.html`, `creature-swarm/skills/fieldguide-html/render.py`, `creature-swarm/tests/test_fieldguide.py`
-- [ ] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft_
+- [x] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft_
   <br/>outputs: `creature-swarm/skills/creature-biology/SKILL.md`, `creature-swarm/skills/habitat-ecology/SKILL.md`, `creature-swarm/skills/folklore-society/SKILL.md`
 - [x] **Task 6** — Agent definitions (system prompts + roster config) — _AldenCraft, Nicholas Bindela_
   <br/>outputs: `creature-swarm/agents/definitions.py`
