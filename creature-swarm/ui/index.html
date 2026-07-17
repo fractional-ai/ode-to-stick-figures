@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creature Gallery</title>
+<style>
+  :root{
+    --sky1:#eaf6ff; --sky2:#fdf3e7; --card:#fff; --ink:#40514b; --dim:#8b9a93;
+    --line:#e4ece8; --accent:#ff5964; --ok:#5ac85a; --shadow:0 4px 20px rgba(60,70,90,.10);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --sky1:#1a2430; --sky2:#241f31; --card:#232c33; --ink:#dce8e2; --dim:#8fa39a;
+           --line:#33403a; --shadow:0 4px 20px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; color:var(--ink);
+    font-family:ui-rounded,-apple-system,"Segoe UI",system-ui,sans-serif;
+    background:linear-gradient(160deg,var(--sky1),var(--sky2));
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:2.2rem 1.2rem 4rem}
+  h1{margin:0 0 .2rem; font-size:1.9rem; letter-spacing:-.01em}
+  .sub{color:var(--dim); margin:0 0 1.6rem; font-size:.95rem}
+
+  /* display:block is load-bearing — a <label> is inline, so without it the drop
+     zone collapses to a sliver and the grid flows up over it. */
+  #drop{
+    display:block; width:100%;
+    border:2.5px dashed var(--line); border-radius:18px; padding:1.6rem;
+    text-align:center; color:var(--dim); background:var(--card);
+    transition:border-color .15s, transform .15s, background .15s; cursor:pointer;
+    margin-bottom:1.8rem;
+  }
+  #drop.hot{border-color:var(--accent); color:var(--ink); transform:scale(1.01)}
+  #drop b{color:var(--ink)}
+  #drop input{display:none}
+
+  /* stretch keeps every row the same height; without it cards jag by caption length */
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:1.1rem; align-items:stretch;
+  }
+  .card{
+    background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; transition:transform .15s;
+  }
+  .card .meta{margin-top:auto}
+  .card.live{cursor:pointer}
+  .card.live:hover{transform:translateY(-3px)}
+  .shot{
+    aspect-ratio:4/3; display:grid; place-items:center; padding:.7rem;
+    background:repeating-conic-gradient(#0000 0 25%, #00000008 0 50%) 0 0/16px 16px;
+  }
+  .shot img{max-width:100%; max-height:100%; object-fit:contain}
+  .meta{padding:.7rem .85rem .85rem; border-top:1px solid var(--line)}
+  .nm{font-weight:650; font-size:.94rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .vb{color:var(--dim); font-size:.79rem; font-style:italic; margin-top:.15rem;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .tag{
+    display:inline-block; margin-top:.5rem; font-size:.68rem; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; padding:.16rem .5rem; border-radius:99px;
+  }
+  .tag.on{background:color-mix(in srgb,var(--ok) 18%,transparent); color:var(--ok)}
+  .tag.off{background:color-mix(in srgb,var(--dim) 16%,transparent); color:var(--dim)}
+  .tag.no{background:color-mix(in srgb,var(--accent) 15%,transparent); color:var(--accent)}
+
+  dialog{
+    border:none; border-radius:20px; padding:0; width:min(94vw,920px);
+    background:var(--card); box-shadow:0 20px 70px rgba(0,0,0,.4);
+  }
+  dialog::backdrop{background:rgba(20,28,26,.55); backdrop-filter:blur(3px)}
+  dialog iframe{width:100%; height:min(62vh,540px); border:0; display:block}
+  .dlg-bar{display:flex; justify-content:space-between; align-items:center;
+           padding:.7rem 1rem; border-bottom:1px solid var(--line)}
+  .dlg-bar button{
+    border:none; background:var(--line); color:var(--ink); border-radius:9px;
+    padding:.35rem .7rem; cursor:pointer; font-size:.85rem; font-weight:600;
+  }
+  #log{margin-top:1rem; font-size:.83rem; color:var(--dim); white-space:pre-wrap; line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Creature Gallery</h1>
+  <p class="sub">Children's drawings, walking around. Click any animated creature to watch it.</p>
+
+  <label id="drop">
+    <input type="file" accept="image/*" multiple>
+    <div><b>Drop a drawing here</b> — or click to pick a file</div>
+    <div style="font-size:.8rem;margin-top:.3rem">We'll key the paper away and tell you what we can do with it</div>
+  </label>
+
+  <div class="grid" id="grid"></div>
+  <div id="log"></div>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg-bar"><strong id="dlg-name"></strong><button id="dlg-x">Close</button></div>
+  <iframe id="dlg-f" title="walk cycle"></iframe>
+</dialog>
+
+<script>
+const grid = document.getElementById('grid');
+const log  = document.getElementById('log');
+const dlg  = document.getElementById('dlg');
+
+async function load() {
+  const items = await (await fetch('/api/creatures')).json();
+  grid.innerHTML = '';
+  for (const c of items) {
+    const el = document.createElement('div');
+    el.className = 'card' + (c.animated ? ' live' : '');
+    const tag = c.animated ? ['on','animated']
+              : c.refused  ? ['no',"won't animate"]
+              :              ['off','needs a rig'];
+    el.innerHTML = `
+      <div class="shot"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}" alt=""></div>
+      <div class="meta">
+        <div class="nm">${c.name}</div>
+        <div class="vb">${c.refused || c.vibe || '&nbsp;'}</div>
+        <span class="tag ${tag[0]}">${tag[1]}</span>
+      </div>`;
+    if (c.animated) el.onclick = () => open(c);
+    if (c.refused) el.title = 'Refused: ' + c.refused;
+    grid.appendChild(el);
+  }
+}
+
+function open(c) {
+  document.getElementById('dlg-name').textContent = c.name;
+  document.getElementById('dlg-f').src = '/anim/' + encodeURIComponent(c.stem);
+  dlg.showModal();
+}
+document.getElementById('dlg-x').onclick = () => { dlg.close(); document.getElementById('dlg-f').src = ''; };
+dlg.addEventListener('close', () => { document.getElementById('dlg-f').src = ''; });
+
+// ---- drag & drop -----------------------------------------------------------
+const drop = document.getElementById('drop');
+const input = drop.querySelector('input');
+const hot = on => e => { e.preventDefault(); drop.classList.toggle('hot', on); };
+drop.addEventListener('dragover', hot(true));
+drop.addEventListener('dragleave', hot(false));
+drop.addEventListener('drop', e => { hot(false)(e); send([...e.dataTransfer.files]); });
+input.addEventListener('change', () => send([...input.files]));
+
+async function send(files) {
+  for (const f of files) {
+    log.textContent += `\n${f.name} — keying…`;
+    const fd = new FormData(); fd.append('file', f);
+    try {
+      const r = await fetch('/api/upload', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (j.error) { log.textContent += ` ✗ ${j.error}`; continue; }
+      const s = j.stats;
+      log.textContent += ` kept ${(s.kept_frac*100).toFixed(0)}% · ${s.blobs} blob(s) · dominance ${s.dominance}`;
+      if (j.warning) log.textContent += `\n  ⚠ ${j.warning}`;
+      if (j.needs_rig) log.textContent += `\n  → in the gallery as "needs a rig": the vision pass that authors joints isn't wired up yet.`;
+    } catch (err) {
+      log.textContent += ` ✗ ${err}`;
+    }
+  }
+  load();
+}
+
+load();
+</script>
+</body>
+</html>
