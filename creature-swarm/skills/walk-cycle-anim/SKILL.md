@@ -127,6 +127,30 @@ parks mid-canvas and the body hangs off the side.
 Squash only applies to models that touch the ground: it reads as weight, and a flyer
 has nothing to push against.
 
+## Environments — `environment`
+
+Every creature walking the same strip of grass makes nine animations read as one
+animation with the sprite swapped. The world should say something about the animal, so
+each rig picks a preset. Drawn procedurally, no assets, still one self-contained file.
+
+`meadow` · `ocean` · `sky` · `garden` · `forest` · `kitchen` · `snow` · `cave`
+
+Each preset is a sky gradient, a ground band, a horizon height, and a prop list. Props
+are drawn in parallax layers keyed off the creature's own position, so the world moves
+past it at depth-appropriate rates. A shark-dog patrolling a seafloor through god-rays
+and seaweed is funnier than one on a lawn; a pop-tart belongs on a kitchen counter.
+
+Two rules worth keeping if you add a preset:
+
+- **The background loses every contrast fight.** The child's drawing is the subject.
+  Props sit at low alpha and muted saturation on purpose.
+- **Scatter is seeded, never `Math.random()` per frame.** Random props shimmer every
+  frame and rearrange themselves on resize. `mulberry(seed)` keeps the world still
+  while the creature moves through it.
+
+The Habitat lane's output is the natural thing to drive this from later — its answer is
+already a description of where the creature lives.
+
 ## Colour — `colorize` / `palette`
 
 `--color` floods bright crayon into the regions **the child's own strokes already

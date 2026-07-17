@@ -358,5 +358,6 @@
   ],
   "locomotion": "fly",
   "speed": 1.0,
-  "colorize": true
+  "colorize": true,
+  "environment": "sky"
 }

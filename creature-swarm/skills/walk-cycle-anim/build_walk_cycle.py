@@ -178,7 +178,8 @@ def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image
     )
 
 
-LOCOMOTIONS = ("walk", "stumble", "fly", "float", "hop")
+LOCOMOTIONS = ("walk", "stumble", "fly", "float", "hop", "slither")
+ENVIRONMENTS = ("meadow", "ocean", "sky", "garden", "forest", "kitchen", "snow", "cave")
 
 
 def build(
@@ -249,6 +250,12 @@ def main() -> None:
     )
     ap.add_argument("--speed", type=float, help="speed multiplier on the model's base")
     ap.add_argument(
+        "--environment",
+        choices=ENVIRONMENTS,
+        help="background world: every creature on the same strip of grass makes the "
+        "animations read as one animation with the sprite swapped",
+    )
+    ap.add_argument(
         "--faces",
         choices=("left", "right"),
         help="which way the drawing points; 'right' stops it moonwalking",
@@ -268,6 +275,7 @@ def main() -> None:
             "locomotion": args.locomotion,
             "speed": args.speed,
             "faces": args.faces,
+            "environment": args.environment,
         },
     )
     kb = out.stat().st_size / 1024

@@ -1,7 +1,10 @@
 {
   "_comment": "Hand-authored rig for examples/drawings/pencil-creature.webp (600x436). Image-space coords. Anatomy is genuinely ambiguous faint grey pencil line-art: read as a mantis/dragon with a spiral-crested head upper-left of a diagonal torso, two fanned wing/arm shapes to the right, two spiky legs beneath, and a long tail sweeping down-left to a hooked tip. NOTE: with the SHIPPED alpha-key (inkness = (175-lum)/60) this drawing keys away to a single 1.12% claw fragment, so these polygons clip almost entirely transparent pixels. The rig is authored against the geometry visible in the source; it is only useful once the key's luminance pivot reaches faint pencil (175 -> ~215). Polygons deliberately overlap INTO the parent past each pivot so rotation never reveals a gap.",
   "source": "examples/drawings/pencil-creature.webp",
-  "image": { "w": 600, "h": 436 },
+  "image": {
+    "w": 600,
+    "h": 436
+  },
   "name": "Sketchmantis",
   "vibe": "drawn faintly, but absolutely certain it is terrifying",
   "ground_y": 424,
@@ -10,64 +13,385 @@
       "id": "tail",
       "parent": "body",
       "z": -30,
-      "pivot": [292, 298],
-      "poly": [[320, 262], [300, 336], [232, 372], [150, 404], [78, 424], [30, 402], [36, 344], [96, 336], [186, 340], [258, 316], [278, 258]],
-      "spring": { "amp": 12, "phase": 0.0, "lag": 0.55 }
+      "pivot": [
+        292,
+        298
+      ],
+      "poly": [
+        [
+          320,
+          262
+        ],
+        [
+          300,
+          336
+        ],
+        [
+          232,
+          372
+        ],
+        [
+          150,
+          404
+        ],
+        [
+          78,
+          424
+        ],
+        [
+          30,
+          402
+        ],
+        [
+          36,
+          344
+        ],
+        [
+          96,
+          336
+        ],
+        [
+          186,
+          340
+        ],
+        [
+          258,
+          316
+        ],
+        [
+          278,
+          258
+        ]
+      ],
+      "spring": {
+        "amp": 12,
+        "phase": 0.0,
+        "lag": 0.55
+      }
     },
     {
       "id": "wingFar",
       "parent": "body",
       "z": -20,
-      "pivot": [344, 196],
-      "poly": [[300, 226], [318, 168], [372, 132], [438, 128], [468, 158], [452, 196], [396, 216], [326, 240]],
-      "spring": { "amp": 8, "phase": 0.9, "lag": 0.4 }
+      "pivot": [
+        344,
+        196
+      ],
+      "poly": [
+        [
+          300,
+          226
+        ],
+        [
+          318,
+          168
+        ],
+        [
+          372,
+          132
+        ],
+        [
+          438,
+          128
+        ],
+        [
+          468,
+          158
+        ],
+        [
+          452,
+          196
+        ],
+        [
+          396,
+          216
+        ],
+        [
+          326,
+          240
+        ]
+      ],
+      "spring": {
+        "amp": 8,
+        "phase": 0.9,
+        "lag": 0.4
+      }
     },
     {
       "id": "crestCurl",
       "parent": "body",
       "z": -16,
-      "pivot": [318, 160],
-      "poly": [[296, 186], [304, 128], [326, 92], [364, 92], [372, 128], [352, 166], [324, 188]],
-      "spring": { "amp": 6, "phase": 2.1, "lag": 0.35 }
+      "pivot": [
+        318,
+        160
+      ],
+      "poly": [
+        [
+          296,
+          186
+        ],
+        [
+          304,
+          128
+        ],
+        [
+          326,
+          92
+        ],
+        [
+          364,
+          92
+        ],
+        [
+          372,
+          128
+        ],
+        [
+          352,
+          166
+        ],
+        [
+          324,
+          188
+        ]
+      ],
+      "spring": {
+        "amp": 6,
+        "phase": 2.1,
+        "lag": 0.35
+      }
     },
     {
       "id": "legFar",
       "parent": "body",
       "z": -10,
-      "pivot": [312, 300],
-      "poly": [[286, 288], [340, 292], [396, 330], [404, 358], [356, 356], [300, 336], [280, 314]],
-      "gait": { "phase": 3.14159, "swing": 14, "lift": 5 }
+      "pivot": [
+        312,
+        300
+      ],
+      "poly": [
+        [
+          286,
+          288
+        ],
+        [
+          340,
+          292
+        ],
+        [
+          396,
+          330
+        ],
+        [
+          404,
+          358
+        ],
+        [
+          356,
+          356
+        ],
+        [
+          300,
+          336
+        ],
+        [
+          280,
+          314
+        ]
+      ],
+      "gait": {
+        "phase": 3.14159,
+        "swing": 14,
+        "lift": 5
+      }
     },
     {
       "id": "body",
       "parent": null,
       "z": 0,
-      "pivot": [300, 230],
-      "poly": [[244, 178], [278, 148], [330, 146], [372, 172], [368, 216], [346, 262], [330, 306], [292, 320], [258, 296], [248, 244]]
+      "pivot": [
+        300,
+        230
+      ],
+      "poly": [
+        [
+          244,
+          178
+        ],
+        [
+          278,
+          148
+        ],
+        [
+          330,
+          146
+        ],
+        [
+          372,
+          172
+        ],
+        [
+          368,
+          216
+        ],
+        [
+          346,
+          262
+        ],
+        [
+          330,
+          306
+        ],
+        [
+          292,
+          320
+        ],
+        [
+          258,
+          296
+        ],
+        [
+          248,
+          244
+        ]
+      ]
     },
     {
       "id": "head",
       "parent": "body",
       "z": 6,
-      "pivot": [268, 196],
-      "poly": [[288, 214], [280, 156], [246, 108], [206, 96], [186, 130], [204, 172], [242, 200], [256, 224]],
-      "spring": { "amp": 5, "phase": 1.4, "lag": 0.3 }
+      "pivot": [
+        268,
+        196
+      ],
+      "poly": [
+        [
+          288,
+          214
+        ],
+        [
+          280,
+          156
+        ],
+        [
+          246,
+          108
+        ],
+        [
+          206,
+          96
+        ],
+        [
+          186,
+          130
+        ],
+        [
+          204,
+          172
+        ],
+        [
+          242,
+          200
+        ],
+        [
+          256,
+          224
+        ]
+      ],
+      "spring": {
+        "amp": 5,
+        "phase": 1.4,
+        "lag": 0.3
+      }
     },
     {
       "id": "wingNear",
       "parent": "body",
       "z": 8,
-      "pivot": [332, 214],
-      "poly": [[292, 240], [312, 186], [356, 158], [412, 168], [420, 202], [382, 232], [326, 254]],
-      "spring": { "amp": 10, "phase": 1.9, "lag": 0.45 }
+      "pivot": [
+        332,
+        214
+      ],
+      "poly": [
+        [
+          292,
+          240
+        ],
+        [
+          312,
+          186
+        ],
+        [
+          356,
+          158
+        ],
+        [
+          412,
+          168
+        ],
+        [
+          420,
+          202
+        ],
+        [
+          382,
+          232
+        ],
+        [
+          326,
+          254
+        ]
+      ],
+      "spring": {
+        "amp": 10,
+        "phase": 1.9,
+        "lag": 0.45
+      }
     },
     {
       "id": "legNear",
       "parent": "body",
       "z": 10,
-      "pivot": [300, 320],
-      "poly": [[274, 306], [330, 312], [386, 348], [396, 378], [346, 376], [292, 354], [268, 332]],
-      "gait": { "phase": 0.0, "swing": 16, "lift": 6 }
+      "pivot": [
+        300,
+        320
+      ],
+      "poly": [
+        [
+          274,
+          306
+        ],
+        [
+          330,
+          312
+        ],
+        [
+          386,
+          348
+        ],
+        [
+          396,
+          378
+        ],
+        [
+          346,
+          376
+        ],
+        [
+          292,
+          354
+        ],
+        [
+          268,
+          332
+        ]
+      ],
+      "gait": {
+        "phase": 0.0,
+        "swing": 16,
+        "lift": 6
+      }
     }
-  ]
+  ],
+  "environment": "cave"
 }
