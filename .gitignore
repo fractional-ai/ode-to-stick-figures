@@ -3,3 +3,8 @@ __pycache__/
 .worktrees/
 creature-swarm/ui/.cache/
 creature-swarm/ui/uploads/
+
+# never commit real credentials (.env.example is the template, .env is the secret)
+.env
+.env.*
+!.env.example
