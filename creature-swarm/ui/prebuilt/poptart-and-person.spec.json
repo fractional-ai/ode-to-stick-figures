@@ -1,0 +1,43 @@
+{
+  "name": {
+    "common_name": "Cracker Slab Beast",
+    "mock_latin_binomial": "Rectangulus biscuitus"
+  },
+  "body_plan": {
+    "core_shape": "flat rectangular slab, wider at top than bottom, tapering slightly like a trapezoid",
+    "symmetry": "bilateral (inner wobbly-bordered rectangle centered within outer rectangle)",
+    "size_est_m": 0.3
+  },
+  "parts": [
+    {
+      "type": "outer_shell",
+      "count": 1,
+      "shape": "large flat trapezoidal slab with straight thick black outline",
+      "placement": "entire body boundary"
+    },
+    {
+      "type": "inner_ridge",
+      "count": 1,
+      "shape": "wobbly, jagged-edged rectangle drawn just inside the outer border",
+      "placement": "centered inside outer shell, like a raised rim or seam"
+    },
+    {
+      "type": "dot_marking",
+      "count": 6,
+      "shape": "small solid oval/dot",
+      "placement": "arranged in two vertical columns of three, evenly spaced down the center of the body, inside the inner ridge"
+    }
+  ],
+  "palette": {
+    "body_fill": "#d6d2c4",
+    "outline_and_dots": "#1a1a1a"
+  },
+  "distinctive_features": [
+    "flat, thin, cracker-like slab body with no visible head, limbs, or tail",
+    "a jagged wobbly-lined inner border running parallel to the straight outer edge, like a seam or dried skin fold",
+    "six small dark dots arranged in two neat columns down the middle, resembling docking holes or pore markings",
+    "no legs, eyes, or face are drawn \u2014 body reads as a flat, faceless, immobile plate creature"
+  ],
+  "locomotion": "none visible; presumed to lie flat and immobile, possibly sliding or drifting along flat surfaces like a paper-thin creature",
+  "vibe": "a flat, faceless cracker-shaped slab creature with a wobbly inner seam and six mysterious dots down its middle"
+}

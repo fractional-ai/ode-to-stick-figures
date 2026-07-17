@@ -64,6 +64,14 @@
   .tag.on{background:color-mix(in srgb,var(--ok) 18%,transparent); color:var(--ok)}
   .tag.off{background:color-mix(in srgb,var(--dim) 16%,transparent); color:var(--dim)}
   .tag.no{background:color-mix(in srgb,var(--accent) 15%,transparent); color:var(--accent)}
+  .acts{display:flex; gap:.4rem; margin-top:.6rem}
+  .acts button, .acts a.btn{
+    flex:1; border:1px solid var(--line); background:transparent; color:var(--ink);
+    border-radius:8px; padding:.32rem .3rem; font-size:.74rem; font-weight:650;
+    cursor:pointer; font-family:inherit; text-align:center; text-decoration:none;
+    display:block; line-height:1.5;
+  }
+  .acts button:hover, .acts a.btn:hover{background:var(--line)}
 
   dialog{
     border:none; border-radius:20px; padding:0; width:min(94vw,920px);
@@ -120,8 +128,19 @@ async function load() {
         <div class="nm">${c.name}</div>
         <div class="vb">${c.refused || c.vibe || '&nbsp;'}</div>
         <span class="tag ${tag[0]}">${tag[1]}</span>
+        ${c.animated ? `<div class="acts">
+          <button data-a="anim">▶ walk</button>
+          <a class="btn" target="_blank" rel="noopener"
+             href="/guide/${encodeURIComponent(c.stem)}">📖 field guide</a>
+        </div>` : ''}
       </div>`;
-    if (c.animated) el.onclick = () => open(c);
+    if (c.animated) {
+      el.querySelector('[data-a=anim]').onclick = e => { e.stopPropagation(); open(c); };
+      // A real link, not window.open + document.write from a fetch callback — that
+      // reads as a popup and browsers block it, which is why this looked broken.
+      el.querySelector('a.btn').onclick = e => e.stopPropagation();
+      el.onclick = () => open(c);
+    }
     if (c.refused) el.title = 'Refused: ' + c.refused;
     grid.appendChild(el);
   }
@@ -132,8 +151,6 @@ function open(c) {
   document.getElementById('dlg-f').src = '/anim/' + encodeURIComponent(c.stem);
   dlg.showModal();
 }
-document.getElementById('dlg-x').onclick = () => { dlg.close(); document.getElementById('dlg-f').src = ''; };
-dlg.addEventListener('close', () => { document.getElementById('dlg-f').src = ''; });
 
 // ---- drag & drop -----------------------------------------------------------
 const drop = document.getElementById('drop');

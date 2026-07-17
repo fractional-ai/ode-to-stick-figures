@@ -1,0 +1,73 @@
+{
+  "name": {
+    "common": "Curl-Horned Wisp Serpent",
+    "binomial": "Draconellus filamentus"
+  },
+  "body_plan": {
+    "core_shape": "long sinuous serpentine body tapering from a spiky-plated tail to a spread, wing-like upper torso with multiple curling horns and heads",
+    "symmetry": "bilateral, though with irregular multiplied features (extra eyes, extra horn-curls) breaking strict symmetry",
+    "size_est_m": 1.2
+  },
+  "parts": [
+    {
+      "type": "head/horn cluster",
+      "count": 3,
+      "shape": "narrow triangular faces with long spiraling curl-tipped horns emerging from the top",
+      "placement": "clustered at the upper end of the body, fanned outward like antennae or petals"
+    },
+    {
+      "type": "eye",
+      "count": 3,
+      "shape": "small round pink-dotted circles",
+      "placement": "embedded within the triangular head shapes"
+    },
+    {
+      "type": "curling tendril/whisker",
+      "count": 2,
+      "shape": "thin wavy squiggling lines",
+      "placement": "trailing off to the left from the head area, one tinted pale pink/orange"
+    },
+    {
+      "type": "wing-like membrane",
+      "count": 2,
+      "shape": "large triangular fan shapes with fine vertical striping",
+      "placement": "spreading from the neck/shoulder area like wings or a ruff"
+    },
+    {
+      "type": "body segment plating",
+      "count": 1,
+      "shape": "long tapering tube covered in dense scribbled scale texture",
+      "placement": "runs from the head cluster down to the curled tail"
+    },
+    {
+      "type": "spine spikes",
+      "count": "many, in two rows",
+      "shape": "small triangular jagged points",
+      "placement": "lining the underside and along the tail near the bottom curl"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "thick curled hook shape with a solid dark scalloped tip",
+      "placement": "at the bottom end of the body, curling back on itself"
+    }
+  ],
+  "palette": {
+    "body": "#b0b0b0",
+    "outline": "#2b2b2b",
+    "tail_tip": "#1a1a1a",
+    "eyes": "#e8879c",
+    "whisker_tint": "#e0a898",
+    "background": "#ffffff"
+  },
+  "distinctive_features": [
+    "three triangular heads/faces fused together at the top, each sprouting a long spiral-curled horn",
+    "three small pink dot-eyes scattered unevenly across the head cluster",
+    "two thin squiggly whisker-lines trailing off to the left, one edged in pale pink-orange",
+    "large fan-like striped wing/ruff membranes spreading from the neck",
+    "long serpentine scale-textured body curling into a solid dark hooked tail",
+    "rows of small jagged spikes lining the belly and tail curl"
+  ],
+  "locomotion": "slithers and undulates along the ground like a serpent, using its fanned wing-membranes to glide or steady itself in short hops",
+  "vibe": "a squiggly-horned three-faced sky-serpent, part dragon, part scribbled wind-whisper"
+}

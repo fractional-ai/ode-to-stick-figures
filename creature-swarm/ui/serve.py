@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #   "fastapi", "uvicorn", "python-multipart",
-#   "pillow", "numpy", "scipy", "anthropic",
+#   "pillow", "numpy", "scipy", "anthropic", "python-dotenv", "markdown",
 # ]
 # ///
 """Creature gallery — browse the drawings we can animate, drop in new ones.
@@ -39,13 +39,25 @@ DRAWINGS = REPO / "examples" / "drawings"
 RIGS = SKILL / "rigs"
 UI = REPO / "creature-swarm" / "ui"
 UPLOADS = UI / "uploads"
+# Checked in: the model-derived artifacts (Creature Spec, each text lane's markdown)
+# and the built walk cycles. They're small, deterministic to serve, and they cost real
+# API calls to produce — so the gallery is all cache hits on a fresh clone and nobody
+# has to prewarm (or pay) to demo. Regenerate any of it by deleting the file.
+PREBUILT = UI / "prebuilt"
+# Derived and disposable: thumbnails and assembled guides, both rebuildable offline
+# from PREBUILT with no API calls.
 CACHE = UI / ".cache"
 
 sys.path.insert(0, str(SKILL))
+sys.path.insert(0, str(UI))
 from build_walk_cycle import build, key  # noqa: E402
+from pipeline import load_env  # noqa: E402
+from pipeline import run as run_swarm  # noqa: E402
 
 UPLOADS.mkdir(parents=True, exist_ok=True)
 CACHE.mkdir(parents=True, exist_ok=True)
+PREBUILT.mkdir(parents=True, exist_ok=True)
+HAVE_KEY = load_env()
 
 IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".heic", ".gif"}
 app = FastAPI()
@@ -85,7 +97,7 @@ def animation(stem: str) -> str | None:
     src, rig = find(stem), rig_for(stem)
     if not src or not rig:
         return None
-    out = CACHE / f"{stem}.html"
+    out = PREBUILT / f"{stem}.html"
     stale = not out.exists() or out.stat().st_mtime < max(
         src.stat().st_mtime, rig.stat().st_mtime, (SKILL / "template.html").stat().st_mtime
     )
@@ -132,6 +144,31 @@ def refusal(spec: dict) -> str | None:
     if "NEGATIVE fixture" in spec.get("_comment", ""):
         return spec.get("vibe") or "documented as not animatable"
     return None
+
+
+@app.get("/guide/{stem}", response_class=HTMLResponse)
+def get_guide(stem: str):
+    """The full field guide: Interpreter -> 3 text lanes + Animator -> assembled page.
+
+    Cached to disk after the first run — the swarm is a few seconds of model calls and
+    a demo shouldn't pay that twice.
+    """
+    src, rig = find(stem), rig_for(stem)
+    if not src or not rig:
+        return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+    out = PREBUILT / f"{stem}.guide.html"
+    if out.exists():
+        return HTMLResponse(out.read_text())
+    if not HAVE_KEY:
+        return HTMLResponse(
+            "<p>No ANTHROPIC_API_KEY found, so the text lanes can't run. "
+            "The walk cycle still works at <code>/anim/" + stem + "</code>.</p>",
+            status_code=503,
+        )
+    try:
+        return HTMLResponse(run_swarm(stem, src, rig, PREBUILT).read_text())
+    except Exception as e:  # surface the real failure; never a silent blank page
+        return HTMLResponse(f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500)
 
 
 @app.get("/api/creatures")

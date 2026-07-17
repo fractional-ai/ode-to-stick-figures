@@ -1,0 +1,9 @@
+# Habitat & Ecology
+
+*Facialis asymmetricus vibrissimus* occupies the low-canopy understory and moss-hummock strata of temperate cloud-forest margins, favoring humid microclimates where fog condensation keeps ground litter perpetually damp. Its range extends across a discontinuous belt of highland ravines, tracking pockets of high relative humidity rather than elevation or latitude per se, which accounts for its patchy distribution across otherwise unconnected mountain systems.
+
+Lacking limbs or a discernible torso, the species relies on a bouncing, rolling gait powered by irregular contractions of the cranial-body wall, propelling it in short hops across leaf litter and moss beds. This locomotor strategy restricts it to soft, yielding substrates; hard or exposed rock faces are avoided, likely due to injury risk during rebound.
+
+Ecologically, *F. asymmetricus* functions as a low-trophic omnivorous forager, subsisting on fungal fruiting bodies, soft detritus, and slow-moving invertebrates encountered at whisker height. It is, in turn, an important prey item for mid-sized forest carnivores, its rounded form making it easily swallowed whole—a trait that has shaped its primary defense mechanism.
+
+The species' asymmetrical whisker array, particularly the stray cheek-line filament, is not merely cosmetic but functions as an omnidirectional vibratory sensor array. Because the whiskers emerge at irregular angles rather than in a uniform row, the creature achieves wider environmental coverage per whisker than symmetrical-whiskered relatives, allowing near-instantaneous detection of approaching predators from oblique angles. This asymmetry appears to have been directly favored by predation pressure in dense understory habitats, where sound and air-current cues arrive unpredictably through irregular vegetation gaps—making the "lopsided" sensory layout a functional adaptation rather than a cosmetic anomaly.

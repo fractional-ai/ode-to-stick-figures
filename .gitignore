@@ -8,3 +8,5 @@ creature-swarm/ui/uploads/
 .env
 .env.*
 !.env.example
+
+# UI: thumbnails are derived and disposable; prebuilt/ is checked in on purpose

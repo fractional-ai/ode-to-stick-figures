@@ -1,0 +1,89 @@
+{
+  "name": {
+    "common": "Shark-Dog",
+    "mock_latin": "Caniselachus bidens"
+  },
+  "body_plan": {
+    "core_shape": "elongated quadruped torso with shark-like head and tail fin",
+    "symmetry": "bilateral",
+    "size_est_m": 1.2
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "elongated shark-like snout with open hinged jaw",
+      "placement": "front of body, low to ground"
+    },
+    {
+      "type": "teeth",
+      "count": 12,
+      "shape": "triangular jagged shark teeth",
+      "placement": "lining upper and lower jaw"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "small round white circle with black pupil",
+      "placement": "side of head, near snout base"
+    },
+    {
+      "type": "dorsal fin",
+      "count": 1,
+      "shape": "tall triangular shark fin",
+      "placement": "top of back, center"
+    },
+    {
+      "type": "extra spike/fin",
+      "count": 1,
+      "shape": "narrow curved spike, striped",
+      "placement": "behind dorsal fin, angled back"
+    },
+    {
+      "type": "tail fin",
+      "count": 1,
+      "shape": "large curved shark-style tail fin",
+      "placement": "rear end of body"
+    },
+    {
+      "type": "legs",
+      "count": 4,
+      "shape": "short stubby dog-like legs with clawed paws",
+      "placement": "underside of body, evenly spaced"
+    },
+    {
+      "type": "claws",
+      "count": 4,
+      "shape": "small curved claw tufts",
+      "placement": "tips of each paw"
+    },
+    {
+      "type": "body marking",
+      "count": 1,
+      "shape": "dark irregular blotch",
+      "placement": "mid-body, near back haunch"
+    },
+    {
+      "type": "body stripes",
+      "count": "multiple",
+      "shape": "vertical shading lines",
+      "placement": "across torso and legs"
+    }
+  ],
+  "palette": {
+    "primary_blue": "#5EC8E0",
+    "outline_black": "#1A1A1A",
+    "white_highlight": "#FFFFFF",
+    "dark_marking": "#2B2A2A"
+  },
+  "distinctive_features": [
+    "shark-shaped head fused onto a four-legged dog body",
+    "large gaping jaw with many triangular teeth",
+    "tall dorsal fin plus a second striped spike fin behind it",
+    "shark tail fin at the rear instead of a dog tail",
+    "dark blotch marking on the haunch",
+    "single visible eye with white sclera"
+  ],
+  "locomotion": "walks on four stubby clawed legs like a land shark-dog, tail fin used for balance or swimming bursts",
+  "vibe": "a shark that decided to grow legs and hunt on land like a dog"
+}

@@ -1,0 +1,9 @@
+## Habitat & Ecology
+
+*Rostrolonga alabrachium* occupies the brackish tidal flats and estuarine mudbanks of temperate coastlines, favoring the transitional zone where freshwater sediment plumes meet saline shallows. Its uneven-length legs, long dismissed by early observers as a developmental anomaly, are in fact a precise adaptation to this habitat: the shorter limb permits stable footing on sloped mud berms, while the longer limb provides reach across shallow tidal pools during low-water foraging bouts.
+
+The species' range is patchy and discontinuous, tracking isolated estuary systems along a single biogeographic corridor rather than forming a continuous coastal population — a distribution likely maintained by its poor flight capacity rather than by resource specificity.
+
+Within the food web, *R. alabrachium* functions as a low-tier benthic predator, its long flat beak sweeping through soft substrate to extract burrowing invertebrates, small crustaceans, and stranded fry. The small chin flap beneath the jaw acts as a tactile sensor, detecting prey movement in turbid water where visual cues are unreliable. It is, in turn, predated upon by larger wading birds and opportunistic shoreline carnivores, particularly during its awkward, energy-costly takeoff attempts.
+
+Its most consequential ecological trait is the single jagged wing-arm. Lacking a symmetrical counterpart, the creature cannot achieve conventional lift; instead, it uses the wing in a rapid one-sided flapping motion to spin in place, churning shallow sediment and flushing buried prey into the open — a foraging technique now termed "unilateral disturbance feeding." This behavior inadvertently benefits small mudflat crabs and juvenile gobies, which exploit the disturbed sediment plume to ambush newly exposed prey, making *R. alabrachium* an unwitting facilitator within its own trophic guild.

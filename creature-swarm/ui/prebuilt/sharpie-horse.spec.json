@@ -1,0 +1,81 @@
+{
+  "name": {
+    "common_name": "Curly-Tailed Number Horse",
+    "mock_latin_binomial": "Equicaput numerocorpus"
+  },
+  "body_plan": {
+    "core_shape": "long horse-like head fused to a bulky scalloped-edged hexagonal body",
+    "symmetry": "bilateral",
+    "size_est_m": 0.6
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "elongated wedge-shaped horse head with pointed single ear/horn on top",
+      "placement": "front-left, attached directly to body via narrow neck"
+    },
+    {
+      "type": "ear/horn",
+      "count": 1,
+      "shape": "thin pointed spike",
+      "placement": "top of head"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "solid black oval",
+      "placement": "side of head, upper-middle"
+    },
+    {
+      "type": "mouth lines",
+      "count": 3,
+      "shape": "short curved parallel strokes",
+      "placement": "lower snout"
+    },
+    {
+      "type": "body",
+      "count": 1,
+      "shape": "large hexagonal/rounded torso with scalloped bumpy fringe along top edge",
+      "placement": "center-right, main mass of creature"
+    },
+    {
+      "type": "number marking",
+      "count": 1,
+      "shape": "numeral '3' drawn in thick black outline",
+      "placement": "center of body, like a marking or tag"
+    },
+    {
+      "type": "fringe/spikes",
+      "count": 10,
+      "shape": "small rounded scallop bumps",
+      "placement": "along top curved edge of body"
+    },
+    {
+      "type": "legs",
+      "count": 8,
+      "shape": "short thin straight lines",
+      "placement": "underside of body, evenly spaced along bottom edge"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "long looping squiggly line forming cursive 'e e e'-like curls",
+      "placement": "rear-right, extending from back of body"
+    }
+  ],
+  "palette": {
+    "body_fill": "#d3d3d3",
+    "outline": "#1a1512",
+    "background": "#ffffff"
+  },
+  "distinctive_features": [
+    "horse-like head with single pointed horn/ear fused directly onto a much larger scalloped body",
+    "numeral '3' rendered as a marking on the torso",
+    "scalloped bumpy fringe running along the top edge of the body",
+    "many short thin legs (eight) lined along the belly",
+    "long looping cursive-squiggle tail resembling repeated 'e' shapes"
+  ],
+  "locomotion": "skitters along on its many short thin legs, dragging its long curly tail behind",
+  "vibe": "a horse-headed, number-branded lawn ornament tromping about on centipede-like legs"
+}

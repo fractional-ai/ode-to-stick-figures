@@ -1,0 +1,9 @@
+# Habitat & Ecology
+
+The Fanfoot Wingbird inhabits the brackish delta margins and tidal reed-flats of temperate coastlines, favoring the slow-moving braided channels where freshwater runoff meets saline estuary. Its range is patchy and discontinuous, tracking the availability of soft-bottomed mudflats exposed at low tide—habitats that reward its unusual foot morphology while offering little advantage to more conventional waders.
+
+Ecologically, *Alarpes palmatapes* occupies a mesopredator niche within the delta food web, feeding primarily on burrowing invertebrates, small crustaceans, and the occasional stranded fish fry left in tidal pools. It is, in turn, predated upon by larger marsh raptors and semi-aquatic carnivores, making it a mid-tier energy conduit between the benthic invertebrate layer and upper trophic levels.
+
+The species' asymmetric, staggered wing placement—long dismissed by early observers as a developmental anomaly—is now understood to serve a specific foraging function. During low-tide feeding bouts, the Wingbird executes a characteristic lopsided hop-glide, using the lower-mounted wing as a stabilizing skid across soft mud while the upper wing generates lateral lift, effectively "steering" the bird in short, controlled arcs across otherwise treacherous semi-liquid substrate. This asymmetric gait allows it to cross mudflats too unstable for symmetrically-winged competitors, granting it near-exclusive access to a narrow but reliable invertebrate stratum that other estuarine birds cannot efficiently exploit.
+
+Its fan-pleated webbed feet, meanwhile, distribute body weight during this maneuver and convert to effective paddles when the bird enters deeper channel water, permitting a dual terrestrial-aquatic foraging strategy uncommon among delta avifauna. The sawtooth beak edge is presumed to aid in gripping slick, wriggling prey items extracted from the substrate.
