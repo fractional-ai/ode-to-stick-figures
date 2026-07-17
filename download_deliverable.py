@@ -14,7 +14,7 @@ Usage:
 import sys
 from pathlib import Path
 
-from anthropic import Anthropic
+from lib.client import managed_client
 
 
 OUTPUT_DIR = Path("outputs")
@@ -33,7 +33,7 @@ def main() -> None:
             )
         session_id = last.read_text().strip()
 
-    client = Anthropic()
+    client = managed_client()
 
     print(f"Listing files for session {session_id}...")
     # `scope_id` filters to files associated with that session

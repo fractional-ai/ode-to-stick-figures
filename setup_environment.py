@@ -7,16 +7,12 @@ Usage:
     python setup_environment.py
 """
 
-import os
 from pathlib import Path
 
-from anthropic import Anthropic
+from lib.client import managed_client
 
 
 def main() -> None:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise SystemExit("Set ANTHROPIC_API_KEY before running.")
-
     env_path = Path(".environment_id")
     if env_path.exists():
         existing = env_path.read_text().strip()
@@ -24,7 +20,7 @@ def main() -> None:
         print("(remove .environment_id if you want to provision a new one)")
         return
 
-    client = Anthropic()
+    client = managed_client()
     environment = client.beta.environments.create(
         name="creature-swarm-env",
         config={

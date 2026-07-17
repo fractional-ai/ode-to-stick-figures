@@ -12,11 +12,11 @@ Usage:
 """
 
 import json
-import os
 from pathlib import Path
 
-from anthropic import Anthropic
 from anthropic.lib import files_from_dir
+
+from lib.client import managed_client
 
 
 # Map skill directory name → specialist key that should get it.
@@ -34,9 +34,6 @@ COORDINATOR_SKILLS = ["fieldguide-html"]
 
 
 def main() -> None:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise SystemExit("Set ANTHROPIC_API_KEY before running.")
-
     specialist_ids_path = Path(".specialist_ids.json")
     if not specialist_ids_path.exists():
         raise SystemExit("Run create_specialists.py first.")
@@ -47,7 +44,7 @@ def main() -> None:
         coordinator_id_path.read_text().strip() if coordinator_id_path.exists() else None
     )
 
-    client = Anthropic()
+    client = managed_client()
 
     # List existing custom skills so we can detect and reuse any prior uploads.
     # Skills API enforces unique display_title, so retrying with the same title
