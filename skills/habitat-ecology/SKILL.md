@@ -1,6 +1,6 @@
 ---
 name: habitat-ecology
-description: Reference guide for writing the habitat and ecology section of an invented-creature field guide entry. Use whenever assigning range, biome, climate, or ecological niche to a creature described by a Creature Spec. Trigger on any request to place an invented animal in an environment or describe its role in a food web.
+description: Reference guide for writing the habitat and ecology section of an invented-creature field guide entry, grounded in real animal biology and written for kids. Use whenever assigning range, biome, or ecological niche to a creature described by a Creature Spec, for a children's field guide.
 ---
 
 # Habitat & Ecology
@@ -8,6 +8,20 @@ description: Reference guide for writing the habitat and ecology section of an i
 Treat the Creature Spec as ground truth. `locomotion` and `body_plan`
 constrain which biomes are plausible — pick a habitat that fits the anatomy,
 don't pick one at random and rationalize backward.
+
+## Ground it in a real animal first
+
+Before writing, use your web search/fetch tools to find 1-2 REAL animals
+that actually live the way the spec's `locomotion` implies, and look up one
+real fact about where they live or how they survive there. Examples:
+
+- `locomotion: float` → look up a real animal that spends its life floating
+  (jellyfish, sea otter) and one real fact about how it survives there.
+- `locomotion: slither` → look up a real burrowing or slithering animal
+  (snake, caecilian) and one real fact about its hideout.
+
+Bring back ONE genuine fact per animal you look up, for the "Real Animals
+It's Like" section below.
 
 ## Locomotion → biome compatibility
 
@@ -46,18 +60,35 @@ connection if the palette supports it, skip it if it doesn't.
 
 If `locomotion` and the most obvious biome choice conflict (e.g. `float`
 with a `size_est_m` implying a large land mass), don't silently paper over
-it — note the tension in one sentence and commit to a resolution (amphibious
-lifestyle, seasonal migration) rather than ignoring it.
+it — tell the reader about the puzzle in one plain sentence and commit to a
+fun resolution (it swims most of the time and only comes on land to nest,
+say) rather than ignoring it.
+
+## Writing for kids
+
+Your reader is a kid, so:
+
+- Short sentences. One idea per sentence.
+- Describe the home the way you'd describe it to a friend: "It lives in
+  warm, shallow swamps, hiding under lily pads the size of trash can
+  lids" — not "prefers humid subtropical wetland environments."
+- Explain any hard word the moment you use it.
+- Warm, curious tone — you're showing off a cool place, not filing a report.
+- Skip taxonomic/scientific register entirely.
 
 ## How to format your output
 
 ```
-RANGE
-[invented region]
+WHERE IT LIVES
+[1-2 kid-friendly sentences naming the invented region and what it looks/feels like there]
 
-BIOME & CLIMATE
-[biome] · [temperature/moisture band] · [one sentence tying it to locomotion/body_plan]
+ITS NEIGHBORHOOD
+[1-2 sentences: biome, weather, and how that fits its locomotion/body_plan]
 
-ECOLOGICAL NICHE
-[role in food web, 2-3 sentences]
+WHO IT SHARES THE FOOD WEB WITH
+[1-2 sentences: what it eats or who eats it]
+
+REAL ANIMALS IT'S LIKE
+- [real animal #1] — [the one genuine fact you found, in kid language, tied to locomotion or habitat]
+- [real animal #2, if you found one] — [same]
 ```
