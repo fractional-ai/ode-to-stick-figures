@@ -1,0 +1,97 @@
+{
+  "_comment": "Hand-authored fixture rig for examples/drawings/shark-dog.webp (580x404). Image-space coords. This is what the Animator's vision pass must learn to emit; it exists so the renderer can be built and tested without the vision step. Polygons deliberately overlap INTO the parent past each pivot so rotation never reveals a gap.",
+  "source": "examples/drawings/shark-dog.webp",
+  "image": { "w": 580, "h": 404 },
+  "name": "Sharkdog",
+  "vibe": "confident, slightly too many fins, no notes",
+  "ground_y": 312,
+  "parts": [
+    {
+      "id": "tail",
+      "parent": "body",
+      "z": -30,
+      "pivot": [432, 222],
+      "poly": [[398, 186], [470, 176], [548, 196], [540, 232], [478, 322], [452, 318], [430, 268], [398, 250]],
+      "spring": { "amp": 14, "phase": 0.0, "lag": 0.55 }
+    },
+    {
+      "id": "sideFin",
+      "parent": "body",
+      "z": -20,
+      "pivot": [408, 152],
+      "poly": [[392, 108], [470, 96], [536, 104], [520, 152], [452, 196], [404, 200], [388, 168]],
+      "spring": { "amp": 7, "phase": 0.9, "lag": 0.4 }
+    },
+    {
+      "id": "upperFin",
+      "parent": "body",
+      "z": -18,
+      "pivot": [402, 132],
+      "poly": [[386, 118], [432, 96], [470, 58], [492, 68], [462, 112], [424, 140], [392, 148]],
+      "spring": { "amp": 9, "phase": 1.7, "lag": 0.35 }
+    },
+    {
+      "id": "dorsalFin",
+      "parent": "body",
+      "z": -15,
+      "pivot": [300, 108],
+      "poly": [[262, 116], [286, 82], [330, 52], [352, 54], [340, 92], [318, 118]],
+      "spring": { "amp": 5, "phase": 2.4, "lag": 0.3 }
+    },
+    {
+      "id": "legFarFront",
+      "parent": "body",
+      "z": -10,
+      "pivot": [231, 236],
+      "poly": [[206, 224], [258, 224], [262, 288], [252, 312], [212, 312], [204, 286]],
+      "gait": { "phase": 3.14159, "swing": 15, "lift": 5 }
+    },
+    {
+      "id": "legFarBack",
+      "parent": "body",
+      "z": -10,
+      "pivot": [346, 250],
+      "poly": [[324, 240], [386, 240], [388, 300], [372, 324], [336, 322], [320, 292]],
+      "gait": { "phase": 0.0, "swing": 15, "lift": 5 }
+    },
+    {
+      "id": "body",
+      "parent": null,
+      "z": 0,
+      "pivot": [300, 180],
+      "poly": [[96, 148], [120, 122], [176, 100], [246, 86], [318, 88], [392, 100], [446, 128], [452, 210], [420, 252], [330, 262], [230, 258], [150, 248], [104, 214], [92, 178]]
+    },
+    {
+      "id": "jaw",
+      "parent": "body",
+      "z": 5,
+      "pivot": [196, 172],
+      "poly": [[98, 146], [150, 158], [200, 152], [212, 196], [188, 212], [122, 206], [96, 186]],
+      "chomp": { "amp": 9, "period": 2.6 }
+    },
+    {
+      "id": "eye",
+      "parent": "body",
+      "z": 8,
+      "pivot": [156, 128],
+      "poly": [[138, 114], [174, 112], [176, 142], [140, 144]],
+      "blink": { "period": 3.7 }
+    },
+    {
+      "id": "legNearFront",
+      "parent": "body",
+      "z": 10,
+      "pivot": [184, 238],
+      "poly": [[156, 226], [212, 226], [214, 288], [204, 308], [146, 306], [142, 280]],
+      "gait": { "phase": 0.0, "swing": 17, "lift": 6 }
+    },
+    {
+      "id": "legNearBack",
+      "parent": "body",
+      "z": 10,
+      "pivot": [304, 252],
+      "poly": [[282, 242], [332, 242], [334, 292], [318, 306], [280, 302], [274, 276]],
+      "gait": { "phase": 3.14159, "swing": 17, "lift": 6 }
+    }
+  ]
+}

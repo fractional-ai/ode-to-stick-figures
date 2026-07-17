@@ -15,10 +15,29 @@ Deal Desk demo) to build an **animal encyclopedia** with a multi-agent system.
   - Encyclopedia / description writing
   - Habitat and botany-level content
   - Image generation (artists involved)
-  - 3D modeling or animation
-- 3D modeling complexity is unknown; 2D image animation is the simpler
-  fallback if 3D doesn't pan out.
+  - 3D modeling
+  - Animation — **resolved: 2.5D cutout puppet** (see below)
 - Art style idea: hand-drawn sharpie on paper, scanned and uploaded.
+
+### Animation approach — RESOLVED (2026-07-17)
+
+The open question "3D modeling or animation, and how by the deadline?" is closed for
+the animation lane. We are **not** doing 3D animation. We animate the child's drawing
+directly as **2.5D cutouts**: alpha-key the paper away, segment the drawing into parts,
+puppet them as flat layers with a parametric gait. The kid's own crayon is what walks.
+
+This is the "simpler 2D fallback" this plan anticipated — taken up front rather than
+after burning the afternoon on 3D. Two reasons it's also the *better* option, not just
+the safer one:
+
+- **It keeps the drawing.** Rebuilding the creature from a JSON description renders a
+  generic blob; the whole payload is "that's *my* drawing, and it's *alive*."
+- **No headless GL.** Offscreen 3D rendering (`pyrender`/OSMesa) was the largest
+  schedule risk and adds nothing to the joke.
+
+The animation lane depends on no other lane and carries no schedule risk for the rest
+of the swarm. Full rationale: `docs/superpowers/specs/2026-07-17-creature-swarm-design.md`,
+section "Animation approach — 2.5D cutout puppet".
 
 ## Agent orchestration structure
 
@@ -48,7 +67,7 @@ Deal Desk demo) to build an **animal encyclopedia** with a multi-agent system.
 
 - [ ] **Set up fork in Fractional AI repo** — each person assigns themselves
   one agent; all work lives in the shared repo.
-- [ ] **Determine 3D modeling or animation approach** — unresolved; must land
-  by the 4pm deadline or fall back to 2D animation.
+- [x] **Determine 3D modeling or animation approach** — **resolved:** animation lane
+  is 2.5D cutouts of the original drawing, no 3D dependency. Owner: Hugh.
 - [ ] **Clarify API key scope** — confirm whether the key is for development
   use or repo-based agent execution only.
