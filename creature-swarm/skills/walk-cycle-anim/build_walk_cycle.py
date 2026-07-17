@@ -38,11 +38,16 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     neutral. That separates them without a model — but every constant here was
     earned the hard way, so read the notes before tuning:
 
-    1. WHITE BALANCE FIRST. A phone photo under warm light gives *blank paper* a
-       saturation of 40-70, well over the colour threshold, so the key fires on the
-       page and the whole sheet comes back as one blob. Normalising each channel by
-       its own p95 illuminant returns paper to neutral. Without this, real phone
-       photos are silently unusable.
+    1. FLATTEN THE ILLUMINATION FIRST, LOCALLY. Two separate things break here and
+       one fix handles both. (a) Warm light gives *blank paper* a saturation of
+       40-70, over the colour threshold, so the key fires on the page and the whole
+       sheet returns as one blob. (b) A cast shadow is darker than paper, so it
+       passes the ink test and gets keyed in as part of the creature — on
+       sharpie-horse a shadow became a huge blob fused to the animal. A single
+       global illuminant can't fix (b) because the gradient is spatial. So estimate
+       paper LOCALLY: max-filter away the strokes, blur to get a smooth paper
+       model, divide by it. Shadows and colour cast both flatten out, and every
+       downstream threshold gets a neutral page to work against.
     2. DERIVE THE INK CUTOFF PER IMAGE. A global luminance constant tuned on crayon
        deletes grey pencil (paper 240, pencil only reaches 141 — it fails both
        tests and is discarded as background). Anchor it to this page's own paper.
@@ -60,9 +65,17 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     """
     a = np.asarray(img.convert("RGB")).astype(np.float32)
 
-    illum = np.array([np.percentile(a[..., c], 95) for c in range(3)])
-    illum[illum < 1] = 1
-    wb = np.clip(a / illum * 245.0, 0, 255)
+    # Local paper model: max-filter removes the strokes (ink is dark, so the local
+    # max is paper), then a blur smooths it into an illumination field. Dividing by
+    # it flattens shadow gradients AND colour cast at once. Kernel must exceed the
+    # widest stroke or ink survives into the model and erases itself.
+    k = max(9, min(a.shape[0], a.shape[1]) // 16)
+    wb = np.empty_like(a)
+    for c in range(3):
+        paper_c = nd.maximum_filter(a[..., c], size=k)
+        paper_c = nd.gaussian_filter(paper_c, sigma=k / 2.0)
+        wb[..., c] = a[..., c] / np.maximum(paper_c, 1.0) * 245.0
+    wb = np.clip(wb, 0, 255)
 
     lum = 0.299 * wb[..., 0] + 0.587 * wb[..., 1] + 0.114 * wb[..., 2]
     sat = wb.max(-1) - wb.min(-1)
@@ -98,9 +111,75 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     ), stats
 
 
-def build(doodle: Path, rig: Path, out: Path, keep: int = 1) -> tuple[Path, dict]:
+# Bright, saturated, unashamed. A child's crayon box, not a designer's palette —
+# realism is not the goal and would actively hurt.
+CRAYON = [
+    "#ff5964", "#ffb400", "#ffe14d", "#5ac85a",
+    "#3aa7ff", "#a05ae0", "#ff8fc7", "#ff8a3d",
+]
+
+
+def _hex(c: str) -> np.ndarray:
+    c = c.lstrip("#")
+    if len(c) == 3:
+        c = "".join(ch * 2 for ch in c)
+    return np.array([int(c[i : i + 2], 16) for i in (0, 2, 4)], dtype=np.float32)
+
+
+def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image:
+    """Flood bright colour into the enclosed regions of a mono line drawing.
+
+    This is a colouring book, and that is the point. We find the regions the child's
+    own strokes already enclose and fill each one — we never invent strokes or
+    reshape anything. The linework stays exactly where they put it; only the white
+    between it changes. A sharpie doodle keeps its identity and stops being grey.
+
+    No-ops on drawings that are already coloured, so crayon art is left alone.
+    """
+    a = np.asarray(rgba).astype(np.float32)
+    rgb, alpha = a[..., :3], a[..., 3]
+    inside = alpha > 128
+    if not inside.any():
+        return rgba
+
+    sat = rgb.max(-1) - rgb.min(-1)
+    if float(np.median(sat[inside])) > 28:
+        return rgba  # already coloured; don't touch the child's own colour choices
+
+    lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
+    paper = float(np.percentile(lum[inside], 80))
+    ink = (lum < paper - 45) & inside
+    regions = inside & ~nd.binary_dilation(ink, np.ones((3, 3)))
+
+    lab, n = nd.label(regions)
+    if not n:
+        return rgba
+    sizes = nd.sum(regions, lab, range(1, n + 1))
+    pal = [_hex(c) for c in (palette or CRAYON)]
+    out = rgb.copy()
+    # Largest region first so the biggest shape gets the first (most dominant)
+    # palette entry — with a Spec palette, that means the creature's own colour.
+    for rank, idx in enumerate(np.argsort(sizes)[::-1]):
+        if sizes[idx] < 40:
+            continue
+        m = lab == (idx + 1)
+        col = pal[rank % len(pal)]
+        # Multiply rather than replace: keeps paper tooth and stroke edges, so it
+        # reads as crayon laid over paper instead of a flat vector fill.
+        out[m] = np.clip(rgb[m] / 255.0 * col, 0, 255)
+
+    return Image.fromarray(
+        np.dstack([out.astype(np.uint8), alpha.astype(np.uint8)]), "RGBA"
+    )
+
+
+def build(
+    doodle: Path, rig: Path, out: Path, keep: int = 1, color: bool = False
+) -> tuple[Path, dict]:
     spec = json.loads(rig.read_text())
     keyed, stats = key(Image.open(doodle), keep=max(keep, spec.get("figures", 1)))
+    if color or spec.get("colorize"):
+        keyed = colorize(keyed, spec.get("palette"))
 
     buf = io.BytesIO()
     keyed.save(buf, format="PNG", optimize=True)
@@ -125,9 +204,15 @@ def main() -> None:
         default=1,
         help="how many of the largest blobs to keep; >1 for multi-figure drawings",
     )
+    ap.add_argument(
+        "--color",
+        action="store_true",
+        help="flood bright crayon colour into a mono line drawing's enclosed regions "
+        "(no-ops if the drawing is already coloured)",
+    )
     args = ap.parse_args()
 
-    out, s = build(args.doodle, args.rig, args.out, keep=args.keep)
+    out, s = build(args.doodle, args.rig, args.out, keep=args.keep, color=args.color)
     kb = out.stat().st_size / 1024
     print(f"{out}  ({kb:.0f} KB, self-contained)")
     print(
