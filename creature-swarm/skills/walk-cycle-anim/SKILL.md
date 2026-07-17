@@ -16,10 +16,37 @@ inflated from `body_plan: "blob"` is not that.
 
 | | |
 |---|---|
-| **In** | doodle image (any format PIL reads); Creature Spec `name` + `vibe` if available |
+| **In** | doodle image (any format PIL reads) + optional free text: `name`, `vibe`, `movement`, and the `locomotion`/`speed` they imply |
 | **Out** | `walk-cycle.html` — one file, drawing inlined base64, zero external deps |
 | **Slot** | `{{video}}` in `fieldguide-html`. **Markup, not a `<video>` tag.** |
 | **Depends on** | nothing. No `.glb`, no other lane. |
+
+### Free text is welcome — at author time, not render time
+
+The renderer wants numbers. Prose is never parsed there; asking it to interpret
+"lurches along, stops to sniff things" would be the worst of both worlds. Instead the
+**vision pass that authors the rig** takes the description and emits `locomotion`,
+`speed`, and amplitudes — one place, once, where a model is already looking at the
+drawing. Everything downstream is deterministic.
+
+The frozen Creature Spec already carries all of it, so **no schema change is needed**:
+
+| Spec field | drives |
+|---|---|
+| `locomotion` | which movement model (below) |
+| `palette` | the colouring (see *Colour*) |
+| `vibe` | cadence, bounce, how manic it reads |
+| `body_plan.symmetry` | per-limb phase distribution |
+| `name` | caption |
+
+Any of these can be overridden per run without editing the rig:
+
+```bash
+./build_walk_cycle.py ../../../examples/drawings/bee.webp --rig rigs/bee.rig.json --color \
+    --name "Bumbling Behemoth (Apis enormis)" --vibe "far too large for those legs" \
+    --movement "flies in lazy loops, never quite lands" \
+    --locomotion fly --speed 0.75 --faces right -o /tmp/wc.html
+```
 
 Runs standalone against a fixture rig — no swarm needed:
 
@@ -68,9 +95,45 @@ transforms; parametric gait with per-leg phase offsets.
 }
 ```
 
-Per-part behaviours (pick one): `gait` `{phase, swing, lift}` for legs · `spring`
-`{amp, phase, lag}` for trailing bits · `chomp` `{amp, period}` for jaws · `blink`
-`{period}` for eyes.
+Per-part behaviours (pick one): `gait` `{phase, swing, lift}` for legs · `flap`
+`{amp, phase, rest}` for wings · `spring` `{amp, phase, lag}` for trailing bits ·
+`chomp` `{amp, period}` for jaws · `blink` `{period}` for eyes.
+
+## Movement models — `locomotion`
+
+Every creature moving at one speed with one gait reads as a rigged puppet show. A stiff
+rectangle travels nothing like a bird, and that difference is most of the charm. Each
+model owns its own speed, path through the air, and body attitude.
+
+| `locomotion` | what it does | for |
+|---|---|---|
+| `walk` | legs cycle in phase-offset pairs, body bobs, stays grounded | quadrupeds, bipeds |
+| `stumble` | **no gait — rotation IS the locomotion.** A rigid body rocks corner to corner (asymmetric, so it tips and catches rather than swinging like a metronome) and lurches forward in pulses | the pop-tart; anything jointless |
+| `fly` | wings flap (asymmetric — the downstroke is the hard one), body rides a sine through the air, never touches ground, shadow stays below and fades with altitude | birds, the bee |
+| `float` | barely travels; drifts on a slow sine and bobs gently in place | balloon-shaped creatures |
+| `hop` | parabolic arcs with squash on landing | legless bobbers |
+
+Set `speed` to multiply the model's base. `faces: "right"` for right-facing drawings —
+without it they **moonwalk**, because heading 0 means "the drawing's natural facing"
+and the default assumes left.
+
+Squash only applies to models that touch the ground: it reads as weight, and a flyer
+has nothing to push against.
+
+## Colour — `colorize` / `palette`
+
+`--color` floods bright crayon into the regions **the child's own strokes already
+enclose**. It's a colouring book: we never add a stroke or reshape a line, only the
+white between them changes. Regions fill largest-first, so `palette[0]` lands on the
+biggest shape — with a Spec `palette`, that's the creature's dominant colour.
+
+**It no-ops on drawings that already have colour**, so a child's own choices are never
+overridden.
+
+Two clear areas want two entries. The pop-tart's frosting and pastry border are
+separate regions, so `"palette": ["#f7cfe0", "#d99a52"]` gives pink frosting inside a
+tan border. Note the ink mask is closed 5×5 before regions are split — children's
+outlines have gaps, and one gap merges two areas into one colour.
 
 ### The one rigging rule that matters
 

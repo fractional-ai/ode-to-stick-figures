@@ -149,6 +149,11 @@ def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image
     lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
     paper = float(np.percentile(lum[inside], 80))
     ink = (lum < paper - 45) & inside
+    # Close the strokes before splitting regions. Children's outlines have gaps, and
+    # one gap merges two areas into one — the pop-tart's frosting line leaks into its
+    # pastry border, so both take a single colour instead of two. A 5x5 bridges the
+    # gap without closing the deliberate spaces between separate parts.
+    ink = nd.binary_closing(ink, np.ones((5, 5)))
     regions = inside & ~nd.binary_dilation(ink, np.ones((3, 3)))
 
     lab, n = nd.label(regions)
@@ -173,10 +178,27 @@ def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image
     )
 
 
+LOCOMOTIONS = ("walk", "stumble", "fly", "float", "hop")
+
+
 def build(
-    doodle: Path, rig: Path, out: Path, keep: int = 1, color: bool = False
+    doodle: Path,
+    rig: Path,
+    out: Path,
+    keep: int = 1,
+    color: bool = False,
+    overrides: dict | None = None,
 ) -> tuple[Path, dict]:
     spec = json.loads(rig.read_text())
+    # Free text (name / vibe / movement) and the locomotion+speed it implies can be
+    # supplied per-run without editing the rig, so the Creature Spec can drive the
+    # animation directly. Prose is deliberately NOT parsed here: the renderer wants
+    # numbers, and the mapping from "stumbles along, stops to sniff things" onto a
+    # model plus amplitudes belongs to the vision pass that authors the rig — one
+    # place, once, where a model is already reading the drawing.
+    for k, v in (overrides or {}).items():
+        if v is not None:
+            spec[k] = v
     keyed, stats = key(Image.open(doodle), keep=max(keep, spec.get("figures", 1)))
     if color or spec.get("colorize"):
         keyed = colorize(keyed, spec.get("palette"))
@@ -210,9 +232,44 @@ def main() -> None:
         help="flood bright crayon colour into a mono line drawing's enclosed regions "
         "(no-ops if the drawing is already coloured)",
     )
+    ap.add_argument("--name", help="Creature Spec `name` — free text, shown as caption")
+    ap.add_argument("--vibe", help="Creature Spec `vibe` — free text, shown as caption")
+    ap.add_argument(
+        "--movement",
+        help="free-text movement description, e.g. 'lurches, stops to sniff things'. "
+        "Recorded on the rig for provenance; the vision pass turns it into "
+        "--locomotion/--speed. Not parsed here.",
+    )
+    ap.add_argument(
+        "--locomotion",
+        choices=LOCOMOTIONS,
+        help="movement model: walk (legs cycle) | stumble (rigid body rocks itself "
+        "forward in lurches) | fly (wings flap, rides a sine through the air) | "
+        "float (drifts and bobs, barely travels) | hop (parabolic arcs)",
+    )
+    ap.add_argument("--speed", type=float, help="speed multiplier on the model's base")
+    ap.add_argument(
+        "--faces",
+        choices=("left", "right"),
+        help="which way the drawing points; 'right' stops it moonwalking",
+    )
     args = ap.parse_args()
 
-    out, s = build(args.doodle, args.rig, args.out, keep=args.keep, color=args.color)
+    out, s = build(
+        args.doodle,
+        args.rig,
+        args.out,
+        keep=args.keep,
+        color=args.color,
+        overrides={
+            "name": args.name,
+            "vibe": args.vibe,
+            "movement": args.movement,
+            "locomotion": args.locomotion,
+            "speed": args.speed,
+            "faces": args.faces,
+        },
+    )
     kb = out.stat().st_size / 1024
     print(f"{out}  ({kb:.0f} KB, self-contained)")
     print(
