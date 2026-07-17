@@ -1,13 +1,14 @@
 """
-Download every file produced by a Deal Desk session.
+Download every file produced by a Creature Swarm session
+(field-guide.html, creature.glb, walk-cycle.mp4 if built).
 
 By default reads the session ID from `.last_session_id` (written by
-run_deal_desk.py). You can also pass the session ID as a CLI argument
+run_creature_swarm.py). You can also pass the session ID as a CLI argument
 to grab files from any older session.
 
 Usage:
     python download_deliverable.py                       # last run
-    python download_deliverable.py sesn_01ABC...         # specific session
+    python download_deliverable.py sesn_01ABC...          # specific session
 """
 
 import sys

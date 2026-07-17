@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreatureSpec",
+  "description": "Canonical description of one invented creature, emitted once by the Field Interpreter and consumed unmodified by every downstream specialist. See docs/superpowers/specs/2026-07-17-creature-swarm-design.md, Contract 1.",
+  "type": "object",
+  "required": ["name", "body_plan", "parts", "palette", "distinctive_features", "locomotion", "vibe"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Invented common name + mock-Latin binomial, e.g. 'Sixleg Puddlehopper (Sextapes lacunasaltans)'"
+    },
+    "body_plan": {
+      "type": "object",
+      "required": ["core_shape", "symmetry", "size_est_m"],
+      "properties": {
+        "core_shape": { "type": "string", "enum": ["sphere", "ovoid", "slab", "cylinder", "blob"] },
+        "symmetry": { "type": "string", "enum": ["bilateral", "radial", "asymmetric"] },
+        "size_est_m": { "type": "number", "description": "Estimated adult length/height in meters" }
+      }
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "count", "shape", "placement"],
+        "properties": {
+          "type": { "type": "string", "description": "e.g. leg, eyestalk, wing, tail, horn" },
+          "count": { "type": "integer", "minimum": 0 },
+          "shape": { "type": "string" },
+          "placement": { "type": "string" }
+        }
+      }
+    },
+    "palette": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+      "minItems": 1
+    },
+    "distinctive_features": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "locomotion": {
+      "type": "string",
+      "enum": ["waddle", "hop", "slither", "scuttle", "float", "other"]
+    },
+    "vibe": {
+      "type": "string",
+      "description": "One-line personality descriptor for tone-setting in prose sections"
+    }
+  }
+}
