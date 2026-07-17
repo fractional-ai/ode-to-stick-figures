@@ -1,0 +1,47 @@
+{
+  "name": "Flapjack (Alaudirostris recusans)",
+  "body_plan": {
+    "core_shape": "ovoid",
+    "symmetry": "bilateral",
+    "size_est_m": 0.28
+  },
+  "parts": [
+    {
+      "type": "wing",
+      "count": 2,
+      "shape": "broad flat paddle, permanently spread",
+      "placement": "dorsolateral, one per side"
+    },
+    {
+      "type": "leg",
+      "count": 2,
+      "shape": "thin twig",
+      "placement": "ventral, side by side"
+    },
+    {
+      "type": "beak",
+      "count": 1,
+      "shape": "oversized indignant wedge",
+      "placement": "front of head"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "stubby fan",
+      "placement": "posterior"
+    }
+  ],
+  "palette": [
+    "#7a5230",
+    "#e8d8b0",
+    "#c8892f",
+    "#3a2a1a"
+  ],
+  "distinctive_features": [
+    "wings held permanently fully outstretched",
+    "absolutely refuses to become airborne",
+    "an oversized, perpetually affronted beak"
+  ],
+  "locomotion": "fly",
+  "vibe": "wings fully deployed, absolutely no intention of flying"
+}

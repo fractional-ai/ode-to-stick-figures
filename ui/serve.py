@@ -33,11 +33,11 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[1]
 SKILL = REPO / "creature-swarm" / "skills" / "walk-cycle-anim"
 DRAWINGS = REPO / "examples" / "drawings"
 RIGS = SKILL / "rigs"
-UI = REPO / "creature-swarm" / "ui"
+UI = REPO / "ui"
 UPLOADS = UI / "uploads"
 CACHE = UI / ".cache"
 
