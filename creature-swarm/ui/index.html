@@ -129,6 +129,12 @@ const grid = document.getElementById('grid');
 const log  = document.getElementById('log');
 const dlg  = document.getElementById('dlg');
 
+// Names, taglines and refusal reasons are model-authored and land in innerHTML.
+// Nothing hostile so far, but an apostrophe or a stray < shouldn't be able to break
+// the card, let alone the page.
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 async function load() {
   const items = await (await fetch('/api/creatures')).json();
   grid.innerHTML = '';
@@ -139,10 +145,11 @@ async function load() {
               : c.refused  ? ['no',"won't animate"]
               :              ['off','needs a rig'];
     el.innerHTML = `
-      <div class="shot"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}" alt=""></div>
+      <div class="shot"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+             alt="${esc(c.name)} — child's drawing, background removed"></div>
       <div class="meta">
-        <div class="nm">${c.name}</div>
-        <div class="vb">${c.refused || c.vibe || '&nbsp;'}</div>
+        <div class="nm">${esc(c.name)}</div>
+        <div class="vb">${esc(c.refused || c.vibe) || '&nbsp;'}</div>
         <span class="tag ${tag[0]}">${tag[1]}</span>
         ${c.animated ? `<div class="acts">
           <button data-a="anim">▶ walk</button>
