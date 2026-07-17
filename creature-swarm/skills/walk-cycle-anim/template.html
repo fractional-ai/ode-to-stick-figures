@@ -55,20 +55,73 @@
   const springs = {};
   for (const p of RIG.parts) if (p.spring) springs[p.id] = { a: 0, v: 0 };
 
-  // --- locomotion state -----------------------------------------------------
-  // heading 0 = facing left (the drawing's natural direction), PI = facing right.
-  // Turning sweeps heading through PI/2, where the cutout goes edge-on and
-  // momentarily vanishes. That flat-paper pivot is the whole charm; don't smooth it.
-  let t = 0, gait = 0, x = 0;
-  let heading = 0, turnFrom = 0, turnTo = 0, turnP = 1;
-  const SPEED = 66, CADENCE = 1.15, TURN_DUR = 0.5;
+  // --- locomotion models ----------------------------------------------------
+  // Every creature moving at one speed with one gait reads as a rigged puppet show.
+  // What sells "alive" is that a stiff rectangle travels nothing like a bird. So the
+  // Creature Spec's `locomotion` picks a model here, and each model owns its own
+  // speed, path through the air, and body attitude.
+  //
+  //   walk    legs cycle, body bobs, stays on the ground        (shark-dog, person)
+  //   stumble no gait — a rigid thing rocking itself forward     (pop-tart)
+  //           in lurches. Rotation IS the locomotion.
+  //   fly     wings flap, body rides a sine through the air,     (bird, bee)
+  //           never touches ground
+  //   float   barely travels; drifts and bobs in place           (balloon creature)
+  //   hop     parabolic arcs, squash on landing                  (legless bobbers)
+  const LOCO = RIG.locomotion || 'walk';
+  const SPEED_MUL = RIG.speed ?? 1;
+  const AIRBORNE = LOCO === 'fly' || LOCO === 'float';
+
+  // heading 0 = the drawing's natural facing. `faces: "right"` flips it, so a
+  // right-facing drawing travels the way it points instead of moonwalking.
+  const FACES_RIGHT = RIG.faces === 'right';
+  let t = 0, gait = 0, x = 0, drift = 0;
+  let heading = FACES_RIGHT ? Math.PI : 0, turnFrom = 0, turnTo = 0, turnP = 1;
+
+  const BASE = { walk: 66, stumble: 34, fly: 92, float: 9, hop: 46 }[LOCO] ?? 66;
+  const CAD = { walk: 1.15, stumble: 0.85, fly: 2.7, float: 0.30, hop: 1.0 }[LOCO] ?? 1.15;
+  const SPEED = BASE * SPEED_MUL, CADENCE = CAD, TURN_DUR = 0.5;
+
   const scatter = [];
   for (let i = 0; i < 26; i++) scatter.push({ x: Math.random(), s: Math.random(), k: Math.random() });
+  const clouds = [];
+  for (let i = 0; i < 4; i++) clouds.push({ x: Math.random(), y: 0.10 + Math.random() * 0.30, s: 0.5 + Math.random() });
 
   function startTurn() {
-    turnFrom = heading; turnTo = heading < Math.PI / 2 ? Math.PI : 0; turnP = 0;
+    turnFrom = heading;
+    turnTo = heading < Math.PI / 2 ? Math.PI : 0;
+    turnP = 0;
   }
   const easeInOut = u => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+
+  // Forward velocity is not constant except when walking. A stumbling rectangle
+  // lurches: it rocks onto a corner, tips forward, stalls, repeats.
+  function speedNow() {
+    if (LOCO === 'stumble') return SPEED * (0.15 + 1.5 * Math.max(0, Math.sin(gait)) ** 2);
+    if (LOCO === 'hop') return SPEED * (0.2 + 1.4 * Math.max(0, Math.sin(gait)));
+    if (LOCO === 'float') return SPEED * (0.6 + 0.8 * Math.sin(t * 0.21));
+    if (LOCO === 'fly') return SPEED * (0.85 + 0.3 * Math.sin(gait * 0.5));
+    return SPEED;
+  }
+
+  // Vertical offset from the anchor, and body attitude. This is where each model
+  // gets its silhouette-in-motion.
+  function airborneY() {
+    if (LOCO === 'fly') return -78 - 26 * Math.sin(t * 1.5) - 7 * Math.sin(gait);
+    if (LOCO === 'float') return -58 - 15 * Math.sin(t * 0.62) - 5 * Math.sin(t * 1.4);
+    if (LOCO === 'hop') return -34 * Math.abs(Math.sin(gait));
+    return -4.2 * Math.abs(Math.sin(gait));
+  }
+  function bodyTilt() {
+    // The pop-tart has no joints, so its whole body IS the animation: it rocks
+    // corner to corner. Asymmetric (cubed sine) so it tips and catches rather
+    // than swinging like a metronome.
+    if (LOCO === 'stumble') return (10 * Math.sin(gait) ** 3 + 3 * Math.sin(gait * 2.3)) * Math.PI / 180;
+    if (LOCO === 'float') return 5 * Math.sin(t * 0.44) * Math.PI / 180;
+    if (LOCO === 'fly') return -7 * Math.sin(t * 1.5) * Math.PI / 180;
+    if (LOCO === 'hop') return 4 * Math.sin(gait) * Math.PI / 180;
+    return 1.5 * Math.sin(gait) * Math.PI / 180;
+  }
 
   const img = new Image();
   let ready = false;
@@ -90,15 +143,28 @@
       heading = turnFrom + (turnTo - turnFrom) * easeInOut(turnP);
     }
     const face = Math.cos(heading);
-    // Keep the legs cycling through the turn — walking in place reads as intent.
+    // Keep the cycle running through the turn — moving in place reads as intent.
     gait += dt * 2 * Math.PI * CADENCE;
-    x += -face * SPEED * dt;
+    x += -face * speedNow() * dt;
+    // A floater doesn't commit to a direction; it wanders on its own slow sine.
+    if (LOCO === 'float') drift = 26 * Math.sin(t * 0.17 + 1.2);
 
-    const R = W / 2 - 110;
+    // Clamp the wander to the content, not the canvas: a wide two-figure drawing
+    // otherwise slides its left figure off the edge.
+    const halfW = (RIG.image.w * scaleNow()) / 2;
+    const R = Math.max(40, W / 2 - halfW - 24);
     if (turnP >= 1 && ((x < -R && face > 0) || (x > R && face < 0))) startTurn();
   }
 
+  function scaleNow() { return Math.min(W / 860, 1) * 0.62; }
+
   function partAngle(p) {
+    // Wings: big, fast, asymmetric — the downstroke is the hard one. Driven off
+    // `gait`, so cadence and flap stay locked together.
+    if (p.flap) {
+      const u = Math.sin(gait + (p.flap.phase || 0));
+      return p.flap.amp * (u > 0 ? u : u * 0.55) - (p.flap.rest || 0);
+    }
     if (p.gait) return p.gait.swing * Math.sin(gait + p.gait.phase);
     if (p.spring) {
       const s = springs[p.id];
@@ -153,24 +219,35 @@
     const gy = drawScene();
 
     const face = Math.cos(heading);
-    const S = Math.min(W / 860, 1) * 0.62;
+    const S = scaleNow();
     const sx = Math.sign(face || 1) * Math.max(Math.abs(face), 0.05);
-    const bob = -4.2 * Math.abs(Math.sin(gait));
-    const squash = 1 + 0.030 * Math.sin(gait * 2);
-    const screenX = W / 2 + x;
-    const screenY = gy + 6 + bob;
+    const lift = airborneY();
+    // Squash reads as weight, so only things that touch the ground get it. A hop
+    // squashes hardest at landing; a flyer has nothing to push against.
+    const squash = AIRBORNE ? 1
+      : LOCO === 'hop' ? 1 - 0.09 * Math.max(0, -Math.sin(gait))
+      : 1 + 0.030 * Math.sin(gait * 2);
+    const screenX = W / 2 + x + drift;
+    const screenY = gy + 6 + lift;
 
-    // contact shadow: tightens as the cutout turns edge-on
+    // Contact shadow. It tightens as the cutout turns edge-on, and for anything
+    // airborne it stays on the ground and fades with altitude — which is what
+    // makes the height legible at all.
+    const alt = Math.max(0, -lift);
+    const fade = AIRBORNE ? Math.max(0.05, 0.18 - alt / 900) : 0.17;
+    const spread = AIRBORNE ? 1 + alt / 190 : 1;
     ctx.save();
-    ctx.fillStyle = 'rgba(40,60,50,.17)';
+    ctx.fillStyle = `rgba(40,60,50,${fade})`;
     ctx.beginPath();
-    ctx.ellipse(screenX, gy + 8, (86 * Math.abs(face) + 26) * S * 1.6, 9 * S * 1.6, 0, 0, 7);
+    ctx.ellipse(screenX, gy + 8, (86 * Math.abs(face) + 26) * S * 1.6 / spread,
+                9 * S * 1.6 / spread, 0, 0, 7);
     ctx.fill();
     ctx.restore();
 
     for (const p of byZ) {
       ctx.save();
       ctx.translate(screenX, screenY);
+      ctx.rotate(bodyTilt());
       ctx.scale(sx * S, S * squash);
       ctx.translate(-body.pivot[0], -RIG.ground_y);
 
