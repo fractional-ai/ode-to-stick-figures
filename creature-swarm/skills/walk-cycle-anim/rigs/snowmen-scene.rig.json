@@ -1,0 +1,41 @@
+{
+  "_comment": "STRESS-CASE rig for examples/drawings/snowmen-scene.jpg (1200x900). This is a NEGATIVE fixture: it documents a drawing the Animator should REFUSE, and it exists so the bail path can be tested. It is a good-faith attempt to rig the red/green snowman as a biped and it does NOT work, for two stacked reasons recorded here. (1) key() does not separate this image at all: the paper is a warm-lit photograph (blank paper sat~36-70, well over the colorness threshold of 20), so `colorness` fires on the PAPER and the raw mask keeps 93.5% of the page. closing+fill_holes then merges the whole sheet into ONE blob, so largest-blob isolation is a no-op and every polygon below clips cream paper plus whatever else it overlaps. (2) Even after per-channel white-balance against the paper illuminant (which drops the mask to 37.7% and yields 32 blobs), the largest blob is the BLUE WATER BAND (49.4% of ink, aspect 2.98, x[15:1188]) with both snowmen fused to it, because they touch the water. The snowman is never independently obtainable via largest-blob. (3) A snowman has no legs -- it is a stack of balls -- so there is no leg-like protrusion to gait and no walk cycle to author; only the arms/hat below can move. Do not ship this rig as a success. See the bail signals in the report.",
+  "source": "examples/drawings/snowmen-scene.jpg",
+  "image": { "w": 1200, "h": 900 },
+  "name": "Snow Man (red)",
+  "vibe": "cannot walk, has no legs, is standing in the sea",
+  "ground_y": 800,
+  "parts": [
+    {
+      "id": "armLeft",
+      "parent": "body",
+      "z": -10,
+      "pivot": [868, 700],
+      "poly": [[758, 668], [880, 662], [886, 730], [852, 758], [786, 754], [754, 716]],
+      "spring": { "amp": 13, "phase": 0.0, "lag": 0.5 }
+    },
+    {
+      "id": "body",
+      "parent": null,
+      "z": 0,
+      "pivot": [900, 730],
+      "poly": [[846, 640], [900, 630], [954, 642], [960, 700], [952, 760], [936, 802], [886, 806], [850, 776], [842, 706]]
+    },
+    {
+      "id": "armRight",
+      "parent": "body",
+      "z": 10,
+      "pivot": [944, 706],
+      "poly": [[930, 676], [1002, 682], [1048, 704], [1044, 748], [1002, 772], [940, 758], [928, 716]],
+      "spring": { "amp": 13, "phase": 3.14159, "lag": 0.5 }
+    },
+    {
+      "id": "hat",
+      "parent": "body",
+      "z": 14,
+      "pivot": [906, 650],
+      "poly": [[836, 618], [880, 606], [884, 508], [968, 510], [976, 612], [1052, 620], [1048, 656], [900, 664], [838, 654]],
+      "spring": { "amp": 6, "phase": 1.2, "lag": 0.3 }
+    }
+  ]
+}
