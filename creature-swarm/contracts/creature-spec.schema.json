@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fractional-ai/ode-to-stick-figures/creature-swarm/contracts/creature-spec.schema.json",
+  "title": "Creature Spec",
+  "description": "The canonical, frozen consistency contract for the creature-swarm pipeline. The Field Interpreter agent reads the doodle once and emits exactly one Creature Spec; every downstream specialist keys off it so they all describe the SAME creature. Text agents (Biologist/Habitat/Society) mine the descriptive half (name, distinctive_features, vibe, and loose reference to parts/palette); structural agents (3D Modeler/Animator) treat body_plan, parts, palette, and locomotion as literal build parameters. See docs/superpowers/specs/2026-07-17-creature-swarm-design.md, section 'Contract 1 — Creature Spec'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "body_plan",
+    "parts",
+    "palette",
+    "distinctive_features",
+    "locomotion",
+    "vibe"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Invented common name plus a mock-Latin binomial (e.g. 'Warbling Blorb (Blorbus canticus)'). Primary consumers: text agents (Biologist/Habitat/Society) and the coordinator's {{creature_name}} slot."
+    },
+    "body_plan": {
+      "type": "object",
+      "description": "The creature's overall structural bauplan. Primary consumers: structural agents (3D Modeler/Animator) as literal build parameters.",
+      "additionalProperties": false,
+      "required": ["core_shape", "symmetry", "size_est_m"],
+      "properties": {
+        "core_shape": {
+          "type": "string",
+          "enum": ["sphere", "ovoid", "slab", "cylinder", "cone", "blob", "torus"],
+          "description": "The dominant primitive the body reads as. The 3D Modeler starts from this primitive when composing the mesh in trimesh."
+        },
+        "symmetry": {
+          "type": "string",
+          "enum": ["bilateral", "radial"],
+          "description": "Body symmetry. Drives how the 3D Modeler mirrors/arranges parts and how the Animator distributes per-limb phase offsets."
+        },
+        "size_est_m": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Estimated longest-axis size in metres. Text agents use it for tone/scale; structural agents use it to scale the exported model."
+        }
+      }
+    },
+    "parts": {
+      "type": "array",
+      "description": "The creature's appendages and features as discrete, countable parts. Structural agents build one instance per count; text agents reference these loosely. May be empty for a featureless blob.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "count", "shape", "placement"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the part is (e.g. 'leg', 'eyestalk', 'wing', 'antenna'). Free text so the Interpreter can name whatever the doodle shows."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "How many of this part exist. The 3D Modeler instantiates exactly this many; the Animator phases exactly this many (relevant for locomotion)."
+          },
+          "shape": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Free-text description of the part's form (e.g. 'tapering tube', 'flat paddle'). 3D Modeler maps it onto a primitive; text agents quote it."
+          },
+          "placement": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Where the part sits on the body (e.g. 'ventral, evenly spaced', 'dorsal midline'). Drives 3D placement and Animator gait grouping."
+          }
+        }
+      }
+    },
+    "palette": {
+      "type": "array",
+      "description": "The creature's colours as hex strings, most dominant first. Text agents cite colours descriptively; the 3D Modeler tints mesh parts from this list. At least one colour is required.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+        "description": "A CSS hex colour, 3- or 6-digit, leading '#'."
+      }
+    },
+    "distinctive_features": {
+      "type": "array",
+      "description": "Short prose callouts of what makes this creature memorable (e.g. 'forked tail', 'bioluminescent spots'). Primary consumers: text agents, which build narrative around them. At least one is required so every guide has a hook.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "locomotion": {
+      "type": "string",
+      "enum": ["waddle", "hop", "slither", "walk", "crawl", "swim", "fly", "roll", "float", "stationary"],
+      "description": "How the creature moves. Text agents use it for behavioural flavour; the Animator uses it to pick the parametric walk-cycle model."
+    },
+    "vibe": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line personality read of the creature. Primary consumers: text agents for tone and the coordinator's {{tagline}} slot."
+    }
+  }
+}
