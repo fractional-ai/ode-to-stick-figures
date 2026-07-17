@@ -157,7 +157,7 @@ def rig_from_image(doodle: Path, model: str = MODEL) -> dict:
     client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     msg = client.messages.create(
         model=model,
-        max_tokens=4000,
+        max_tokens=16000,
         messages=[
             {
                 "role": "user",
