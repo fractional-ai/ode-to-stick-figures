@@ -1,0 +1,37 @@
+{
+  "name": "Puddle Gloomp (Gloompus lachrymosus)",
+  "body_plan": {
+    "core_shape": "blob",
+    "symmetry": "bilateral",
+    "size_est_m": 0.35
+  },
+  "parts": [
+    {
+      "type": "leg",
+      "count": 5,
+      "shape": "stubby wobbling nub",
+      "placement": "ventral, unevenly spaced because the artist lost count"
+    },
+    {
+      "type": "eyestalk",
+      "count": 3,
+      "shape": "droopy tube with a bead on the end",
+      "placement": "clustered on the upper-left of the body"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "single forked crayon squiggle",
+      "placement": "rear, dragging on the ground"
+    }
+  ],
+  "palette": ["#5b8c85", "#c7e5cf", "#f2b705", "#3a3042"],
+  "distinctive_features": [
+    "permanently damp sheen",
+    "three eyestalks that never all look the same way",
+    "a forked tail it trips over",
+    "faint blue bioluminescent freckles when startled"
+  ],
+  "locomotion": "waddle",
+  "vibe": "a deeply sincere puddle that apologises for existing"
+}
