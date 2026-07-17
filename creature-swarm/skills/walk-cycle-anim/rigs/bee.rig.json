@@ -1,0 +1,113 @@
+{
+  "_comment": "Hand-authored rig for examples/drawings/bee.webp (600x470). Image-space coords. Hard case: enormous body, six ~17px leg scribbles, and the drawing faces RIGHT (the renderer assumes heading 0 == facing left). Wings/head/antennae/legs all sit at negative z so their polygons can overlap INTO the body past each pivot without dragging body pixels on top of the body. The flowers/grass apron survives the alpha key (it is connected to the bee through the legs) but no polygon covers it, so it clips away.",
+  "source": "examples/drawings/bee.webp",
+  "image": { "w": 600, "h": 470 },
+  "name": "Beatrice",
+  "vibe": "far too much bee for these legs, undeterred",
+  "ground_y": 323,
+  "parts": [
+    {
+      "id": "antennaBack",
+      "parent": "head",
+      "z": -30,
+      "pivot": [444, 142],
+      "poly": [[430, 94], [450, 92], [456, 128], [458, 156], [438, 158], [434, 126]],
+      "spring": { "amp": 13, "phase": 0.0, "lag": 0.55 }
+    },
+    {
+      "id": "antennaFront",
+      "parent": "head",
+      "z": -28,
+      "pivot": [479, 134],
+      "poly": [[494, 90], [510, 100], [488, 126], [478, 150], [462, 144], [472, 118]],
+      "spring": { "amp": 15, "phase": 1.6, "lag": 0.45 }
+    },
+    {
+      "id": "wingFar",
+      "parent": "body",
+      "z": -24,
+      "pivot": [327, 140],
+      "poly": [[314, 58], [336, 60], [344, 96], [342, 128], [334, 160], [312, 158], [308, 118], [308, 80]],
+      "spring": { "amp": 11, "phase": 0.9, "lag": 0.3 }
+    },
+    {
+      "id": "wingNear",
+      "parent": "body",
+      "z": -22,
+      "pivot": [297, 140],
+      "poly": [[276, 66], [300, 54], [320, 62], [324, 108], [322, 140], [316, 164], [284, 162], [268, 122], [266, 88]],
+      "spring": { "amp": 14, "phase": 0.0, "lag": 0.35 }
+    },
+    {
+      "id": "head",
+      "parent": "body",
+      "z": -12,
+      "pivot": [440, 200],
+      "poly": [[424, 156], [446, 132], [478, 130], [500, 148], [510, 184], [506, 214], [486, 236], [456, 242], [428, 226], [414, 196], [412, 168]],
+      "spring": { "amp": 4, "phase": 2.2, "lag": 0.5 }
+    },
+    {
+      "id": "eyes",
+      "parent": "head",
+      "z": -10,
+      "pivot": [470, 152],
+      "poly": [[446, 136], [494, 134], [496, 168], [446, 170]],
+      "blink": { "period": 3.4 }
+    },
+    {
+      "id": "legRearFar",
+      "parent": "body",
+      "z": -8,
+      "pivot": [220, 296],
+      "poly": [[210, 280], [230, 280], [232, 328], [212, 328]],
+      "gait": { "phase": 0.0, "swing": 38, "lift": 7 }
+    },
+    {
+      "id": "legRearNear",
+      "parent": "body",
+      "z": -8,
+      "pivot": [232, 296],
+      "poly": [[222, 280], [244, 280], [246, 328], [224, 328]],
+      "gait": { "phase": 3.14159, "swing": 38, "lift": 7 }
+    },
+    {
+      "id": "legMidFar",
+      "parent": "body",
+      "z": -7,
+      "pivot": [268, 296],
+      "poly": [[258, 280], [278, 280], [280, 328], [260, 328]],
+      "gait": { "phase": 3.14159, "swing": 40, "lift": 8 }
+    },
+    {
+      "id": "legMidNear",
+      "parent": "body",
+      "z": -7,
+      "pivot": [292, 296],
+      "poly": [[282, 280], [304, 280], [306, 328], [284, 328]],
+      "gait": { "phase": 0.0, "swing": 40, "lift": 8 }
+    },
+    {
+      "id": "legFrontFar",
+      "parent": "body",
+      "z": -6,
+      "pivot": [371, 294],
+      "poly": [[361, 278], [380, 278], [382, 328], [363, 328]],
+      "gait": { "phase": 0.0, "swing": 42, "lift": 8 }
+    },
+    {
+      "id": "legFrontNear",
+      "parent": "body",
+      "z": -6,
+      "pivot": [384, 294],
+      "poly": [[374, 278], [395, 278], [397, 328], [376, 328]],
+      "gait": { "phase": 3.14159, "swing": 42, "lift": 8 }
+    },
+    {
+      "id": "body",
+      "parent": null,
+      "z": 0,
+      "pivot": [300, 215],
+      "poly": [[157, 228], [172, 190], [196, 158], [240, 138], [290, 131], [340, 133], [390, 148], [425, 178], [446, 214], [438, 256], [412, 286], [360, 304], [300, 311], [248, 310], [198, 297], [166, 262]]
+    }
+  ]
+}

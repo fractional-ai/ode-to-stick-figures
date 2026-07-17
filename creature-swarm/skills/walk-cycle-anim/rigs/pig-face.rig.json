@@ -1,0 +1,81 @@
+{
+  "_comment": "Hand-authored rig for examples/drawings/pig-face.webp (600x652). DEGRADATION CASE: the drawing is a head only — face, two ears, whiskers. There is no body and there are no legs, so this rig contains NO `gait` parts. Nothing here was invented: every part is a cutout of something the child actually drew. Locomotion is the renderer's global bob + squash only. Ears and whiskers use `spring` so the head reads as bobbing with lag/overshoot rather than sliding rigidly. Polygons overlap INTO the face past each pivot and sit at negative z so rotation never reveals a gap.",
+  "source": "examples/drawings/pig-face.webp",
+  "image": { "w": 600, "h": 652 },
+  "name": "Pig",
+  "vibe": "all head, no notes, delighted about it",
+  "ground_y": 578,
+  "parts": [
+    {
+      "id": "earLeft",
+      "parent": "face",
+      "z": -10,
+      "pivot": [185, 270],
+      "poly": [[210, 110], [248, 180], [256, 250], [258, 330], [200, 346], [150, 320], [116, 268], [108, 206], [142, 144], [176, 116]],
+      "spring": { "amp": 11, "phase": 0.0, "lag": 0.6 }
+    },
+    {
+      "id": "earRight",
+      "parent": "face",
+      "z": -10,
+      "pivot": [318, 254],
+      "poly": [[280, 84], [330, 100], [372, 140], [394, 180], [398, 214], [386, 262], [380, 340], [300, 346], [262, 300], [240, 240], [238, 140], [244, 92]],
+      "spring": { "amp": 9, "phase": 0.7, "lag": 0.5 }
+    },
+    {
+      "id": "whiskerLeft",
+      "parent": "face",
+      "z": -5,
+      "pivot": [200, 490],
+      "poly": [[404, 428], [412, 470], [96, 516], [82, 494]],
+      "spring": { "amp": 5, "phase": 1.4, "lag": 0.75 }
+    },
+    {
+      "id": "whiskerRight",
+      "parent": "face",
+      "z": -5,
+      "pivot": [452, 300],
+      "poly": [[374, 340], [388, 362], [498, 284], [484, 262]],
+      "spring": { "amp": 7, "phase": 2.2, "lag": 0.7 }
+    },
+    {
+      "id": "chinWhiskerA",
+      "parent": "face",
+      "z": -5,
+      "pivot": [362, 566],
+      "poly": [[340, 500], [364, 496], [392, 620], [368, 626]],
+      "spring": { "amp": 9, "phase": 0.3, "lag": 0.8 }
+    },
+    {
+      "id": "chinWhiskerB",
+      "parent": "face",
+      "z": -5,
+      "pivot": [414, 552],
+      "poly": [[400, 520], [420, 516], [440, 586], [424, 592]],
+      "spring": { "amp": 9, "phase": 3.4, "lag": 0.8 }
+    },
+    {
+      "id": "face",
+      "parent": null,
+      "z": 0,
+      "pivot": [320, 400],
+      "poly": [[200, 258], [250, 242], [310, 238], [372, 246], [400, 266], [440, 290], [478, 330], [500, 372], [524, 430], [522, 470], [496, 498], [450, 528], [400, 556], [348, 576], [300, 556], [250, 524], [196, 492], [150, 458], [128, 400], [130, 348], [150, 300], [170, 272]]
+    },
+    {
+      "id": "eyeLow",
+      "parent": "face",
+      "z": 8,
+      "pivot": [242, 370],
+      "poly": [[196, 330], [290, 326], [292, 414], [194, 412]],
+      "blink": { "period": 3.7 }
+    },
+    {
+      "id": "eyeHigh",
+      "parent": "face",
+      "z": 8,
+      "pivot": [341, 313],
+      "poly": [[300, 274], [382, 272], [384, 354], [298, 352]],
+      "blink": { "period": 3.7 }
+    }
+  ]
+}
