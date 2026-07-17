@@ -1,0 +1,7 @@
+# Deterministic checks: jsonschema powers the authoritative schema-valid check.
+# (If absent, that one check skips to PASS and the per-field checks still run.)
+jsonschema>=4.0
+
+# Only needed for the optional LLM-as-judge check (run with --llm).
+# (If absent or no ANTHROPIC_API_KEY, the judge skips to PASS.)
+anthropic>=0.40

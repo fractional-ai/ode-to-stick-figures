@@ -1,0 +1,54 @@
+{
+  "name": "Fanfoot Scribblewing (Avis viridimarker)",
+  "body_plan": {
+    "core_shape": "ovoid",
+    "symmetry": "bilateral",
+    "size_est_m": 0.3
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "round blob with two dot eyes",
+      "placement": "top of the body"
+    },
+    {
+      "type": "beak",
+      "count": 1,
+      "shape": "large boxy open bill",
+      "placement": "front of the head"
+    },
+    {
+      "type": "wing",
+      "count": 2,
+      "shape": "outstretched feathered scallops",
+      "placement": "left and right of the torso"
+    },
+    {
+      "type": "leg",
+      "count": 2,
+      "shape": "thin sticks ending in broad fans",
+      "placement": "underside of the body"
+    },
+    {
+      "type": "foot",
+      "count": 2,
+      "shape": "large webbed fan-shaped paddles",
+      "placement": "at the ends of the legs"
+    }
+  ],
+  "palette": [
+    "#2f7d75",
+    "#3a9b8f",
+    "#e8f2f0",
+    "#1e5f58"
+  ],
+  "distinctive_features": [
+    "comically oversized beak",
+    "wings spread wide mid-flap",
+    "enormous fan-shaped webbed feet",
+    "drawn entirely in a single teal marker line"
+  ],
+  "locomotion": "fly",
+  "vibe": "an over-eager fledgling convinced it is a majestic eagle"
+}

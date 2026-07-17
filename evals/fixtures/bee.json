@@ -1,0 +1,49 @@
+{
+  "name": "Beaming Buzzlump (Bombus hilaris)",
+  "body_plan": {
+    "core_shape": "ovoid",
+    "symmetry": "bilateral",
+    "size_est_m": 0.6
+  },
+  "parts": [
+    {
+      "type": "wing",
+      "count": 2,
+      "shape": "rounded blue petal-like flaps",
+      "placement": "atop the back of the body"
+    },
+    {
+      "type": "antenna",
+      "count": 2,
+      "shape": "thin curved feelers",
+      "placement": "on the smiling head"
+    },
+    {
+      "type": "leg",
+      "count": 6,
+      "shape": "spindly bristled sticks",
+      "placement": "underside of the abdomen"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "happy curved crescents",
+      "placement": "front of the face"
+    }
+  ],
+  "palette": [
+    "#f2c40d",
+    "#1a1a1a",
+    "#3a8ddb",
+    "#ffffff",
+    "#7bbf3a"
+  ],
+  "distinctive_features": [
+    "bold black-and-yellow abdominal stripes",
+    "oversized grinning face",
+    "blue rounded wings",
+    "cheerful sunlit demeanor"
+  ],
+  "locomotion": "fly",
+  "vibe": "an eternally delighted pollinator who thinks every flower is its best friend"
+}

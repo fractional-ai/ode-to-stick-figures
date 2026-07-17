@@ -1,0 +1,62 @@
+{
+  "name": "Bluefin Barkjaw (Carcharocanis caeruleus)",
+  "body_plan": {
+    "core_shape": "slab",
+    "symmetry": "bilateral",
+    "size_est_m": 1.8
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "shark head with gaping jagged jaws",
+      "placement": "front of the body"
+    },
+    {
+      "type": "tooth",
+      "count": 12,
+      "shape": "sharp white triangular fangs",
+      "placement": "lining the open mouth"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "small round side-set circle",
+      "placement": "top of the head"
+    },
+    {
+      "type": "dorsal fin",
+      "count": 1,
+      "shape": "tall triangular blade",
+      "placement": "middle of the back"
+    },
+    {
+      "type": "tail fin",
+      "count": 1,
+      "shape": "swept shark caudal fin",
+      "placement": "rear of the body"
+    },
+    {
+      "type": "leg",
+      "count": 4,
+      "shape": "stubby dog legs ending in clawed paws",
+      "placement": "underside of the torso"
+    }
+  ],
+  "palette": [
+    "#4bb6e0",
+    "#2a7fb0",
+    "#ffffff",
+    "#1a1a1a",
+    "#6b3a2a"
+  ],
+  "distinctive_features": [
+    "shark head with menacing jagged teeth",
+    "triangular dorsal fin",
+    "swept shark tail fin",
+    "four dog-like legs with paws",
+    "scribbled blue crayon body"
+  ],
+  "locomotion": "walk",
+  "vibe": "a fearsome land-shark puppy that wants to bite you and also be petted"
+}
