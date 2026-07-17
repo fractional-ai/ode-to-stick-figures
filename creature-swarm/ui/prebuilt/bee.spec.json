@@ -1,0 +1,98 @@
+{
+  "name": {
+    "common_name": "Big Blue-Wing Bumbler",
+    "mock_latin_binomial": "Apis magnabdomen"
+  },
+  "body_plan": {
+    "core_shape": "large rounded oval abdomen fused to a smaller round head, classic bee segmentation",
+    "symmetry": "bilateral",
+    "size_est_m": 0.3
+  },
+  "parts": [
+    {
+      "type": "abdomen",
+      "count": 1,
+      "shape": "large oval striped body",
+      "placement": "main central/left mass of body"
+    },
+    {
+      "type": "stripes",
+      "count": 3,
+      "shape": "thick vertical black bands",
+      "placement": "wrapped around the yellow abdomen"
+    },
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "smaller yellow oval",
+      "placement": "attached to right side of abdomen, connected by thin neck"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "small black dot and curved smile line",
+      "placement": "front of head"
+    },
+    {
+      "type": "antennae",
+      "count": 2,
+      "shape": "thin curved black lines",
+      "placement": "top of head, curling upward"
+    },
+    {
+      "type": "wing",
+      "count": 1,
+      "shape": "tall rounded oval",
+      "placement": "top of abdomen, single large blue wing"
+    },
+    {
+      "type": "legs",
+      "count": 6,
+      "shape": "thin black lines ending in small red dots",
+      "placement": "hanging down from underside of abdomen"
+    },
+    {
+      "type": "sun",
+      "count": 1,
+      "shape": "orange circle with radiating jagged lines and a smiling face",
+      "placement": "upper right corner of scene"
+    },
+    {
+      "type": "cloud",
+      "count": 1,
+      "shape": "white scalloped blob",
+      "placement": "next to sun, upper right"
+    },
+    {
+      "type": "flowers",
+      "count": 6,
+      "shape": "small purple round-petaled blooms with green stems",
+      "placement": "on ground beneath creature"
+    },
+    {
+      "type": "ground",
+      "count": 1,
+      "shape": "yellow scribbled horizontal strip with green grass blades",
+      "placement": "bottom of scene beneath creature and flowers"
+    }
+  ],
+  "palette": {
+    "black": "#1a1a1a",
+    "yellow": "#f2b632",
+    "blue_wing": "#3a6fb5",
+    "orange_sun": "#e8871e",
+    "purple_flower": "#7a4ea3",
+    "green_grass": "#4c8c3c",
+    "red_leg_tip": "#c0392b",
+    "white_cloud": "#f5f5f0"
+  },
+  "distinctive_features": [
+    "single oversized blue wing perched atop the striped body instead of a symmetrical pair",
+    "small round head fused directly to a much larger striped abdomen via a thin neck",
+    "six thin legs each tipped with a tiny red dot dangling below the body",
+    "smiling anthropomorphic sun watching from the corner",
+    "row of purple flowers and green grass growing beneath the creature"
+  ],
+  "locomotion": "buzzing flight powered by the single large wing, with dangling legs used for landing on flowers",
+  "vibe": "a cheerful lopsided bumblebee buzzing over its own little sunny flower patch"
+}

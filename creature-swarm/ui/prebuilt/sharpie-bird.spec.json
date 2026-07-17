@@ -1,0 +1,69 @@
+{
+  "name": {
+    "common_name": "Long-Beaked Wing-Arm Bird",
+    "mock_latin_binomial": "Rostrolonga alabrachium"
+  },
+  "body_plan": {
+    "core_shape": "large rounded head fused directly into a tapering conical body, no visible neck",
+    "symmetry": "bilateral",
+    "size_est_m": 0.5
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "large rounded dome narrowing into a long flat scoop-like beak/jaw",
+      "placement": "top-left, tilted forward"
+    },
+    {
+      "type": "beak/jaw",
+      "count": 1,
+      "shape": "long flat elongated open beak with a small pointed chin flap underneath",
+      "placement": "front of head, jutting left"
+    },
+    {
+      "type": "eyes",
+      "count": 2,
+      "shape": "small solid black almond dots",
+      "placement": "upper head, close together"
+    },
+    {
+      "type": "body",
+      "count": 1,
+      "shape": "wide conical trunk, tapering from shoulders to a jagged zigzag hem at bottom",
+      "placement": "below head, no neck separation"
+    },
+    {
+      "type": "wing/arm",
+      "count": 1,
+      "shape": "single angular jagged-edged wing-like limb with zigzag feather-like notches",
+      "placement": "right side of body, extended outward like an arm"
+    },
+    {
+      "type": "arm-stick",
+      "count": 1,
+      "shape": "thin straight line with a small perpendicular cross-tick near the end",
+      "placement": "left side, extending horizontally from body like a held stick or second thin arm"
+    },
+    {
+      "type": "legs",
+      "count": 2,
+      "shape": "thin straight lines of uneven length",
+      "placement": "bottom of body, splayed apart"
+    }
+  ],
+  "palette": [
+    "#d3d3d3",
+    "#1a1a1a",
+    "#ffffff"
+  ],
+  "distinctive_features": [
+    "long flat open beak with a small pointed chin flap, no visible neck joining head to body",
+    "single jagged zigzag-edged wing on only one side, functioning like an arm",
+    "thin stick-like second arm with a small cross-tick mark near its end",
+    "jagged zigzag hem at the bottom of the body",
+    "two uneven thin stick legs"
+  ],
+  "locomotion": "waddles on two thin uneven legs, using the single jagged wing-arm for awkward flapping or balance",
+  "vibe": "a lopsided, one-winged bird-creature that looks like it's mid-shrug, part gull, part stick figure"
+}

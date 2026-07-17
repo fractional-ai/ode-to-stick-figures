@@ -1,0 +1,49 @@
+{
+  "name": {
+    "common": "Three-Blob Bristle Bug",
+    "binomial": "Trilobula spinifera"
+  },
+  "body_plan": {
+    "core_shape": "three large round/oval blob lobes clustered together with a narrow elongated head-tube extending to the right",
+    "symmetry": "asymmetrical (three uneven round lobes fused in a cluster with a single lateral appendage)",
+    "size_est_m": 0.4
+  },
+  "parts": [
+    {
+      "type": "body lobe",
+      "count": 3,
+      "shape": "large rounded/oval blob, uneven sizes",
+      "placement": "clustered together forming the main mass \u2014 one upper-left, one lower-left, one lower-center, all touching/overlapping"
+    },
+    {
+      "type": "head/neck tube",
+      "count": 1,
+      "shape": "narrow elongated oval, tapering",
+      "placement": "extends rightward from the blob cluster, connecting body to bristle end"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "small dark filled oval",
+      "placement": "on the head tube near the junction with the body blobs"
+    },
+    {
+      "type": "bristles/antennae",
+      "count": 7,
+      "shape": "long thin straight lines radiating outward",
+      "placement": "at the far right tip of the head tube, splaying up, down, and forward like whiskers or spines"
+    }
+  ],
+  "palette": {
+    "body_fill": "#c9c9c1",
+    "outline": "#274a5e"
+  },
+  "distinctive_features": [
+    "body made of three fused round blobs of uneven size",
+    "single small dark eye placed on the narrow neck between body and head",
+    "long tapering snout/tube ending in a burst of 7 thin bristle-like spines",
+    "no visible legs anywhere on the body"
+  ],
+  "locomotion": "no legs drawn; presumed to shuffle/roll on its rounded fused underside, or drag itself using the bristled snout tip as a probing anchor",
+  "vibe": "a squishy triple-blobbed grub-thing sniffing the air with a spiky whisker-nose"
+}

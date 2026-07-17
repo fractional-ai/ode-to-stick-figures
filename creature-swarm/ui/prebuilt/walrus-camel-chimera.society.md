@@ -1,0 +1,9 @@
+## Folk Traditions of the Steppe-Dwelling Peoples: The Cornudens
+
+Among the pastoral clans of the high steppe basins, the Antlered Tusk-Cat is known by a name that translates roughly as "the Grandfather Who Carries Winter"—a reference to the twin humps that swell with stored fat before the cold season and recede, visibly, by spring. This seasonal transformation has made the creature a living calendar for herding communities, who time migrations and lambing cycles to the fullness of its silhouette when spotted at grazing distance.
+
+The animal's improbable anatomy generated a foundational myth: that the Cornudens was assembled last by the creator-spirits from parts rejected by other beasts—the tiger's stripes deemed too proud, the walrus's tusks too heavy, the deer's antlers too vain—and given calm, low-slung dignity so it would never compete with its donor species. This origin explains why local taboo forbids hunting the creature for sport; it is considered already humbled, and to further humiliate it invites drought.
+
+Practically, the shed antlers (dropped annually, unlike the permanent tusks) are harvested and ground into a fine tan powder used in joint remedies for elderly herders and aging draft animals alike, a use directly tied to the antler's mineral density and the creature's own noted longevity. The tusks, never harvested from living animals, are traded only when found naturally fallen or from carcasses, and are carved into betrothal tokens—their curve said to mirror the embrace of committed partnership.
+
+Symbolically, the single visible drooping ear (the other tucked low and unseen) represents "the ear that listens to earth, not sky"—an emblem of groundedness prized in clan elders, who are sometimes called Tusk-Cat Eared as the highest form of respect for patient, unhurried wisdom.

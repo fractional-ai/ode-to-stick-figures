@@ -1,0 +1,9 @@
+# Folklore & Society: The Marsh-Weavers of Kettlebrook Fen
+
+Among the fen-dwelling communities that share territory with *Draconodon spirocauda*, the creature is known as the **Two-Legged Weaver**, a name derived not from its locomotion but from the local belief that it was assembled — deliberately, imperfectly — by a minor river deity who ran out of matching parts and refused to start over. This origin myth is not treated as embarrassing; it is treated as instructive. The Weaver is held up as the patron figure of **improvisation**, and fen artisans who cobble together tools from mismatched scrap are said to be "building like the Weaver built."
+
+The dual tails carry the heaviest symbolic weight. The spiraled gray tail, coiled like stored rope, represents *patience and containment* — the wisdom of holding one's strength in reserve. The teal scorpion-tail, tufted in dark red, represents *sudden reckoning* — the strike that comes when patience runs out. Village elders invoke both tails when mediating disputes: "carry the gray tail until you must show the teal one."
+
+Practically, the creature is prized as a **living weather-flag**. Fisherfolk watch the red sail-fin; when the animal raises it fully upright and orients broadside to open water, a storm is said to follow within the day, and boats are recalled. The mismatched legs — one clawed, one webbed — are cited as proof the Weaver moves comfortably between shore and shallows, making it a natural totem for amphibious trades: eel-trappers, reed-cutters, and lock-keepers all claim it as guild emblem.
+
+The blue-dotted belly scales are sometimes pressed into wax seals, believed to ward off contracts made in bad faith — for a creature stitched from spare parts, it is said, values things fitting together honestly.

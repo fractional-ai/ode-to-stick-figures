@@ -1,0 +1,72 @@
+{
+  "name": {
+    "common": "Longnose Tusklegged Mophead",
+    "binomial": "Proboscipes crinicapita"
+  },
+  "body_plan": {
+    "core_shape": "single elongated tapering head-body mass, wider at top, narrowing to point at bottom, no separate torso",
+    "symmetry": "bilateral",
+    "size_est_m": 0.6
+  },
+  "parts": [
+    {
+      "type": "head/body fusion mass",
+      "count": 1,
+      "shape": "tall teardrop, pale tan on left half, tapering to dark pointed tip at bottom",
+      "placement": "central, dominant vertical form"
+    },
+    {
+      "type": "hair/mane",
+      "count": 1,
+      "shape": "shaggy dark bristly fringe sweeping down right side and over top of head",
+      "placement": "covers top and right side of head-mass"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "small dark oval dot, one set above the other diagonally",
+      "placement": "upper-left face area"
+    },
+    {
+      "type": "nostril/dark marking",
+      "count": 1,
+      "shape": "elongated dark teardrop smudge",
+      "placement": "mid-face, below eyes"
+    },
+    {
+      "type": "trunk-legs (tusk-like tendrils)",
+      "count": 2,
+      "shape": "long, thin, curling tapered tubes ending in points, ridged texture",
+      "placement": "extending down and forward from lower face/chin, reaching to ground"
+    },
+    {
+      "type": "tail/drip tip",
+      "count": 1,
+      "shape": "small dark pointed nub",
+      "placement": "very bottom tip of the tapering body"
+    },
+    {
+      "type": "ground mound",
+      "count": 1,
+      "shape": "flattened irregular dark green blob",
+      "placement": "beneath creature, serving as base/grass patch"
+    }
+  ],
+  "palette": {
+    "body_tan": "#c9ab8f",
+    "body_dark_rust": "#7a3b2e",
+    "mane_dark_brown": "#3a2a24",
+    "eye_black": "#221b16",
+    "ground_green": "#3f5a42",
+    "background_cream": "#f2ede1"
+  },
+  "distinctive_features": [
+    "no arms or legs \u2014 body tapers directly into two long curling trunk-like tendrils used to touch the ground",
+    "asymmetric shaggy dark mane covering only the top and right side of the head",
+    "sharp dark pointed tip at bottom of body opposite the mane",
+    "single dark teardrop mark on face like a tear or nostril",
+    "body sits directly on a green ground mound with no visible feet"
+  ],
+  "locomotion": "drags and balances on its two long tendril-like trunks, inching forward by curling and uncurling them like elephantine feelers",
+  "vibe": "a hairy, tusk-legged teardrop creature that looks like it's melting sideways into its own shadow"
+}

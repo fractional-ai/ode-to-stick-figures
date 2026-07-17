@@ -1,0 +1,9 @@
+# Habitat & Ecology
+
+*Equicaput numerocorpus* occupies temperate scrubland and dry pasture margins, favoring the ecotone between mown grass and untended hedgerow where its pale grey coloration disappears against sun-bleached stone and dust. Its range extends across low, rolling grazing country, rarely straying onto soft substrates that would impede its distinctive gait. Individuals are strictly ground-dwelling and do not burrow, sheltering instead beneath fence lines and low shrubs during peak daylight.
+
+Locomotion is achieved via eight short, evenly spaced legs operating in overlapping waves reminiscent of myriapod gaits, permitting the animal to skitter rapidly across uneven ground despite its bulky, hexagonal torso. The long, coiling tail trails passively behind during movement, only occasionally lifting to aid balance on inclines.
+
+Within the local food web, *E. numerocorpus* functions as a low-tier grazer-forager, its elongated equine snout well-suited to cropping short grasses and stripping seed heads, while the three curved mouth-lines mark flexible lip structures used for fine plant manipulation. It is preyed upon by mid-sized cursorial predators, against which its primary defense is simply outrunning pursuit with its many-legged sprint.
+
+The scalloped fringe running along the dorsal edge of the body serves a specific ecological function beyond ornamentation: it hosts a community of small epizoic arthropods that shelter within each bump's shallow cavity. In return for this protected microhabitat, these arthropods groom away ectoparasites accumulating along the body's dorsal ridge, a mutualism analogous to oxpecker relationships seen in larger ungulates. This arrangement is thought to explain the fringe's persistence despite conferring no direct locomotor or defensive advantage of its own.

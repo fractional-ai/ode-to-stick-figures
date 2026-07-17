@@ -1,0 +1,9 @@
+## Folklore & Society: The Threefold Reckoning
+
+Among the marsh-villages that border the Trilobula's native wetlands, the creature is known by a name that translates roughly to **"Three-Who-Wait-As-One."** Its fused, uneven lobes—never symmetrical, never matched in size—gave rise to a foundational cosmology in which the bug is read as a living allegory of family, debt, and inheritance: three unequal parts bound permanently together, unable to separate without destroying the whole. Village elders point to the largest lobe as "the burden-carrier," the smallest as "the newcomer," and the middle as "the mediator," and disputes over inheritance are traditionally settled by consulting the proportions of a captured specimen.
+
+Practically, the creature's bristle-tipped snout has made it indispensable to local water-diviners. Because the seven spines flare outward only when the animal senses subterranean moisture through its tube-mounted eye, dried and mounted snout-clusters are affixed to divining poles and carried across dry season fields. A twitch in the bristles—even on a preserved specimen, locals insist—marks a spot worth digging.
+
+Symbolically, the single eye positioned at the neck junction (rather than on the head proper) has made the Trilobula an emblem of *watchfulness without judgment*: a being that observes the threshold between body and world without ever choosing a side. Amulets carved in its blob-cluster shape are given to newborns not for protection from harm, but as a wish that the child grow into someone who watches carefully before acting.
+
+No myth ascribes the creature legs or speed—its slow, dragging shuffle is instead honored as patience made flesh, a trait invoked in proverbs warning against haste: *"Even the Three-Who-Wait arrives."*

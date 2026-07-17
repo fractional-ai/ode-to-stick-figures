@@ -1,0 +1,9 @@
+## Folk Traditions of the Marrow Coast: The Shrugging Herald
+
+Among the tide-villages of the Marrow Coast, the *Rostrolonga alabrachium* is known by its vernacular name, the **Half-Wing Herald**, and occupies a peculiar niche in local cosmology: it is neither fully revered nor feared, but *consulted*. Its asymmetry — one jagged, feather-notched wing-arm opposing a bare stick-thin limb tipped with a curious perpendicular mark — is read by coastal seers as a permanent gesture of divination, as though the bird were forever caught mid-answer to a question no one asked aloud.
+
+The cross-tick on its thin limb is central to Herald lore. Fisherfolk call it the "tally-mark," and hold that the bird was born already counting something — the dead, the tides, the debts of the living — and that its lopsided stance is not injury but *posture*, the frozen shrug of a creature that has seen the sum and will not tell you what it is.
+
+Practically, the Herald's long, flat scoop-beak made it valuable in salt-harvesting communities, where tame (or merely tolerated) individuals were observed sifting brine-pools with mechanical patience, inspiring the design of the double-bladed marsh-scoop still used in tidal flats today.
+
+Symbolically, the creature represents *unfinished balance* — a being that walks unevenly, flies imperfectly, yet persists. Coastal proverb holds: "Walk like the Herald: one side broken, both feet moving." It is invoked not for luck, but for endurance — a patron of those who must continue functioning despite visible, permanent asymmetry. Its zigzag hem is stitched into mourning shawls as a mark of resilience rather than mourning.

@@ -1,0 +1,9 @@
+## Folklore & Society: The Tallykeepers of Threefold Pasture
+
+Among the pastoral communities that historically ranged in the temperate lowlands, the *Equicaput numerocorpus* was never regarded as mere fauna—it was regarded as a **ledger with legs**. Villagers dubbed it the **Tallyhorse**, or in older dialects, the *Reckoning Nag*, owing to the thick black numeral branded upon its hexagonal torso. Folk etymology insists the numeral is not painted but *grown*, a birthmark dictating the creature's singular purpose: counting.
+
+The foundational myth holds that Tallyhorses hatched in triplets from a single clutch, each sibling marked with a different digit, and that a household blessed with a "1," "2," and "3" would never suffer an inaccurate harvest count again. Farmers who kept a Tallyhorse near the granary swore the creature's eight short legs skittered in rhythm with each sack of grain tallied, its cursive, looping tail—resembling a chain of handwritten *e*'s—said to be the animal literally "signing" the day's total into the dirt.
+
+Practically, the Tallyhorse served as a **living abacus and pest deterrent**: its scalloped fringe was believed to vibrate at the approach of granary weevils, and its horse-like head, with its solemn triple mouth-lines, was interpreted as a permanently disapproving expression aimed at thieves.
+
+Symbolically, the creature embodied **honest accounting and quiet vigilance**—a numeral made flesh, standing watch over harvest and hearth alike. Its scalloped-edge body was later stylized into garden ornaments meant to invoke prosperity, and to this day, rural charm-carvers reproduce its curled tail as a sigil for balanced books and undiminished stores.

@@ -1,0 +1,57 @@
+{
+  "name": {
+    "common_name": "Lopsided Bunny-Faced Whiskerbeast",
+    "mock_latin_binomial": "Facialis asymmetricus vibrissimus"
+  },
+  "body_plan": {
+    "core_shape": "single large rounded head-blob, no visible body or torso",
+    "symmetry": "bilateral but drawn asymmetrically (mismatched eyes and ears)",
+    "size_est_m": 0.3
+  },
+  "parts": [
+    {
+      "type": "ear",
+      "count": 2,
+      "shape": "large rounded floppy oval, one taller/narrower and one shorter/wider, each with a smaller pink oval/rectangle inside",
+      "placement": "top of head, asymmetrically sized and angled, separated by a gap"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "one large round circle with small pink pupil dot (left eye), one squarish rounded shape with a smaller circle pupil (right eye) \u2014 mismatched shapes",
+      "placement": "front of face, uneven height and size"
+    },
+    {
+      "type": "mouth",
+      "count": 1,
+      "shape": "long wavy curved line, smile-like squiggle",
+      "placement": "lower half of face, off-center curving down-right"
+    },
+    {
+      "type": "whisker",
+      "count": 3,
+      "shape": "thin straight or slightly curved lines",
+      "placement": "one on upper right side near ear, two below chin/jaw pointing downward"
+    },
+    {
+      "type": "cheek line",
+      "count": 1,
+      "shape": "single thin diagonal stray line",
+      "placement": "left side of face near jaw, extending outward like a stray whisker or mark"
+    }
+  ],
+  "palette": {
+    "outline": "#7a3b2e",
+    "fill_face": "#f5f0d8",
+    "eye_ear_mouth_marks": "#e8879a"
+  },
+  "distinctive_features": [
+    "no body, arms, or legs drawn \u2014 creature exists as a floating head only",
+    "ears are mismatched in size and shape, one noticeably taller than the other",
+    "eyes are different shapes (one round, one squarish) giving a lopsided expression",
+    "wavy smiling mouth gives a content, goofy look",
+    "stray whisker-like lines emerge from jaw, cheek, and near the ear at odd angles"
+  ],
+  "locomotion": "presumed stationary or floating head-form; no limbs drawn, so movement (if any) is by rolling or bouncing on its rounded head-body",
+  "vibe": "a happy, lopsided floating bunny-head with mismatched ears and eyes and stray whiskers sticking out every which way"
+}

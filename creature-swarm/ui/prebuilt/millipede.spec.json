@@ -1,0 +1,57 @@
+{
+  "name": {
+    "common": "Fringed Bristleback Eel",
+    "binomial": "Serratapelta longissima"
+  },
+  "body_plan": {
+    "core_shape": "extremely long flat ribbon-like body, tapering slightly with a rounded knob at one end",
+    "symmetry": "bilateral",
+    "size_est_m": 1.8
+  },
+  "parts": [
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "small dark spiral/circle",
+      "placement": "on the rounded knob at right end of body"
+    },
+    {
+      "type": "body-spots",
+      "count": 9,
+      "shape": "irregular rounded loop outlines, varying sizes",
+      "placement": "scattered along the top surface of the ribbon body"
+    },
+    {
+      "type": "fringe/bristles",
+      "count": 1,
+      "shape": "dense row of short thin spikes",
+      "placement": "running along entire bottom edge of body"
+    },
+    {
+      "type": "head-knob",
+      "count": 1,
+      "shape": "rounded bulb",
+      "placement": "far right end of body, where eye sits"
+    },
+    {
+      "type": "tail-tip",
+      "count": 1,
+      "shape": "thin tapering point with small hooked flick",
+      "placement": "far left end of body"
+    }
+  ],
+  "palette": {
+    "body_fill": "#a9adb0",
+    "outline": "#000000",
+    "background": "#ffffff"
+  },
+  "distinctive_features": [
+    "single long flat gray ribbon body with no visible legs",
+    "one small spiral eye only at the bulbous right-end head",
+    "row of thin bristle-like spikes fringing the entire bottom edge",
+    "scattered open-loop spots decorating the top surface",
+    "tapering pointed tail at the left end"
+  ],
+  "locomotion": "undulates its long ribbon body side to side, using the bottom bristle-fringe like tiny legs/cilia to grip and ripple along surfaces",
+  "vibe": "a impossibly long speckled eel-ribbon that fringe-walks on a thousand tiny bottom bristles"
+}

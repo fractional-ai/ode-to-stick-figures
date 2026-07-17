@@ -1,0 +1,92 @@
+{
+  "name": {
+    "common_name": "Antlered Tusk-Cat",
+    "mock_latin_binomial": "Cornudens tigristauriforme"
+  },
+  "body_plan": {
+    "core_shape": "elongated feline quadruped body with a double-humped back",
+    "symmetry": "bilateral",
+    "size_est_m": 1.8
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "walrus-like with elongated muzzle and jowls",
+      "placement": "front of body, low-slung"
+    },
+    {
+      "type": "antlers",
+      "count": 1,
+      "shape": "branching deer-like antlers with multiple points",
+      "placement": "top of head"
+    },
+    {
+      "type": "tusks",
+      "count": 2,
+      "shape": "long curved ivory tusks",
+      "placement": "protruding downward from upper jaw"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "small round dark eye",
+      "placement": "side of head, visible in profile"
+    },
+    {
+      "type": "ear",
+      "count": 1,
+      "shape": "large drooping pink-lined floppy ear",
+      "placement": "side of head, behind eye"
+    },
+    {
+      "type": "whiskers",
+      "count": 1,
+      "shape": "tuft of thin bristly hairs",
+      "placement": "around muzzle/chin"
+    },
+    {
+      "type": "body humps",
+      "count": 2,
+      "shape": "furry raised humps like a camel",
+      "placement": "along upper back"
+    },
+    {
+      "type": "torso",
+      "count": 1,
+      "shape": "long striped feline body",
+      "placement": "central body"
+    },
+    {
+      "type": "legs",
+      "count": 4,
+      "shape": "thick tiger-striped legs with pale paws",
+      "placement": "underside of body, two front two back"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "long bushy tail with white tuft at tip",
+      "placement": "rear of body, curling upward"
+    }
+  ],
+  "palette": {
+    "body_orange": "#c97b5a",
+    "stripe_black": "#2a2a2a",
+    "cream_underbelly": "#e8dcc0",
+    "antler_tan": "#c2a15a",
+    "tusk_white": "#f0ece0",
+    "inner_ear_pink": "#e8a0b0",
+    "eye_dark": "#3a2a1a",
+    "background_grey_shadow": "#a8a8a8"
+  },
+  "distinctive_features": [
+    "walrus-style tusks jutting from a deer-antlered head",
+    "one large floppy pink-lined ear visible in profile",
+    "two furry camel-like humps along the spine",
+    "tiger-striped body and legs",
+    "long tail with fluffy white-tipped tuft"
+  ],
+  "locomotion": "quadrupedal walking gait, slow and heavy-footed like a big cat",
+  "vibe": "a tusked, antlered tiger-camel hybrid ambling along with regal, ancient calm"
+}

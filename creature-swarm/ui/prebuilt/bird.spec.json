@@ -1,0 +1,69 @@
+{
+  "name": {
+    "common_name": "Fanfoot Wingbird",
+    "mock_latin_binomial": "Alarpes palmatapes"
+  },
+  "body_plan": {
+    "core_shape": "round head fused directly to an oval torso, no visible neck",
+    "symmetry": "bilateral",
+    "size_est_m": 0.4
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "round bulb",
+      "placement": "top of body, tilted left"
+    },
+    {
+      "type": "beak",
+      "count": 1,
+      "shape": "long flat triangular wedge with a jagged sawtooth edge on the underside",
+      "placement": "front of head, pointing left"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "tiny black dots",
+      "placement": "upper face, close together near top of head"
+    },
+    {
+      "type": "crest marks",
+      "count": 3,
+      "shape": "small dark squiggle lines",
+      "placement": "top of head above eyes"
+    },
+    {
+      "type": "wing",
+      "count": 2,
+      "shape": "long flat tapering blade with a jagged sawtooth trailing edge",
+      "placement": "one extending left from lower body, one extending right from upper body, staggered at different heights"
+    },
+    {
+      "type": "leg",
+      "count": 2,
+      "shape": "thick straight teal stalk",
+      "placement": "hanging down from bottom of body, close together"
+    },
+    {
+      "type": "foot",
+      "count": 2,
+      "shape": "wide fanned webbed shape with radiating pleats, like an open shell or fan",
+      "placement": "at the end of each leg"
+    }
+  ],
+  "palette": {
+    "outline": "#3d8b83",
+    "body_fill": "#eef2f0",
+    "eye_dots": "#1a1a1a"
+  },
+  "distinctive_features": [
+    "flat wedge beak with jagged sawtooth underside",
+    "two long asymmetric jagged-edged wings set at different heights on the body",
+    "fan-shaped pleated webbed feet resembling open shells",
+    "head fused directly onto body with no neck",
+    "small squiggle crest marks atop the head"
+  ],
+  "locomotion": "waddles on thick teal legs using fan-webbed feet for paddling or gliding, staggered wings suggest lopsided gliding-hops",
+  "vibe": "a lopsided fan-footed bird-thing that looks like it's mid-waddle with mismatched jagged wings"
+}

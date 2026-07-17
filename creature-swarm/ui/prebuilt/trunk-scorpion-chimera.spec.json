@@ -1,0 +1,118 @@
+{
+  "name": {
+    "common_name": "Spiny Curl-Tail Sail-Back",
+    "mock_latin_binomial": "Draconodon spirocauda"
+  },
+  "body_plan": {
+    "core_shape": "elongated reptilian body with crocodile-like snout, curled tail, and tall dorsal sail",
+    "symmetry": "bilateral",
+    "size_est_m": 0.9
+  },
+  "parts": [
+    {
+      "type": "head",
+      "count": 1,
+      "shape": "long crocodile-like snout with jagged teeth",
+      "placement": "front of body, low to ground"
+    },
+    {
+      "type": "eye",
+      "count": 1,
+      "shape": "round white eye with black pupil",
+      "placement": "top of head"
+    },
+    {
+      "type": "horn",
+      "count": 1,
+      "shape": "thin curved red spike",
+      "placement": "top of head, behind eye"
+    },
+    {
+      "type": "antenna/whisker",
+      "count": 1,
+      "shape": "thin curved white line",
+      "placement": "above snout, near eye"
+    },
+    {
+      "type": "sail",
+      "count": 1,
+      "shape": "tall triangular red fin",
+      "placement": "mid-back, upright"
+    },
+    {
+      "type": "spine",
+      "count": 1,
+      "shape": "row of small gray triangular spikes",
+      "placement": "along upper back, running length of body"
+    },
+    {
+      "type": "belly plating",
+      "count": 1,
+      "shape": "white oval scales with blue dot pattern",
+      "placement": "underside and side of torso"
+    },
+    {
+      "type": "underbelly stripe",
+      "count": 1,
+      "shape": "solid red band with zigzag lower edge",
+      "placement": "lower body, below white scales"
+    },
+    {
+      "type": "leg",
+      "count": 1,
+      "shape": "thick yellow leg with black spots, bent forward",
+      "placement": "front-lower body"
+    },
+    {
+      "type": "foot",
+      "count": 1,
+      "shape": "small clawed foot",
+      "placement": "end of yellow front leg"
+    },
+    {
+      "type": "leg",
+      "count": 1,
+      "shape": "curved green leg",
+      "placement": "rear-lower body"
+    },
+    {
+      "type": "foot",
+      "count": 1,
+      "shape": "webbed green flipper-like foot",
+      "placement": "end of green rear leg"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "long gray curling tail, tightly spiraled at tip",
+      "placement": "extends left from body, curls into spiral"
+    },
+    {
+      "type": "tail (rear)",
+      "count": 1,
+      "shape": "thick teal segmented coiled tail with dark red curled tuft at end",
+      "placement": "extends right and upward from rear body, coiling like a scorpion tail"
+    }
+  ],
+  "palette": {
+    "body_green": "#2e7d5b",
+    "gray": "#7a7a7a",
+    "red": "#c62828",
+    "yellow": "#f4c430",
+    "white": "#f5f5f0",
+    "blue_dots": "#4a90d9",
+    "black": "#1a1a1a",
+    "teal": "#1f6f5c",
+    "dark_red_tuft": "#7a1f1f"
+  },
+  "distinctive_features": [
+    "single tall red triangular sail on the back",
+    "long gray tail that curls into a tight spiral like a hose",
+    "separate thick teal coiled scorpion-like tail with dark red frayed tuft at the tip",
+    "mismatched legs: one yellow spotted leg with claw foot, one green leg with webbed foot",
+    "white belly covered in blue polka-dot scales bordered by a jagged red stripe",
+    "crocodile snout with single thin red horn and a whisker-like curl above the eye"
+  ],
+  "locomotion": "low crawling/walking gait using two mismatched legs, tail used for balance or as a secondary scorpion-like appendage",
+  "vibe": "a scrappy backyard-invented dragon-gator with a scorpion tail and a sailfin, stitched together from spare parts"
+}

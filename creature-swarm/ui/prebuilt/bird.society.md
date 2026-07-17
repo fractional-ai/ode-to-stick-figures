@@ -1,0 +1,9 @@
+# Folklore & Society: The Fanfoot Wingbird
+
+Among the marsh-dwelling communities that share wetland territory with *Alarpes palmatapes*, the creature is known colloquially as the **Tideclapper** or **Left-Leaning Saint**, names that derive directly from its lopsided gait and asymmetric wing placement. Local folk taxonomy treats the staggered wings not as an anatomical curiosity but as a moral lesson: the bird is said to have been "built by two makers who never spoke to each other," a parable invoked when villagers discuss the perils of poor communication in communal labor, particularly boat-building and dike repair.
+
+The sawtooth edges on both beak and wings have given rise to the Tideclapper's role as an unofficial weather-oracle. Elders claim that when the bird's serrated wingtips catch the light at a particular angle during its lopsided glide-hops, a storm surge follows within three days. Whether or not this correlation holds, coastal fisherfolk still delay launching boats after a Tideclapper sighting near dusk.
+
+Practically, dried and hollowed Fanfoot feet — prized for their pleated, fan-like webbing — are repurposed as ceremonial winnowing scoops, their radiating ridges said to separate "true grain from false" more efficiently than woven baskets. The teal leg-stalks, when boiled, yield a dye used to mark boundary stones in disputed marshland, since the color is believed to be recognized and respected even by rival clans.
+
+Symbolically, the Tideclapper represents *productive imbalance* — the idea that mismatched, awkward parts can still achieve forward motion. Community mediators invoke its waddling gait as a teaching image: progress rarely moves in a straight line, and a little jaggedness, like the bird's sawtooth wings, is sometimes what cuts through stalled water.
