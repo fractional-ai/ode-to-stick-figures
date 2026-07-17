@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Regenerate creature-swarm/TASKS.md from the working tree and stage it into
+# this commit, so the checklist stays in sync as tasks land. Never blocks a
+# commit: if the updater can't run, we skip it and let the commit proceed.
+set -uo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+UPDATER="$ROOT/.githooks/update-tasks.py"
+
+# Only relevant once the creature-swarm project exists, and only if python3
+# and the updater are available.
+if [ ! -e "$ROOT/creature-swarm" ] || [ ! -f "$UPDATER" ]; then
+  exit 0
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-commit: python3 not found, skipping TASKS.md update" >&2
+  exit 0
+fi
+
+if python3 "$UPDATER"; then
+  git add "$ROOT/creature-swarm/TASKS.md" 2>/dev/null || true
+else
+  echo "pre-commit: TASKS.md update failed, committing without refresh" >&2
+fi
+
+exit 0
