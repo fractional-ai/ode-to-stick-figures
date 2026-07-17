@@ -8,10 +8,12 @@
   :root{
     --sky1:#eaf6ff; --sky2:#fdf3e7; --card:#fff; --ink:#40514b; --dim:#8b9a93;
     --line:#e4ece8; --accent:#ff5964; --ok:#5ac85a; --shadow:0 4px 20px rgba(60,70,90,.10);
+    --paper:#fbfcfb;
   }
   @media (prefers-color-scheme:dark){
     :root{ --sky1:#1a2430; --sky2:#241f31; --card:#232c33; --ink:#dce8e2; --dim:#8fa39a;
-           --line:#33403a; --shadow:0 4px 20px rgba(0,0,0,.35); }
+           --line:#33403a; --shadow:0 4px 20px rgba(0,0,0,.35);
+           --paper:#f2f4f2; /* deliberately NOT dark — see .shot */ }
   }
   *{box-sizing:border-box}
   body{
@@ -53,9 +55,16 @@
      white band under short/wide drawings (a bee, a very long millipede). Growing the
      shot means the transparency checkerboard fills the card and the drawing stays
      centred in it. min-height keeps tall drawings from squashing the row. */
+/* The thumbnail always sits on PAPER, in both themes. A keyed drawing is transparent
+     ink, and children draw in black marker — on a dark card the drawing simply vanished
+     (a black millipede on #232c33 is not a thumbnail). The creature is the content, so
+     it gets a light ground regardless of the viewer's theme; the checker stays on top
+     of it so it still reads as "background removed". */
   .shot{
     flex:1; min-height:200px; display:grid; place-items:center; padding:.7rem;
-    background:repeating-conic-gradient(#0000 0 25%, #00000008 0 50%) 0 0/16px 16px;
+    background:
+      repeating-conic-gradient(#0000 0 25%, #0000000d 0 50%) 0 0/16px 16px,
+      var(--paper);
   }
   .shot img{max-width:100%; max-height:100%; object-fit:contain}
   .meta{padding:.7rem .85rem .85rem; border-top:1px solid var(--line)}
