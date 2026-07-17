@@ -1,0 +1,51 @@
+{
+  "name": "Tophat Frostmuncher (Chionanthropus bicephalus)",
+  "body_plan": {
+    "core_shape": "sphere",
+    "symmetry": "bilateral",
+    "size_est_m": 1.2
+  },
+  "parts": [
+    {
+      "type": "body-sphere",
+      "count": 3,
+      "shape": "stacked round painted blobs",
+      "placement": "vertical column forming the snowman"
+    },
+    {
+      "type": "top hat",
+      "count": 1,
+      "shape": "brimmed cylinder",
+      "placement": "perched on the head sphere"
+    },
+    {
+      "type": "arm",
+      "count": 2,
+      "shape": "splayed stick branches",
+      "placement": "sides of the middle sphere"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "small round dots",
+      "placement": "front of the head sphere"
+    }
+  ],
+  "palette": [
+    "#e8531f",
+    "#e4262b",
+    "#1f9e3a",
+    "#111111",
+    "#1f43e0",
+    "#c02fb0"
+  ],
+  "distinctive_features": [
+    "stacked snowball body",
+    "jaunty brimmed top hat",
+    "stick-branch arms flung wide",
+    "bright painterly primary colors",
+    "standing in a wintry scene with sun, snow clouds, and blue drifts"
+  ],
+  "locomotion": "roll",
+  "vibe": "a jolly hand-painted snow-person soaking up a sunny winter day"
+}

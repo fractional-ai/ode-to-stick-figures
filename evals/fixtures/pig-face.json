@@ -1,0 +1,54 @@
+{
+  "name": "Grassmeadow Grinhog (Sus prasinus)",
+  "body_plan": {
+    "core_shape": "sphere",
+    "symmetry": "bilateral",
+    "size_est_m": 0.8
+  },
+  "parts": [
+    {
+      "type": "ear",
+      "count": 2,
+      "shape": "rounded triangular flaps",
+      "placement": "top corners of the head"
+    },
+    {
+      "type": "eye",
+      "count": 2,
+      "shape": "large pink circles with pupils",
+      "placement": "upper face"
+    },
+    {
+      "type": "snout",
+      "count": 1,
+      "shape": "broad rounded muzzle with two nostril dots",
+      "placement": "center of the face"
+    },
+    {
+      "type": "mouth",
+      "count": 1,
+      "shape": "upturned smiling curve",
+      "placement": "lower face beneath the snout"
+    },
+    {
+      "type": "whisker",
+      "count": 4,
+      "shape": "thin straight lines",
+      "placement": "sprouting from the cheeks"
+    }
+  ],
+  "palette": [
+    "#e77fa3",
+    "#8a4b2f",
+    "#3aa838",
+    "#f3ead6"
+  ],
+  "distinctive_features": [
+    "cheerful pink smiling face",
+    "big pink ringed eyes",
+    "two-dot nostril snout",
+    "sprigs of green grass framing the head"
+  ],
+  "locomotion": "waddle",
+  "vibe": "a friendly barnyard sweetheart who greets everyone with a grin"
+}

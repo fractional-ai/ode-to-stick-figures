@@ -1,0 +1,49 @@
+{
+  "name": "Spindled Curlmantis (Mantodea spiralis)",
+  "body_plan": {
+    "core_shape": "slab",
+    "symmetry": "bilateral",
+    "size_est_m": 0.5
+  },
+  "parts": [
+    {
+      "type": "eye",
+      "count": 3,
+      "shape": "pink-flushed circular ocelli",
+      "placement": "clustered around the upper head"
+    },
+    {
+      "type": "raptorial arm",
+      "count": 2,
+      "shape": "curled spiral limbs with hooked tips",
+      "placement": "reaching up from the front thorax"
+    },
+    {
+      "type": "leg",
+      "count": 4,
+      "shape": "segmented bristled sticks",
+      "placement": "along the lower body"
+    },
+    {
+      "type": "tail",
+      "count": 1,
+      "shape": "curled segmented scorpion-like coil",
+      "placement": "trailing from the rear"
+    }
+  ],
+  "palette": [
+    "#6b6b6b",
+    "#9a9a9a",
+    "#c98b9b",
+    "#d9d0c8",
+    "#3a3a3a"
+  ],
+  "distinctive_features": [
+    "spiraling curled forelimbs",
+    "flushed pink eye-spots",
+    "heavily segmented bristly body",
+    "faint ghostly under-sketch behind the main creature"
+  ],
+  "locomotion": "crawl",
+  "vibe": "a brooding grey ambush predator that poses dramatically before it strikes"
+}
