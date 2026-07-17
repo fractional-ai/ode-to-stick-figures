@@ -1,39 +1,39 @@
 """
-Run the Deal Desk swarm against the synthetic RFP.
+Run the Creature Swarm against a doodle image.
 
-Inlines the RFP + past-wins + product-overview into the user message (simpler
-than Files API for hackathon-scale content). Streams events as they come in so
-you can watch the parallel thread fan-out — this is the demo, narrate it live.
+Uploads the doodle as a base64 image content block (simpler than the Files
+API for hackathon-scale content). Streams events as they come in: watch for
+the Field Interpreter thread first (serial), then the specialist threads
+spawning together (parallel), then the coordinator assembling the page.
 
-Saves the final transcript to outputs/.
+Saves the final transcript and downloaded deliverables to outputs/.
 
 Usage:
-    python run_deal_desk.py
+    python run_creature_swarm.py [path/to/doodle]
 """
 
+import base64
+import mimetypes
 import os
+import sys
 from pathlib import Path
 
 from anthropic import Anthropic
 
 
-RFP_PATH = Path("synthetic-data/rfp-acme-corp.md")
-SUPPORTING_FILES = [
-    Path("synthetic-data/past-wins.json"),
-    Path("synthetic-data/product-overview.md"),
-]
+DEFAULT_DOODLE = Path("examples/drawings/shark-dog.webp")
 OUTPUT_DIR = Path("outputs")
 
 
-def load_inputs_as_context() -> str:
-    blocks = []
-    for path in [RFP_PATH, *SUPPORTING_FILES]:
-        if not path.exists():
-            print(f"  WARNING: {path} missing — skipping")
-            continue
-        print(f"  including {path.name}")
-        blocks.append(f"=====  DOCUMENT: {path.name}  =====\n{path.read_text()}")
-    return "\n\n".join(blocks)
+def load_doodle_as_image_block(path: Path) -> dict:
+    media_type, _ = mimetypes.guess_type(str(path))
+    if media_type is None:
+        raise SystemExit(f"Could not determine media type for {path}")
+    data = base64.standard_b64encode(path.read_bytes()).decode("utf-8")
+    return {
+        "type": "image",
+        "source": {"type": "base64", "media_type": media_type, "data": data},
+    }
 
 
 def main() -> None:
@@ -43,52 +43,57 @@ def main() -> None:
     if not Path(".coordinator_id").exists() or not Path(".environment_id").exists():
         raise SystemExit(
             "Missing .coordinator_id or .environment_id. Run "
-            "create_specialists.py, upload_skills.py, then create_coordinator.py first."
+            "create_specialists.py, create_coordinator.py, upload_skills.py, "
+            "and setup_environment.py first."
         )
+
+    doodle_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DOODLE
+    if not doodle_path.exists():
+        raise SystemExit(f"Doodle not found: {doodle_path}")
 
     coordinator_id = Path(".coordinator_id").read_text().strip()
     environment_id = Path(".environment_id").read_text().strip()
 
     client = Anthropic()
 
-    print("Loading RFP + supporting docs...")
-    context = load_inputs_as_context()
+    print(f"Loading doodle: {doodle_path}")
+    image_block = load_doodle_as_image_block(doodle_path)
 
     print(f"\nStarting session against coordinator {coordinator_id}...")
     session = client.beta.sessions.create(
         agent=coordinator_id,
         environment_id=environment_id,
-        title="Deal Desk — Acme Corp RFP",
+        title=f"Creature Swarm — {doodle_path.name}",
     )
     Path(".last_session_id").write_text(session.id)
 
-    user_message = (
-        "An RFP has just landed. Please run the standard Deal Desk process:\n"
-        "1. Read the RFP yourself.\n"
-        "2. Delegate to all four specialists in parallel.\n"
-        "3. Synthesise their replies.\n"
-        "4. Produce the final proposal response as a branded Word document "
-        "if you have access to a docx skill; otherwise output the response "
-        "as a structured markdown document.\n\n"
-        "Specialists have their own skills attached for their respective "
-        "domains. Move fast — the RFP deadline is real.\n\n"
-        f"{context}"
-    )
+    user_message = {
+        "type": "user.message",
+        "content": [
+            {
+                "type": "text",
+                "text": (
+                    "A doodle has arrived. Run the standard process:\n"
+                    "1. Delegate to the Field Interpreter alone first — wait "
+                    "for the Creature Spec.\n"
+                    "2. Fan out to Biologist, Habitat, Society, and 3D "
+                    "Modeler in parallel, in one message.\n"
+                    "3. Assemble the field guide with the fieldguide-html "
+                    "skill.\n\n"
+                    "Treat the subject with complete scientific seriousness."
+                ),
+            },
+            image_block,
+        ],
+    }
 
-    # Stream the events — this is the demo. Watch for parallel thread spawns.
+    # Stream the events — this is the demo. Watch for the serial Interpreter
+    # pass followed by the parallel specialist fan-out.
     print("\n=== EVENT STREAM (this is the demo) ===\n")
     final_text_parts: list[str] = []
 
     with client.beta.sessions.events.stream(session.id) as stream:
-        client.beta.sessions.events.send(
-            session.id,
-            events=[
-                {
-                    "type": "user.message",
-                    "content": [{"type": "text", "text": user_message}],
-                }
-            ],
-        )
+        client.beta.sessions.events.send(session.id, events=[user_message])
         for event in stream:
             t = event.type
             if t == "session.thread_created":
