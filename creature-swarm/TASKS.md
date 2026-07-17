@@ -6,7 +6,7 @@
 > commit. Full task detail lives in
 > `docs/superpowers/plans/2026-07-17-creature-swarm.md`.
 
-**Progress: 0/13 tasks complete.**
+**Progress: 6/13 tasks complete.**
 
 ## Prerequisite (merged separately)
 
@@ -14,7 +14,7 @@
 
 ## V1 tasks
 
-- [ ] **Task 1** — Scaffold folder, requirements, and shared managed-agents client
+- [x] **Task 1** — Scaffold folder, requirements, and shared managed-agents client
   <br/>outputs: `creature-swarm/requirements.txt`, `creature-swarm/.env.example`, `creature-swarm/lib/client.py`
 - [ ] **Task 2** — Creature Spec loader + validator
   <br/>outputs: `creature-swarm/lib/spec.py`, `creature-swarm/tests/test_spec.py`
@@ -24,15 +24,15 @@
   <br/>outputs: `creature-swarm/skills/fieldguide-html/template.html`, `creature-swarm/skills/fieldguide-html/render.py`, `creature-swarm/tests/test_fieldguide.py`
 - [ ] **Task 5** — Author the specialist skills (SKILL.md files)
   <br/>outputs: `creature-swarm/skills/creature-biology/SKILL.md`, `creature-swarm/skills/habitat-ecology/SKILL.md`, `creature-swarm/skills/folklore-society/SKILL.md`
-- [ ] **Task 6** — Agent definitions (system prompts + roster config)
+- [x] **Task 6** — Agent definitions (system prompts + roster config)
   <br/>outputs: `creature-swarm/agents/definitions.py`
-- [ ] **Task 7** — setup_environment.py
+- [x] **Task 7** — setup_environment.py
   <br/>outputs: `creature-swarm/setup_environment.py`
-- [ ] **Task 8** — create_specialists.py
+- [x] **Task 8** — create_specialists.py
   <br/>outputs: `creature-swarm/create_specialists.py`
-- [ ] **Task 9** — upload_skills.py (with the object-vs-dict fix)
+- [x] **Task 9** — upload_skills.py (with the object-vs-dict fix)
   <br/>outputs: `creature-swarm/upload_skills.py`
-- [ ] **Task 10** — create_coordinator.py
+- [x] **Task 10** — create_coordinator.py
   <br/>outputs: `creature-swarm/create_coordinator.py`
 - [ ] **Task 11** — run_creature_swarm.py
   <br/>outputs: `creature-swarm/run_creature_swarm.py`
@@ -43,5 +43,5 @@
 
 ## Stretch
 
-- [ ] Walk-cycle animator (stub -> full)
+- [x] Walk-cycle animator (stub -> full)
   <br/>outputs: `creature-swarm/skills/walk-cycle-anim/SKILL.md`
