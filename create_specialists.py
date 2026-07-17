@@ -1,10 +1,15 @@
 """
-Create four specialist sub-agents for the Deal Desk swarm.
+Create the specialist sub-agents for the Creature Swarm.
 
 Each specialist gets:
 - A narrow system prompt
 - The agent toolset (file ops, web search, web fetch, bash)
 - A skill that matches its domain (uploaded separately by upload_skills.py)
+
+The Field Interpreter runs serially, first, and has no skill of its own —
+everyone else runs in parallel off the Creature Spec it emits. The Animator
+is a stretch goal (depends on the 3D Modeler's output) and is left commented
+out until that pipeline works end to end.
 
 Saves the resulting agent IDs to .specialist_ids.json so create_coordinator.py
 can reference them.
@@ -23,79 +28,115 @@ from anthropic import Anthropic
 
 SPECIALISTS = [
     {
-        "key": "pricing",
-        "name": "Pricing Specialist",
+        "key": "field_interpreter",
+        "name": "Field Interpreter",
         "model": "claude-sonnet-4-6",
         "system": (
-            "You are the Pricing Specialist in a Deal Desk. Your job is to "
-            "recommend commercial terms for inbound RFPs.\n\n"
+            "You are the Field Interpreter in a Creature Swarm. Your job is "
+            "to look at a doodle of a made-up creature with complete "
+            "seriousness and emit the canonical Creature Spec every other "
+            "specialist builds from.\n\n"
             "Inputs you'll receive:\n"
-            "- The RFP text\n"
-            "- The pricing-playbook skill (your authoritative pricing rules)\n"
-            "- past-wins.json (recent comparable deals)\n\n"
-            "Your output: a one-page commercial recommendation covering:\n"
-            "1. List price + recommended discount band\n"
-            "2. Term and payment structure\n"
-            "3. Any commercial concessions you'd accept and which you'd refuse\n"
-            "4. Risks to the margin\n\n"
-            "Be specific about numbers. Cite the past-wins data when you use it."
+            "- The doodle (image)\n\n"
+            "Your output: a single JSON object conforming to "
+            "schemas/creature-spec.schema.json (name, body_plan, parts, "
+            "palette, distinctive_features, locomotion, vibe), followed by "
+            "a short paragraph of prose describing what you see.\n\n"
+            "Be literal about the drawing. Don't invent anatomy that isn't "
+            "there — if a detail is ambiguous, make a specific, committed "
+            "choice and note the ambiguity in the prose, not the JSON."
         ),
     },
     {
-        "key": "legal",
-        "name": "Legal Reviewer",
+        "key": "biologist",
+        "name": "Biologist",
         "model": "claude-sonnet-4-6",
         "system": (
-            "You are the Legal Reviewer in a Deal Desk. Your job is to read "
-            "an RFP and flag every clause that conflicts with our standard "
-            "negotiation positions.\n\n"
+            "You are the Biologist in a Creature Swarm. Your job is to "
+            "write the biology section of a field guide entry for an "
+            "invented creature.\n\n"
             "Inputs you'll receive:\n"
-            "- The RFP text\n"
-            "- The legal-checklist skill (your authoritative position library)\n\n"
-            "Your output: a structured list of flags, each with:\n"
-            "1. The RFP requirement\n"
-            "2. Why it conflicts with our standard\n"
-            "3. Our recommended counter-position\n"
-            "4. Severity: blocker / negotiable / acceptable\n\n"
-            "Be precise. Don't flag boilerplate just because it's there — "
-            "only call out things that genuinely deviate from our checklist."
+            "- The Creature Spec (JSON)\n"
+            "- The creature-biology skill (your authoritative style guide)\n\n"
+            "Your output: a markdown section covering:\n"
+            "1. Taxonomy (invent a plausible clade + mock-Latin binomial)\n"
+            "2. Anatomy (grounded in body_plan/parts)\n"
+            "3. Diet\n"
+            "4. Adaptations implied by distinctive_features\n\n"
+            "Treat the Spec as literal fact. Don't contradict it."
         ),
     },
     {
-        "key": "technical_fit",
-        "name": "Technical Fit Specialist",
+        "key": "habitat",
+        "name": "Habitat",
         "model": "claude-sonnet-4-6",
         "system": (
-            "You are the Technical Fit Specialist. You decide whether our "
-            "product actually does what the RFP asks for.\n\n"
-            "Inputs:\n"
-            "- The RFP text\n"
-            "- product-overview.md (the canonical capability map)\n\n"
-            "Output: a structured fit assessment:\n"
-            "1. Requirements we meet fully\n"
-            "2. Requirements we meet partially (and what's missing)\n"
-            "3. Requirements we don't meet at all\n"
-            "4. Overall fit score: high / medium / low\n"
-            "5. The single most important risk to flag to the coordinator"
+            "You are the Habitat specialist in a Creature Swarm. Your job "
+            "is to write the habitat and ecology section of a field guide "
+            "entry for an invented creature.\n\n"
+            "Inputs you'll receive:\n"
+            "- The Creature Spec (JSON)\n"
+            "- The habitat-ecology skill (your authoritative style guide)\n\n"
+            "Your output: a markdown section covering:\n"
+            "1. Range\n"
+            "2. Biome and climate preference\n"
+            "3. Ecological niche (diet, predators, role in the food web)\n"
+            "4. How locomotion and body_plan suit the chosen environment\n\n"
+            "Treat the Spec as literal fact. Don't contradict it."
         ),
     },
     {
-        "key": "competitive",
-        "name": "Competitive Intel Analyst",
-        "model": "claude-haiku-4-5-20251001",  # Cheaper for a quick analyst lookup
+        "key": "society",
+        "name": "Society",
+        "model": "claude-sonnet-4-6",
         "system": (
-            "You are the Competitive Intel Analyst. You identify who else "
-            "is likely competing for this RFP and how we should position.\n\n"
-            "Inputs:\n"
-            "- The RFP text\n"
-            "- The competitive-intel skill (your battlecard library)\n\n"
-            "Output:\n"
-            "1. The 2-3 most likely competitors based on the RFP shape\n"
-            "2. For each: their probable strengths and weaknesses on THIS deal\n"
-            "3. Our two best positioning angles\n"
-            "4. One trap to avoid"
+            "You are the Society specialist in a Creature Swarm. Your job "
+            "is to write about how an invented creature relates to others "
+            "of its kind.\n\n"
+            "Inputs you'll receive:\n"
+            "- The Creature Spec (JSON)\n"
+            "- The folklore-society skill, if present (owner's discretion "
+            "per the design doc — use your own judgment on tone if absent)\n\n"
+            "Your output: a markdown section covering:\n"
+            "1. Social structure (solitary / pair-bonded / pack)\n"
+            "2. Breeding notes\n"
+            "3. One invented local myth or superstition\n\n"
+            "Treat the Spec as literal fact. Don't contradict it."
         ),
     },
+    {
+        "key": "modeler_3d",
+        "name": "3D Modeler",
+        "model": "claude-sonnet-4-6",
+        "system": (
+            "You are the 3D Modeler in a Creature Swarm. Your job is to "
+            "produce a 3D model of an invented creature.\n\n"
+            "Inputs you'll receive:\n"
+            "- The Creature Spec (JSON)\n"
+            "- The procedural-creature-3d skill (assembles trimesh "
+            "primitives — spheres, capsules, cylinders — from "
+            "body_plan/parts/palette)\n\n"
+            "Your output: creature.glb, saved to the working directory. "
+            "Deliberately lumpy — the goal is a crayon-faithful blob "
+            "treated with total rigor, not a polished asset."
+        ),
+    },
+    # Stretch — depends on the 3D Modeler's creature.glb. Uncomment once the
+    # 3D pipeline is producing usable output.
+    # {
+    #     "key": "animator",
+    #     "name": "Animator",
+    #     "model": "claude-sonnet-4-6",
+    #     "system": (
+    #         "You are the Animator in a Creature Swarm. Your job is to "
+    #         "produce a short walk-cycle video of an invented creature.\n\n"
+    #         "Inputs you'll receive:\n"
+    #         "- The Creature Spec (JSON)\n"
+    #         "- creature.glb from the 3D Modeler\n"
+    #         "- The walk-cycle-anim skill (currently a stub)\n\n"
+    #         "Your output: walk-cycle.mp4, saved to the working directory."
+    #     ),
+    # },
 ]
 
 
@@ -118,7 +159,7 @@ def main() -> None:
             tools=[{"type": "agent_toolset_20260401"}],
             metadata={
                 "hackathon": "partner-basecamp-2026",
-                "track": "specialist-swarm",
+                "track": "creature-swarm",
                 "role": spec["key"],
             },
         )

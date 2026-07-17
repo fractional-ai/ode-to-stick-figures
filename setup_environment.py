@@ -1,5 +1,5 @@
 """
-Create the cloud Environment that the Deal Desk session runs in.
+Create the cloud Environment that the Creature Swarm session runs in.
 
 Safe to run multiple times — if `.environment_id` already exists, it's reused.
 
@@ -26,7 +26,7 @@ def main() -> None:
 
     client = Anthropic()
     environment = client.beta.environments.create(
-        name="specialist-swarm-env",
+        name="creature-swarm-env",
         config={
             "type": "cloud",
             "networking": {"type": "unrestricted"},
