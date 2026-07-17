@@ -52,8 +52,24 @@
 
   const byZ = RIG.parts.slice().sort((a, b) => a.z - b.z);
   const body = RIG.parts.find(p => p.parent === null);
+  const byId = {};
+  for (const p of RIG.parts) byId[p.id] = p;
   const springs = {};
   for (const p of RIG.parts) if (p.spring) springs[p.id] = { a: 0, v: 0 };
+
+  // Ancestor chain, root first. Transforms accumulate down it, so a part inherits
+  // every rotation above it. Limbs hanging off one body are depth-1, where this
+  // reduces to exactly the old flat behaviour — but a SPINE needs the real chain:
+  // segment N's position depends on 1..N-1, and rotating each about a fixed pivot
+  // independently shears the body apart instead of bending it.
+  const chainCache = {};
+  function chain(p) {
+    if (chainCache[p.id]) return chainCache[p.id];
+    const c = [];
+    let q = p, guard = 0;
+    while (q && guard++ < 64) { c.unshift(q); q = q.parent ? byId[q.parent] : null; }
+    return (chainCache[p.id] = c);
+  }
 
   // --- locomotion models ----------------------------------------------------
   // Every creature moving at one speed with one gait reads as a rigged puppet show.
@@ -68,18 +84,26 @@
   //           never touches ground
   //   float   barely travels; drifts and bobs in place           (balloon creature)
   //   hop     parabolic arcs, squash on landing                  (legless bobbers)
+  //   slither a travelling wave down a segment chain — the body                (millipede)
+  //           itself bends. Needs real hierarchical transforms;
+  //           see chain() above.
   const LOCO = RIG.locomotion || 'walk';
   const SPEED_MUL = RIG.speed ?? 1;
   const AIRBORNE = LOCO === 'fly' || LOCO === 'float';
 
-  // heading 0 = the drawing's natural facing. `faces: "right"` flips it, so a
-  // right-facing drawing travels the way it points instead of moonwalking.
+  // The mirror, not the heading, is what `faces` has to flip. heading only picks the
+  // travel direction; the horizontal scale sign decides which way the cutout POINTS.
+  // The default assumes a left-facing drawing, where mirroring makes it face right.
+  // A natively right-facing drawing inverts that: unmirrored it already points right,
+  // so it needs the opposite mirror sign at every heading. Flipping heading alone
+  // (as this did before) just re-mirrors it and it moonwalks anyway.
   const FACES_RIGHT = RIG.faces === 'right';
+  const MIRROR = FACES_RIGHT ? -1 : 1;
   let t = 0, gait = 0, x = 0, drift = 0;
   let heading = FACES_RIGHT ? Math.PI : 0, turnFrom = 0, turnTo = 0, turnP = 1;
 
-  const BASE = { walk: 66, stumble: 34, fly: 92, float: 9, hop: 46 }[LOCO] ?? 66;
-  const CAD = { walk: 1.15, stumble: 0.85, fly: 2.7, float: 0.30, hop: 1.0 }[LOCO] ?? 1.15;
+  const BASE = { walk: 66, stumble: 34, fly: 92, float: 9, hop: 46, slither: 44 }[LOCO] ?? 66;
+  const CAD = { walk: 1.15, stumble: 0.85, fly: 2.7, float: 0.30, hop: 1.0, slither: 1.5 }[LOCO] ?? 1.15;
   const SPEED = BASE * SPEED_MUL, CADENCE = CAD, TURN_DUR = 0.5;
 
   const scatter = [];
@@ -101,6 +125,9 @@
     if (LOCO === 'hop') return SPEED * (0.2 + 1.4 * Math.max(0, Math.sin(gait)));
     if (LOCO === 'float') return SPEED * (0.6 + 0.8 * Math.sin(t * 0.21));
     if (LOCO === 'fly') return SPEED * (0.85 + 0.3 * Math.sin(gait * 0.5));
+    // A many-legged thing pulses slightly as the wave passes down it, but never
+    // stalls the way a stumbling rectangle does.
+    if (LOCO === 'slither') return SPEED * (0.82 + 0.36 * Math.abs(Math.sin(gait)));
     return SPEED;
   }
 
@@ -110,6 +137,7 @@
     if (LOCO === 'fly') return -78 - 26 * Math.sin(t * 1.5) - 7 * Math.sin(gait);
     if (LOCO === 'float') return -58 - 15 * Math.sin(t * 0.62) - 5 * Math.sin(t * 1.4);
     if (LOCO === 'hop') return -34 * Math.abs(Math.sin(gait));
+    if (LOCO === 'slither') return -1.6 * Math.abs(Math.sin(gait * 2));
     return -4.2 * Math.abs(Math.sin(gait));
   }
   function bodyTilt() {
@@ -120,6 +148,9 @@
     if (LOCO === 'float') return 5 * Math.sin(t * 0.44) * Math.PI / 180;
     if (LOCO === 'fly') return -7 * Math.sin(t * 1.5) * Math.PI / 180;
     if (LOCO === 'hop') return 4 * Math.sin(gait) * Math.PI / 180;
+    // Whole-body tilt stays near zero: the bend comes from the segment chain, not
+    // from rocking the creature as a rigid unit.
+    if (LOCO === 'slither') return 0.8 * Math.sin(gait * 0.5) * Math.PI / 180;
     return 1.5 * Math.sin(gait) * Math.PI / 180;
   }
 
@@ -156,7 +187,16 @@
     if (turnP >= 1 && ((x < -R && face > 0) || (x > R && face < 0))) startTurn();
   }
 
-  function scaleNow() { return Math.min(W / 860, 1) * 0.62; }
+  function scaleNow() {
+    // Cap so the whole drawing fits. A long creature (a 1300px millipede) otherwise
+    // renders at the same scale as a small one and hangs off both edges.
+    return Math.min(Math.min(W / 860, 1) * 0.62, (W * 0.80) / RIG.image.w);
+  }
+  // Framing anchor. Defaults to the root pivot, but a head-first segment chain roots
+  // at one END of the creature, which would park that end mid-canvas and hang the
+  // body off the side. `anchor` lets a rig frame on its content centre while the root
+  // still rotates about its own joint.
+  function anchorX() { return (RIG.anchor && RIG.anchor[0]) ?? body.pivot[0]; }
 
   function partAngle(p) {
     // Wings: big, fast, asymmetric — the downstroke is the hard one. Driven off
@@ -220,7 +260,7 @@
 
     const face = Math.cos(heading);
     const S = scaleNow();
-    const sx = Math.sign(face || 1) * Math.max(Math.abs(face), 0.05);
+    const sx = MIRROR * Math.sign(face || 1) * Math.max(Math.abs(face), 0.05);
     const lift = airborneY();
     // Squash reads as weight, so only things that touch the ground get it. A hop
     // squashes hardest at landing; a flyer has nothing to push against.
@@ -249,16 +289,19 @@
       ctx.translate(screenX, screenY);
       ctx.rotate(bodyTilt());
       ctx.scale(sx * S, S * squash);
-      ctx.translate(-body.pivot[0], -RIG.ground_y);
+      ctx.translate(-anchorX(), -RIG.ground_y);
 
-      if (p.parent !== null) {
-        const ang = partAngle(p) * Math.PI / 180;
-        const lift = p.gait ? -p.gait.lift * Math.max(0, Math.sin(gait + p.gait.phase)) : 0;
-        ctx.translate(p.pivot[0], p.pivot[1] + lift);
+      // Walk root -> part, composing each ancestor's transform. Depth-1 rigs get
+      // identical output to the old flat path; deeper chains bend.
+      for (const a of chain(p)) {
+        if (a.parent === null) continue;          // root's transform is the body block above
+        const ang = partAngle(a) * Math.PI / 180;
+        const lf = a.gait ? -(a.gait.lift || 0) * Math.max(0, Math.sin(gait + a.gait.phase)) : 0;
+        ctx.translate(a.pivot[0], a.pivot[1] + lf);
         ctx.rotate(ang);
-        const bs = blinkScale(p);
+        const bs = blinkScale(a);
         if (bs !== 1) ctx.scale(1, bs);
-        ctx.translate(-p.pivot[0], -p.pivot[1]);
+        ctx.translate(-a.pivot[0], -a.pivot[1]);
       }
 
       ctx.beginPath();
