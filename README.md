@@ -1,5 +1,9 @@
 # Option 3 — Specialist Swarm
 
+> **Team project in flight:** we're adapting this pattern to build a
+> multi-agent **animal encyclopedia** (deadline 4pm, July 17, 2026).
+> See [PLAN.md](PLAN.md) for the concept, agent roles, evals, and action items.
+
 **Concept landed:** Skills, plugins & sub-agents
 **Tech:** [Claude Managed Agents multi-agent](https://platform.claude.com/docs/en/managed-agents/multi-agent) + [custom Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) + the pre-built [docx skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/quickstart)
 **Time:** 60 minutes
