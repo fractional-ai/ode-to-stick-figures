@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate creature-swarm/TASKS.md from the state of the working tree.
+"""Regenerate TASKS.md from the state of the working tree.
 
 A task is checked off when every one of its declared output files exists.
 This is a deterministic proxy for "done" — the real bar is green tests
@@ -18,54 +18,52 @@ import sys
 # (id, title, [output files relative to repo root])
 TASKS = [
     ("1", "Scaffold folder, requirements, and shared managed-agents client",
-     ["creature-swarm/requirements.txt", "creature-swarm/.env.example",
-      "creature-swarm/lib/client.py"]),
+     ["requirements.txt", ".env.example", "lib/client.py"]),
     ("2", "Creature Spec loader + validator",
-     ["creature-swarm/lib/spec.py", "creature-swarm/tests/test_spec.py"]),
+     ["lib/spec.py", "tests/test_spec.py"]),
     ("3", "Procedural 3D builder (trimesh -> glb)",
-     ["creature-swarm/skills/procedural-creature-3d/build.py",
-      "creature-swarm/tests/test_creature3d.py"]),
+     ["skills/procedural-creature-3d/build.py",
+      "tests/test_creature3d.py"]),
     ("4", "Field-guide HTML renderer + template",
-     ["creature-swarm/skills/fieldguide-html/template.html",
-      "creature-swarm/skills/fieldguide-html/render.py",
-      "creature-swarm/tests/test_fieldguide.py"]),
+     ["skills/fieldguide-html/template.html",
+      "skills/fieldguide-html/render.py",
+      "tests/test_fieldguide.py"]),
     ("5", "Author the specialist skills (SKILL.md files)",
-     ["creature-swarm/skills/creature-biology/SKILL.md",
-      "creature-swarm/skills/habitat-ecology/SKILL.md",
-      "creature-swarm/skills/folklore-society/SKILL.md"]),
+     ["skills/creature-biology/SKILL.md",
+      "skills/habitat-ecology/SKILL.md",
+      "skills/folklore-society/SKILL.md"]),
     ("6", "Agent definitions (system prompts + roster config)",
-     ["creature-swarm/agents/definitions.py"]),
+     ["agents/definitions.py"]),
     ("7", "setup_environment.py",
-     ["creature-swarm/setup_environment.py"]),
+     ["setup_environment.py"]),
     ("8", "create_specialists.py",
-     ["creature-swarm/create_specialists.py"]),
+     ["create_specialists.py"]),
     ("9", "upload_skills.py (with the object-vs-dict fix)",
-     ["creature-swarm/upload_skills.py"]),
+     ["upload_skills.py"]),
     ("10", "create_coordinator.py",
-     ["creature-swarm/create_coordinator.py"]),
+     ["create_coordinator.py"]),
     ("11", "run_creature_swarm.py",
-     ["creature-swarm/run_creature_swarm.py"]),
+     ["run_creature_swarm.py"]),
     ("12", "download_deliverable.py",
-     ["creature-swarm/download_deliverable.py"]),
+     ["download_deliverable.py"]),
     ("13", "Synthetic doodle, README, full-suite + live-run verification",
-     ["creature-swarm/synthetic-data/doodle-example.png",
-      "creature-swarm/README.md"]),
+     ["examples/drawings/README.md", "README.md"]),
 ]
 
 # Already merged via a separate PR — a read-only input, shown for context.
 PREREQ = [
     ("Creature Spec contract",
-     ["creature-swarm/contracts/creature-spec.schema.json",
-      "creature-swarm/contracts/creature-spec.example.json"]),
+     ["schemas/creature-spec.schema.json",
+      "schemas/creature-spec.example.json"]),
 ]
 
 # Stretch goal — ships as a stub in V1, tracked but not counted in the 13.
 STRETCH = [
     ("S", "Walk-cycle animator (stub -> full)",
-     ["creature-swarm/skills/walk-cycle-anim/SKILL.md"]),
+     ["skills/walk-cycle-anim/SKILL.md"]),
 ]
 
-OUTPUT = "creature-swarm/TASKS.md"
+OUTPUT = "TASKS.md"
 
 
 def repo_root() -> str:
