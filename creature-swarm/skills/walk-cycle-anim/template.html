@@ -181,9 +181,13 @@
     if (LOCO === 'float') drift = 26 * Math.sin(t * 0.17 + 1.2);
 
     // Clamp the wander to the content, not the canvas: a wide two-figure drawing
-    // otherwise slides its left figure off the edge.
+    // otherwise slides its left figure off the edge. But keep a real runway — for a
+    // creature as wide as the frame (a 1300px millipede) the content bound collapses
+    // to the floor, and it then spends most of its life turning, which means most
+    // frames catch it edge-on at 5% width and it reads as a tiny speck rather than as
+    // a long animal. Better to let a long body run off the edges than never travel.
     const halfW = (RIG.image.w * scaleNow()) / 2;
-    const R = Math.max(40, W / 2 - halfW - 24);
+    const R = Math.max(W * 0.22, W / 2 - halfW - 24);
     if (turnP >= 1 && ((x < -R && face > 0) || (x > R && face < 0))) startTurn();
   }
 
@@ -227,28 +231,274 @@
     return u < 0.07 ? 1 - 0.88 * Math.sin(u / 0.07 * Math.PI) : 1;
   }
 
+  // --- environments ---------------------------------------------------------
+  // Every creature walking the same strip of grass makes nine animations read as one
+  // animation with the sprite swapped. The world should say something about the
+  // animal, so `environment` in the rig picks a preset and the Habitat lane's answer
+  // can drive it later. Drawn procedurally: no assets, still one self-contained file.
+  //
+  // Everything here is deliberately muted next to the creature. The drawing is the
+  // subject; the background is a stage, and it loses every contrast fight on purpose.
+  const ENVS = {
+    meadow: { sky: ['#dff1ff', '#fdf6e3'], gnd: ['#cdeccb', '#a4d9a2'], gy: 0.82,
+              props: ['sun', 'clouds', 'hills', 'grass', 'flowers'] },
+    ocean:  { sky: ['#0d5f8f', '#5fb8d4'], gnd: ['#e6d7a2', '#c9b072'], gy: 0.86,
+              props: ['rays', 'bubbles', 'seaweed', 'pebbles'] },
+    sky:    { sky: ['#7fc9f5', '#e4f5ff'], gnd: ['#bfe3c4', '#9fd0a6'], gy: 0.93,
+              props: ['sun', 'bigclouds', 'hills', 'flock'] },
+    garden: { sky: ['#e8f4ff', '#fff4d9'], gnd: ['#bfe6a8', '#8fce84'], gy: 0.80,
+              props: ['sun', 'clouds', 'hive', 'flowers', 'grass'] },
+    forest: { sky: ['#cfe3d0', '#e8ecd4'], gnd: ['#8a6f4a', '#6b5436'], gy: 0.78,
+              props: ['trunks', 'ferns', 'leaflitter'] },
+    kitchen:{ sky: ['#f3e2d0', '#e7cdb2'], gnd: ['#d8b98f', '#bf9b6d'], gy: 0.74,
+              props: ['tiles', 'counter', 'crumbs'] },
+    snow:   { sky: ['#d8ecff', '#f4fbff'], gnd: ['#f2f8ff', '#d6e6f2'], gy: 0.82,
+              props: ['flakes', 'hills', 'drifts'] },
+    cave:   { sky: ['#2b2b33', '#4a4a55'], gnd: ['#3a3a44', '#25252c'], gy: 0.84,
+              props: ['mist', 'stalag', 'pebbles'] },
+  };
+  const ENV = ENVS[(RIG.environment && RIG.environment.preset) || RIG.environment] || ENVS.meadow;
+
+  // Deterministic scatter. Math.random() per frame makes props shimmer and jump on
+  // resize; a fixed seed keeps the world still while the creature moves through it.
+  function mulberry(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function scatterN(n, seed) {
+    const r = mulberry(seed), out = [];
+    for (let i = 0; i < n; i++) out.push({ a: r(), b: r(), c: r(), d: r() });
+    return out;
+  }
+  const SC = { far: scatterN(14, 11), mid: scatterN(18, 22), near: scatterN(30, 33), air: scatterN(26, 44) };
+
+  // Parallax: nearer layers slide faster. `wrap` keeps a layer tiling forever.
+  function wrapX(v, span, par) { const m = ((v - x * par) % span + span) % span; return m - span * 0.5 + W * 0.5; }
+
+  function fill(c) { ctx.fillStyle = c; }
+  function band(y0, y1, c0, c1) {
+    const g = ctx.createLinearGradient(0, y0, 0, y1);
+    g.addColorStop(0, c0); g.addColorStop(1, c1);
+    ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0);
+  }
+
+  const PROPS = {
+    sun(gy) {
+      const cx = W * 0.16, cy = H * 0.17, r = Math.min(W, H) * 0.055;
+      fill('rgba(255,236,150,.85)'); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,224,120,.55)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      for (let i = 0; i < 9; i++) {
+        const a = i / 9 * Math.PI * 2 + t * 0.12;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r * 1.35, cy + Math.sin(a) * r * 1.35);
+        ctx.lineTo(cx + Math.cos(a) * r * 1.75, cy + Math.sin(a) * r * 1.75);
+        ctx.stroke();
+      }
+    },
+    clouds(gy) {
+      fill('rgba(255,255,255,.78)');
+      for (const s of SC.far) {
+        const cx = wrapX(s.a * W * 1.6, W * 1.6, 0.12), cy = H * (0.08 + s.b * 0.30), r = 12 + s.c * 20;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 7); ctx.arc(cx + r * 0.9, cy + r * 0.15, r * 0.75, 0, 7);
+        ctx.arc(cx - r * 0.85, cy + r * 0.2, r * 0.6, 0, 7);
+        ctx.fill();
+      }
+    },
+    bigclouds(gy) {
+      for (const s of SC.far) {
+        fill(`rgba(255,255,255,${0.5 + s.d * 0.4})`);
+        const cx = wrapX(s.a * W * 2, W * 2, 0.10 + s.d * 0.2), cy = H * (0.05 + s.b * 0.55), r = 26 + s.c * 46;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 7); ctx.arc(cx + r, cy + r * 0.2, r * 0.8, 0, 7);
+        ctx.arc(cx - r * 0.95, cy + r * 0.25, r * 0.65, 0, 7); ctx.arc(cx + r * 0.35, cy - r * 0.5, r * 0.55, 0, 7);
+        ctx.fill();
+      }
+    },
+    flock(gy) {
+      // Distant birds: three strokes each, flapping. Sells scale for a flyer.
+      ctx.strokeStyle = 'rgba(70,90,110,.5)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      for (let i = 0; i < 5; i++) {
+        const s = SC.far[i];
+        const cx = wrapX(s.a * W * 1.4 + 200, W * 1.4, 0.22), cy = H * (0.12 + s.b * 0.22);
+        const w = 7 + s.c * 5, f = Math.sin(t * 5 + i) * 0.5 + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - w, cy + f * 3); ctx.lineTo(cx, cy - f * 2); ctx.lineTo(cx + w, cy + f * 3);
+        ctx.stroke();
+      }
+    },
+    hills(gy) {
+      fill('rgba(150,196,150,.5)');
+      for (const s of SC.far) {
+        const cx = wrapX(s.a * W * 1.5, W * 1.5, 0.18), r = 40 + s.c * 90;
+        ctx.beginPath(); ctx.arc(cx, gy + 4, r, Math.PI, 0); ctx.fill();
+      }
+    },
+    grass(gy) {
+      ctx.strokeStyle = 'rgba(120,180,118,.85)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      for (const s of SC.near) {
+        const px = wrapX(s.a * W * 1.2, W * 1.2, 0.62);
+        const py = gy + 5 + s.b * (H - gy - 8), h = 5 + s.c * 9;
+        const sw = Math.sin(t * 1.3 + s.a * 9) * 1.6;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + sw, py - h * 0.6, px + sw * 2 + (s.c - .5) * 3, py - h); ctx.stroke();
+      }
+    },
+    flowers(gy) {
+      const cols = ['#ff7d9c', '#ffd34d', '#c77dff', '#ff9f4d'];
+      for (const s of SC.mid) {
+        const px = wrapX(s.a * W * 1.3 + 40, W * 1.3, 0.5);
+        const py = gy + 8 + s.b * (H - gy - 14);
+        ctx.strokeStyle = 'rgba(110,170,110,.9)'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py - 9 - s.c * 6); ctx.stroke();
+        fill(cols[Math.floor(s.d * cols.length) % cols.length]);
+        ctx.beginPath(); ctx.arc(px, py - 10 - s.c * 6, 2.4 + s.c * 1.6, 0, 7); ctx.fill();
+      }
+    },
+    hive(gy) {
+      const px = wrapX(W * 0.75, W * 2.2, 0.34), base = gy - 4;
+      ctx.strokeStyle = 'rgba(120,90,60,.75)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(px, base); ctx.lineTo(px, base - 74); ctx.stroke();
+      fill('rgba(255,168,66,.9)');
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath(); ctx.ellipse(px, base - 84 - i * 17, 22 - i * 3, 9, 0, 0, 7); ctx.fill();
+      }
+    },
+    trunks(gy) {
+      for (const s of SC.mid) {
+        const px = wrapX(s.a * W * 1.8, W * 1.8, 0.26), w = 7 + s.c * 16;
+        fill(`rgba(88,66,44,${0.30 + s.d * 0.35})`);
+        ctx.fillRect(px - w / 2, 0, w, gy + 4);
+      }
+    },
+    ferns(gy) {
+      ctx.strokeStyle = 'rgba(74,124,72,.8)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      for (const s of SC.near) {
+        const px = wrapX(s.a * W * 1.2, W * 1.2, 0.58), py = gy + 4 + s.b * 10;
+        const h = 14 + s.c * 22, lean = (s.d - .5) * 14 + Math.sin(t * 0.9 + s.a * 7) * 2;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + lean * .5, py - h * .6, px + lean, py - h); ctx.stroke();
+        for (let k = 1; k <= 3; k++) {
+          const u = k / 4, bx = px + lean * u, by = py - h * u, r = 5 * (1 - u * .5);
+          ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - r, by - r * .7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + r, by - r * .7); ctx.stroke();
+        }
+      }
+    },
+    leaflitter(gy) {
+      const cols = ['rgba(176,124,60,.85)', 'rgba(140,92,44,.85)', 'rgba(196,152,72,.8)'];
+      for (const s of SC.near) {
+        const px = wrapX(s.a * W * 1.1 + 20, W * 1.1, 0.72), py = gy + 6 + s.b * (H - gy - 10);
+        fill(cols[Math.floor(s.d * 3) % 3]);
+        ctx.save(); ctx.translate(px, py); ctx.rotate((s.c - .5) * 2);
+        ctx.beginPath(); ctx.ellipse(0, 0, 6 + s.c * 5, 2.6, 0, 0, 7); ctx.fill(); ctx.restore();
+      }
+    },
+    rays(gy) {
+      // God-rays through water. Wide, slow, very low alpha.
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 5; i++) {
+        const s = SC.air[i], bx = wrapX(s.a * W * 1.4, W * 1.4, 0.06);
+        const g = ctx.createLinearGradient(bx, 0, bx + 60, gy);
+        g.addColorStop(0, 'rgba(190,240,255,.16)'); g.addColorStop(1, 'rgba(190,240,255,0)');
+        ctx.fillStyle = g; ctx.beginPath();
+        ctx.moveTo(bx - 20, 0); ctx.lineTo(bx + 34, 0);
+        ctx.lineTo(bx + 86 + Math.sin(t * .3 + i) * 12, gy); ctx.lineTo(bx + 10, gy);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    },
+    bubbles(gy) {
+      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.4;
+      for (const s of SC.air) {
+        const px = wrapX(s.a * W * 1.2, W * 1.2, 0.3) + Math.sin(t * 0.8 + s.b * 9) * 5;
+        const py = ((gy - (t * (14 + s.c * 26) + s.b * gy)) % gy + gy) % gy;
+        ctx.beginPath(); ctx.arc(px, py, 1.6 + s.c * 3.4, 0, 7); ctx.stroke();
+      }
+    },
+    seaweed(gy) {
+      ctx.strokeStyle = 'rgba(46,122,88,.75)'; ctx.lineCap = 'round';
+      for (const s of SC.mid) {
+        const px = wrapX(s.a * W * 1.5, W * 1.5, 0.42), h = 34 + s.c * 78;
+        ctx.lineWidth = 3 + s.d * 3;
+        ctx.beginPath(); ctx.moveTo(px, gy + 6);
+        for (let k = 1; k <= 4; k++) {
+          const u = k / 4;
+          ctx.quadraticCurveTo(px + Math.sin(t * 1.1 + u * 3 + s.a * 6) * 9 * u, gy + 6 - h * (u - .12),
+                               px + Math.sin(t * 1.1 + u * 3.4 + s.a * 6) * 8 * u, gy + 6 - h * u);
+        }
+        ctx.stroke();
+      }
+    },
+    pebbles(gy) {
+      for (const s of SC.near) {
+        const px = wrapX(s.a * W * 1.1, W * 1.1, 0.75), py = gy + 5 + s.b * (H - gy - 8);
+        fill(`rgba(120,110,90,${0.20 + s.d * 0.3})`);
+        ctx.beginPath(); ctx.ellipse(px, py, 2.6 + s.c * 4, 1.8 + s.c * 2.4, 0, 0, 7); ctx.fill();
+      }
+    },
+    flakes(gy) {
+      fill('rgba(255,255,255,.9)');
+      for (const s of SC.air) {
+        const px = wrapX(s.a * W * 1.3, W * 1.3, 0.2) + Math.sin(t * 0.7 + s.b * 8) * 12;
+        const py = ((t * (12 + s.c * 22) + s.b * H) % H + H) % H;
+        ctx.beginPath(); ctx.arc(px, py, 1.2 + s.c * 2.2, 0, 7); ctx.fill();
+      }
+    },
+    drifts(gy) {
+      fill('rgba(255,255,255,.75)');
+      for (const s of SC.mid) {
+        const cx = wrapX(s.a * W * 1.4, W * 1.4, 0.4), r = 20 + s.c * 46;
+        ctx.beginPath(); ctx.ellipse(cx, gy + 8, r, 7 + s.d * 6, 0, Math.PI, 0); ctx.fill();
+      }
+    },
+    mist(gy) {
+      for (const s of SC.far) {
+        fill(`rgba(190,200,215,${0.05 + s.d * 0.07})`);
+        const cx = wrapX(s.a * W * 1.6, W * 1.6, 0.09), cy = H * (0.3 + s.b * 0.5);
+        ctx.beginPath(); ctx.ellipse(cx, cy, 60 + s.c * 120, 16 + s.c * 26, 0, 0, 7); ctx.fill();
+      }
+    },
+    stalag(gy) {
+      fill('rgba(28,28,34,.75)');
+      for (const s of SC.mid) {
+        const px = wrapX(s.a * W * 1.7, W * 1.7, 0.3), w = 10 + s.c * 24, h = 26 + s.d * 70;
+        ctx.beginPath(); ctx.moveTo(px - w / 2, 0); ctx.lineTo(px + w / 2, 0); ctx.lineTo(px, h); ctx.closePath(); ctx.fill();
+      }
+    },
+    tiles(gy) {
+      // Kitchen wall behind the counter. Grid only, no shading: it should read as
+      // "indoors" in half a second and then be ignored.
+      ctx.strokeStyle = 'rgba(255,255,255,.30)'; ctx.lineWidth = 1;
+      const sz = 34;
+      for (let gx = -1; gx < W / sz + 1; gx++) {
+        const px = wrapX(gx * sz, W + sz, 0.05);
+        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, gy); ctx.stroke();
+      }
+      for (let gyy = 0; gyy < gy; gyy += sz) {
+        ctx.beginPath(); ctx.moveTo(0, gyy); ctx.lineTo(W, gyy); ctx.stroke();
+      }
+    },
+    counter(gy) {
+      fill('rgba(255,255,255,.22)'); ctx.fillRect(0, gy - 5, W, 6);
+      fill('rgba(120,80,50,.18)'); ctx.fillRect(0, gy + 1, W, 3);
+    },
+    crumbs(gy) {
+      for (const s of SC.near) {
+        const px = wrapX(s.a * W * 1.1, W * 1.1, 0.78), py = gy + 6 + s.b * (H - gy - 10);
+        fill(`rgba(150,105,60,${0.35 + s.d * 0.4})`);
+        ctx.beginPath(); ctx.arc(px, py, 0.9 + s.c * 1.8, 0, 7); ctx.fill();
+      }
+    },
+  };
+
   function drawScene() {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    const cs = getComputedStyle(document.documentElement);
-    g.addColorStop(0, cs.getPropertyValue('--sky1').trim());
-    g.addColorStop(1, cs.getPropertyValue('--sky2').trim());
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-
-    const gy = H * 0.82;
-    const gg = ctx.createLinearGradient(0, gy, 0, H);
-    gg.addColorStop(0, cs.getPropertyValue('--ground').trim());
-    gg.addColorStop(1, cs.getPropertyValue('--ground2').trim());
-    ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
-
-    // grass tufts, parallaxed off the creature's position so the world feels real
-    ctx.strokeStyle = cs.getPropertyValue('--ground2').trim();
-    ctx.lineWidth = 2; ctx.lineCap = 'round';
-    for (const s of scatter) {
-      const px = ((s.x * W * 2 - x * 0.35) % (W + 40)) - 20;
-      const py = gy + 6 + s.s * (H - gy - 10);
-      const h = 5 + s.k * 7;
-      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + (s.k - .5) * 4, py - h); ctx.stroke();
-    }
+    const gy = H * ENV.gy;
+    band(0, gy, ENV.sky[0], ENV.sky[1]);
+    band(gy, H, ENV.gnd[0], ENV.gnd[1]);
+    for (const name of ENV.props) { const f = PROPS[name]; if (f) { ctx.save(); f(gy); ctx.restore(); } }
     return gy;
   }
 

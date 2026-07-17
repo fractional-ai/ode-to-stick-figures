@@ -235,5 +235,6 @@
         "period": 2.1
       }
     }
-  ]
+  ],
+  "environment": "kitchen"
 }
