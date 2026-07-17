@@ -38,10 +38,19 @@ def render_field_guide(*, creature_name, tagline, doodle_path,
         model_viewer = '<p class="missing">3D model not available.</p>'
 
     if video_path:
-        video_uri = _data_uri(video_path, "video/mp4")
-        video = f'<video controls loop src="{video_uri}" style="width:100%"></video>'
+        # The animator (walk-cycle-anim) emits a self-contained HTML/canvas block,
+        # NOT an .mp4 — the {{video}} slot receives markup, not a <video> tag
+        # (design doc, Contract 2). It ships its own <head>/CSS/classes, so we
+        # isolate it in an iframe rather than inlining the raw markup (which would
+        # leak styles into the field guide). Inlined as a data URI to keep the page
+        # a single portable file, consistent with every other asset here.
+        walk_uri = _data_uri(video_path, "text/html")
+        video = (
+            f'<iframe src="{walk_uri}" title="walk cycle" loading="lazy" '
+            f'style="width:100%;height:520px;border:0;background:transparent"></iframe>'
+        )
     else:
-        video = '<p class="missing">Walk-cycle video not available.</p>'
+        video = '<p class="missing">Walk-cycle animation not available.</p>'
 
     slots = {
         "creature_name": html_lib.escape(creature_name),

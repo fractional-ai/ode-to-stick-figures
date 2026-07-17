@@ -20,6 +20,13 @@ def _glb(tmp_path):
     return str(p)
 
 
+def _walk_cycle(tmp_path):
+    # The animator emits a self-contained HTML document, not an .mp4.
+    p = tmp_path / "walk-cycle.html"
+    p.write_text("<!doctype html><html><body><div class='wc-stage'>walk</div></body></html>")
+    return str(p)
+
+
 def _base(tmp_path, **over):
     args = dict(
         creature_name="Test Blob", tagline="an earnest waddler",
@@ -47,4 +54,18 @@ def test_missing_glb_degrades(tmp_path):
 def test_missing_video_omitted(tmp_path):
     html = render.render_field_guide(**_base(tmp_path, glb_path=_glb(tmp_path)))
     assert "<video" not in html
+    assert "not available" in html  # the {{video}} slot degrades gracefully
+    assert "{{" not in html
+
+
+def test_walk_cycle_embedded_as_iframe(tmp_path):
+    # The animator's walk-cycle.html must land in the {{video}} slot as an
+    # isolated iframe — never wrapped in a <video> tag (design doc, Contract 2).
+    html = render.render_field_guide(
+        **_base(tmp_path, glb_path=_glb(tmp_path), video_path=_walk_cycle(tmp_path))
+    )
+    assert "<iframe" in html
+    assert "data:text/html" in html
+    assert "<video" not in html        # regression guard: was <video src=video/mp4>
+    assert "video/mp4" not in html
     assert "{{" not in html
