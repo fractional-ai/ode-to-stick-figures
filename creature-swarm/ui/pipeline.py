@@ -13,8 +13,10 @@ they describe the same creature.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -64,23 +66,56 @@ def _text(msg) -> str:
     return "".join(b.text for b in msg.content if b.type == "text").strip()
 
 
-def cached(path: Path, produce):
-    """Memoise one model call on disk.
+def _read(path: Path):
+    text = path.read_text()
+    return json.loads(text) if path.suffix == ".json" else text
+
+
+def cached(path: Path, produce, wait_s: float = 240.0):
+    """Memoise one model call on disk, once, even across processes.
 
     Cache per API RESULT, not per finished page. Assembly is the fragile part and the
     model calls are the expensive part; caching only the final HTML means any late
     failure re-bills the whole swarm (it cost us a 50-second retry to learn that).
     With this, a broken assembly step re-runs for free and iteration is instant.
 
-    Delete the file to force a refetch; `rm -rf .cache` is a full reset.
+    The lock is not paranoia. `prewarm.py` and a browser hitting /guide race on exactly
+    the same artifacts, and a bare exists()-then-write is check-then-act: both miss,
+    both call, both pay. We claim the work with an O_EXCL marker; whoever loses waits
+    for the winner's file instead of duplicating the call. A stale marker (killed
+    process) expires so it can't wedge the pipeline forever.
+
+    Delete the file to force a refetch.
     """
     if path.exists():
-        text = path.read_text()
-        return json.loads(text) if path.suffix == ".json" else text
-    value = produce()
+        return _read(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2) if path.suffix == ".json" else value)
-    return value
+    lock = path.with_name(path.name + ".lock")
+
+    try:
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.close(fd)
+    except FileExistsError:
+        # Someone else is already producing this. Wait for their result.
+        age = time.time() - lock.stat().st_mtime if lock.exists() else 0
+        if age < wait_s:
+            deadline = time.time() + wait_s
+            while time.time() < deadline:
+                if path.exists():
+                    return _read(path)
+                time.sleep(0.5)
+        # Winner died or took too long — steal the claim rather than wedge forever.
+        lock.unlink(missing_ok=True)
+        return cached(path, produce, wait_s)
+
+    try:
+        value = produce()
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(value, indent=2) if path.suffix == ".json" else value)
+        tmp.replace(path)  # atomic: readers never see a half-written artifact
+        return value
+    finally:
+        lock.unlink(missing_ok=True)
 
 
 def _json_from(text: str) -> dict:

@@ -10,3 +10,7 @@ creature-swarm/ui/uploads/
 !.env.example
 
 # UI: thumbnails are derived and disposable; prebuilt/ is checked in on purpose
+
+# transient claim markers / partial writes from the swarm cache
+creature-swarm/ui/prebuilt/*.lock
+creature-swarm/ui/prebuilt/*.tmp
