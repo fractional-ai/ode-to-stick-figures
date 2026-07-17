@@ -6,7 +6,7 @@
 > — checkboxes and names are regenerated and re-staged each commit. Full
 > task detail: `docs/superpowers/plans/2026-07-17-creature-swarm.md`.
 
-**V1 plan: 9/13 complete.** **Kickoff-notes workstreams: 2/4 complete.**
+**V1 plan: 9/13 complete.** **Kickoff-notes workstreams: 2/3 complete.**
 
 ## Prerequisite (merged separately)
 
@@ -49,8 +49,6 @@
   <br/>outputs: `creature-swarm/skills/walk-cycle-anim/rigs`
 - [ ] **A3** — Eval suite — deterministic field-guide checks + LLM-as-judge policy
   <br/>outputs: `creature-swarm/evals/run_evals.py`
-- [ ] **A4** — Fork/idea-mining research — scan forks & PRs for patterns to borrow
-  <br/>outputs: `docs/fork-research.md`
 
 ## Stretch
 

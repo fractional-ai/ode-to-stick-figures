@@ -69,8 +69,6 @@ ADDITIONAL = [
      ["creature-swarm/skills/walk-cycle-anim/rigs"]),
     ("A3", "Eval suite — deterministic field-guide checks + LLM-as-judge policy",
      ["creature-swarm/evals/run_evals.py"]),
-    ("A4", "Fork/idea-mining research — scan forks & PRs for patterns to borrow",
-     ["docs/fork-research.md"]),
 ]
 
 # Stretch goal — ships as a stub in V1, tracked but not counted in the 13.
