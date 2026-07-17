@@ -36,7 +36,15 @@
   }
   #drop.hot{border-color:var(--accent); color:var(--ink); transform:scale(1.01)}
   #drop b{color:var(--ink)}
-  #drop input{display:none}
+/* NOT display:none. That drops the input out of the tab order, and since the whole
+     drop zone is a <label> wrapping it, the upload became unreachable without a mouse.
+     Visually hidden but still focusable is the standard trick: the label stays clickable
+     AND Enter/Space on the focused input opens the picker. */
+  #drop input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none}
+  /* the zone is a label, so show focus on it when its input has focus */
+  #drop:focus-within{border-color:var(--accent); color:var(--ink)}
+  #drop:focus-within, .acts button:focus-visible, .acts a.btn:focus-visible,
+  .dlg-bar button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
   /* stretch keeps every row the same height; without it cards jag by caption length */
   .grid{
