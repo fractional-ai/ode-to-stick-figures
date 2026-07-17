@@ -1,0 +1,310 @@
+{
+  "_comment": "Millipede. examples/drawings/millipede.jpg is IMG_7699 rotated 103.1 deg (measured by PCA of the pen ink, not guessed) so the body lies horizontal with the legs pointing down and the head at the right; faces:'right' makes it travel the way it looks. Rotation only, never mirrored \u2014 we don't flip a child's drawing. The body is 9 chained segments, head-first, each pivoting at its parent-side edge on the body midline. Per-segment gait phase increases down the chain, so one sine travels head to tail; swing grows toward the tail so the head steers and the tail whips. This is the first rig that needs REAL hierarchical transforms: with the old flat transforms each segment would rotate about a fixed pivot independently and shear the body apart instead of bending it. Legs are the hatch marks along the bottom edge and ride their segment \u2014 rigging ~60 individual legs would be absurd and invisible at this scale.",
+  "source": "examples/drawings/millipede.jpg",
+  "image": {
+    "w": 1300,
+    "h": 207
+  },
+  "name": "Thousand-Foot Noodle (Myriapoda flexibilis)",
+  "vibe": "extremely long, entirely unhurried",
+  "locomotion": "slither",
+  "speed": 1.0,
+  "faces": "right",
+  "colorize": true,
+  "palette": [
+    "#7ec96b",
+    "#f2d94e",
+    "#ff9b54",
+    "#5ab7e0"
+  ],
+  "ground_y": 118,
+  "parts": [
+    {
+      "id": "head",
+      "parent": null,
+      "z": 0,
+      "pivot": [
+        1296,
+        52
+      ],
+      "poly": [
+        [
+          1095,
+          0
+        ],
+        [
+          1296,
+          0
+        ],
+        [
+          1296,
+          128
+        ],
+        [
+          1095,
+          128
+        ]
+      ]
+    },
+    {
+      "id": "seg1",
+      "parent": "head",
+      "z": -1,
+      "pivot": [
+        1152,
+        52
+      ],
+      "poly": [
+        [
+          951,
+          0
+        ],
+        [
+          1210,
+          0
+        ],
+        [
+          1210,
+          128
+        ],
+        [
+          951,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 0.72,
+        "swing": 1.72,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg2",
+      "parent": "seg1",
+      "z": -2,
+      "pivot": [
+        1009,
+        52
+      ],
+      "poly": [
+        [
+          808,
+          0
+        ],
+        [
+          1066,
+          0
+        ],
+        [
+          1066,
+          128
+        ],
+        [
+          808,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 1.44,
+        "swing": 1.94,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg3",
+      "parent": "seg2",
+      "z": -3,
+      "pivot": [
+        865,
+        52
+      ],
+      "poly": [
+        [
+          664,
+          0
+        ],
+        [
+          923,
+          0
+        ],
+        [
+          923,
+          128
+        ],
+        [
+          664,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 2.16,
+        "swing": 2.16,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg4",
+      "parent": "seg3",
+      "z": -4,
+      "pivot": [
+        722,
+        52
+      ],
+      "poly": [
+        [
+          521,
+          0
+        ],
+        [
+          779,
+          0
+        ],
+        [
+          779,
+          128
+        ],
+        [
+          521,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 2.88,
+        "swing": 2.38,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg5",
+      "parent": "seg4",
+      "z": -5,
+      "pivot": [
+        578,
+        52
+      ],
+      "poly": [
+        [
+          377,
+          0
+        ],
+        [
+          636,
+          0
+        ],
+        [
+          636,
+          128
+        ],
+        [
+          377,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 3.6,
+        "swing": 2.6,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg6",
+      "parent": "seg5",
+      "z": -6,
+      "pivot": [
+        435,
+        52
+      ],
+      "poly": [
+        [
+          234,
+          0
+        ],
+        [
+          492,
+          0
+        ],
+        [
+          492,
+          128
+        ],
+        [
+          234,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 4.32,
+        "swing": 2.82,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg7",
+      "parent": "seg6",
+      "z": -7,
+      "pivot": [
+        291,
+        52
+      ],
+      "poly": [
+        [
+          90,
+          0
+        ],
+        [
+          349,
+          0
+        ],
+        [
+          349,
+          128
+        ],
+        [
+          90,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 5.04,
+        "swing": 3.04,
+        "lift": 0
+      }
+    },
+    {
+      "id": "seg8",
+      "parent": "seg7",
+      "z": -8,
+      "pivot": [
+        148,
+        52
+      ],
+      "poly": [
+        [
+          4,
+          0
+        ],
+        [
+          205,
+          0
+        ],
+        [
+          205,
+          128
+        ],
+        [
+          4,
+          128
+        ]
+      ],
+      "gait": {
+        "phase": 5.76,
+        "swing": 3.26,
+        "lift": 0
+      }
+    }
+  ],
+  "anchor": [
+    650,
+    52
+  ]
+}

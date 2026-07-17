@@ -112,10 +112,17 @@ model owns its own speed, path through the air, and body attitude.
 | `fly` | wings flap (asymmetric — the downstroke is the hard one), body rides a sine through the air, never touches ground, shadow stays below and fades with altitude | birds, the bee |
 | `float` | barely travels; drifts on a slow sine and bobs gently in place | balloon-shaped creatures |
 | `hop` | parabolic arcs with squash on landing | legless bobbers |
+| `slither` | a travelling sine down a chained segment spine — **the body itself bends** | millipede, snakes, anything long |
 
-Set `speed` to multiply the model's base. `faces: "right"` for right-facing drawings —
-without it they **moonwalk**, because heading 0 means "the drawing's natural facing"
-and the default assumes left.
+Set `speed` to multiply the model's base. `faces: "right"` for right-facing drawings;
+without it they **moonwalk**. It flips the *mirror*, not the heading: heading only picks
+the travel direction, while the horizontal scale sign decides which way the cutout
+points. The default assumes a left-facing drawing, where mirroring makes it face right;
+a natively right-facing drawing needs the opposite mirror sign at every heading.
+
+`anchor: [x, y]` overrides the framing anchor, which defaults to the root pivot. A
+head-first segment chain roots at one *end* of the creature, so without this the head
+parks mid-canvas and the body hangs off the side.
 
 Squash only applies to models that touch the ground: it reads as weight, and a flyer
 has nothing to push against.
@@ -134,6 +141,23 @@ Two clear areas want two entries. The pop-tart's frosting and pastry border are
 separate regions, so `"palette": ["#f7cfe0", "#d99a52"]` gives pink frosting inside a
 tan border. Note the ink mask is closed 5×5 before regions are split — children's
 outlines have gaps, and one gap merges two areas into one colour.
+
+### Transforms are hierarchical
+
+A part inherits every rotation above it, composed root-first down the `parent` chain.
+Limbs hanging off a single body are depth-1, where this is indistinguishable from
+rotating each part independently — which is all we needed until a **spine** turned up.
+Segment N's position depends on segments 1..N-1; rotate each about a fixed pivot on its
+own and the body shears apart instead of bending.
+
+Two things follow for a chained spine:
+
+- **Rotations compound.** Nine segments at 5° each is 45° of cumulative tail lift, and
+  the animal rears up like a caterpillar doing a handstand. Keep per-segment swing
+  small (~1-2.5°); the chain does the rest.
+- **Increasing `gait.phase` down the chain is a travelling wave.** No new behaviour
+  needed — that's just what phase-offset rotations compose into. Grow `swing` toward the
+  tail so the head steers and the tail whips.
 
 ### The one rigging rule that matters
 
