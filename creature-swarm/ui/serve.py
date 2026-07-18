@@ -26,6 +26,7 @@ from __future__ import annotations
 import base64
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -143,6 +144,31 @@ def refusal(spec: dict) -> str | None:
     return None
 
 
+# A field guide opens in its own tab with no chrome, so give it a way back to
+# the gallery. Fixed-position so it's reachable no matter how long the page is.
+_BACK_BAR = (
+    '<a href="/" style="position:fixed;top:12px;left:12px;z-index:9999;'
+    'padding:.5rem .8rem;background:#1c2c26;color:#fff;border-radius:9px;'
+    'font:600 14px system-ui,-apple-system,sans-serif;text-decoration:none;'
+    'box-shadow:0 4px 14px rgba(0,0,0,.25)">← Back to gallery</a>'
+)
+
+# The template titles each section with an <h2>; some specialist sections also
+# emit their own top-level <h1> title, so the page shows the title twice. Drop an
+# <h1> that immediately follows an <h2> (the creature-name <h1> at the top is
+# preceded by <body>, not an <h2>, so it's untouched). Fixes already-cached pages.
+_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>",
+                        re.IGNORECASE | re.DOTALL)
+
+
+def _present_guide(html: str) -> str:
+    """Serve-time cleanup so cached guides get the fixes without a re-run."""
+    html = _DUP_TITLE.sub(r"\1", html)
+    new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR,
+                     html, count=1)
+    return new if n else _BACK_BAR + html
+
+
 @app.get("/guide/{stem}", response_class=HTMLResponse)
 def get_guide(stem: str):
     """The full field guide: Interpreter -> 3 text lanes + Animator -> assembled page.
@@ -155,7 +181,7 @@ def get_guide(stem: str):
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
     out = PREBUILT / f"{stem}.guide.html"
     if out.exists():
-        return HTMLResponse(out.read_text())
+        return HTMLResponse(_present_guide(out.read_text()))
     if not HAVE_KEY:
         return HTMLResponse(
             "<p>No ANTHROPIC_API_KEY found, so the text lanes can't run. "
@@ -163,9 +189,20 @@ def get_guide(stem: str):
             status_code=503,
         )
     try:
-        return HTMLResponse(run_swarm(stem, src, rig, PREBUILT).read_text())
+        return HTMLResponse(_present_guide(run_swarm(stem, src, rig, PREBUILT).read_text()))
     except Exception as e:  # surface the real failure; never a silent blank page
         return HTMLResponse(f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500)
+
+
+def _spec_name(spec: dict):
+    """The specialist agent's creature name. `name` may be a string or a
+    {common_name, mock_latin_binomial} object — prefer the common name."""
+    n = spec.get("name")
+    if isinstance(n, dict):
+        return n.get("common_name") or n.get("common") or " ".join(
+            str(v) for v in n.values() if v
+        )
+    return n
 
 
 @app.get("/api/creatures")
@@ -182,6 +219,16 @@ def api_creatures():
                 why = refusal(spec)
             except json.JSONDecodeError:
                 why = "rig file is not valid JSON"
+        # The specialist agent's spec.json is the canonical creature name; align
+        # the gallery to it so the card, walk caption, and field guide all match.
+        agent_spec = PREBUILT / f"{p.stem}.spec.json"
+        if agent_spec.exists():
+            try:
+                s = json.loads(agent_spec.read_text())
+                name = _spec_name(s) or name
+                vibe = s.get("vibe") or vibe
+            except json.JSONDecodeError:
+                pass
         items.append(
             {
                 "stem": p.stem,

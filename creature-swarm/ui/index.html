@@ -138,7 +138,7 @@
 </div>
 
 <dialog id="dlg">
-  <div class="dlg-bar"><strong id="dlg-name"></strong><button id="dlg-x">Close</button></div>
+  <div class="dlg-bar"><button id="dlg-x" style="margin-left:auto">Close</button></div>
   <iframe id="dlg-f" title="walk cycle"></iframe>
 </dialog>
 
@@ -190,7 +190,8 @@ async function load() {
 // Named showWalk, not open: a top-level `function open` shadows window.open, which is
 // a trap waiting for the next person who reaches for it.
 function showWalk(c) {
-  document.getElementById('dlg-name').textContent = c.name;
+  // The name isn't shown here — the animation itself captions the creature with the
+  // specialist agent's name, so the dialog would only duplicate it.
   document.getElementById('dlg-f').src = '/anim/' + encodeURIComponent(c.stem);
   dlg.showModal();
 }

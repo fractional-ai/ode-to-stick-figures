@@ -170,7 +170,7 @@ def specialist(agent: dict, spec: dict) -> tuple[str, str]:
     c = _client()
     msg = c.messages.create(
         model=agent["model"],
-        max_tokens=1200,
+        max_tokens=700,
         system=agent["system"],
         messages=[
             {
@@ -178,9 +178,14 @@ def specialist(agent: dict, spec: dict) -> tuple[str, str]:
                 "content": (
                     "Creature Spec:\n\n```json\n"
                     + json.dumps(spec, indent=2)
-                    + "\n```\n\nWrite your section as markdown. No top-level heading — "
-                    "the field guide supplies it. Treat this creature with complete, "
-                    "unwavering scientific seriousness."
+                    + "\n```\n\nWrite your section as markdown. No top-level "
+                    "heading — the field guide supplies it; you may use bold "
+                    "sub-labels. Keep it tight: about 150 words, 200 max. Stay "
+                    "strictly in your own lane — do not restate the creature's "
+                    "appearance, anatomy, or the other sections' material; the "
+                    "reader sees every section, so repetition is wasted space. "
+                    "Treat this creature with complete, unwavering scientific "
+                    "seriousness."
                 ),
             }
         ],

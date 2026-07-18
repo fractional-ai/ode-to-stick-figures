@@ -4,9 +4,19 @@ freehands markup. All media is inlined (base64) so the page is one portable file
 
 import base64
 import html as html_lib
+import re
 from pathlib import Path
 
 TEMPLATE_PATH = Path(__file__).resolve().parent / "template.html"
+
+# The template already titles each section with an <h2>. A section that also
+# opens with its own top-level <h1> renders the title twice, so strip a single
+# leading <h1> from each section body.
+_LEADING_H1 = re.compile(r"\A\s*<h1\b[^>]*>.*?</h1>\s*", re.IGNORECASE | re.DOTALL)
+
+
+def _strip_leading_title(section_html: str) -> str:
+    return _LEADING_H1.sub("", section_html, count=1)
 
 MODEL_VIEWER_CDN = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
 
@@ -58,9 +68,9 @@ def render_field_guide(*, creature_name, tagline, doodle_path,
         "doodle_img": _img_data_uri(doodle_path),
         "model_viewer": model_viewer,
         "video": video,
-        "biology_html": biology_html,
-        "habitat_html": habitat_html,
-        "society_html": society_html,
+        "biology_html": _strip_leading_title(biology_html),
+        "habitat_html": _strip_leading_title(habitat_html),
+        "society_html": _strip_leading_title(society_html),
     }
     out = template
     for key, value in slots.items():
