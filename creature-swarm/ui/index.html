@@ -64,16 +64,13 @@
      white band under short/wide drawings (a bee, a very long millipede). Growing the
      shot means the transparency checkerboard fills the card and the drawing stays
      centred in it. min-height keeps tall drawings from squashing the row. */
-/* The thumbnail always sits on PAPER, in both themes. A keyed drawing is transparent
-     ink, and children draw in black marker — on a dark card the drawing simply vanished
-     (a black millipede on #232c33 is not a thumbnail). The creature is the content, so
-     it gets a light ground regardless of the viewer's theme; the checker stays on top
-     of it so it still reads as "background removed". */
+/* No checkerboard: the thumbnail is the original photo now, so there's no
+     transparency to advertise. It keeps a light ground in both themes because the
+     drawings are ink on paper and their own paper should sit on something neutral
+     rather than clash with a dark card. */
   .shot{
     flex:1; min-height:200px; display:grid; place-items:center; padding:.7rem;
-    background:
-      repeating-conic-gradient(#0000 0 25%, #0000000d 0 50%) 0 0/16px 16px,
-      var(--paper);
+    background: var(--paper);
   }
   .shot img{max-width:100%; max-height:100%; object-fit:contain}
   .meta{padding:.7rem .85rem .85rem; border-top:1px solid var(--line)}
@@ -167,7 +164,7 @@ async function load() {
               :              ['off','needs a rig'];
     el.innerHTML = `
       <div class="shot"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
-             alt="${esc(c.name)} — child's drawing, background removed"></div>
+             alt="${esc(c.name)} — the original drawing"></div>
       <div class="meta">
         <div class="nm">${esc(c.name)}</div>
         <div class="vb">${esc(c.refused || c.vibe) || '&nbsp;'}</div>
