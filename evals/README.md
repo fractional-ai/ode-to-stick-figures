@@ -34,12 +34,27 @@ gate CI. The `--llm` judge never fails the suite; it skips to PASS if there's no
 | `fixtures/*.json` | A hand-authored valid spec per drawing, so evals run green before the live agent exists. |
 | `run_evals.py` | The runner. |
 
-## Wiring up the live agent
+## Running against the live agent
 
-`--target live` calls `run_interpreter_live()` in `run_evals.py`, which is a stub
-today. Once the Field Interpreter agent exists, wire that function to send the
-drawing to it and parse the returned spec (see `run_deal_desk.py` for the
-managed-agents session/stream pattern). No other file needs to change.
+`--target live` sends each case's drawing to the real Field Interpreter and checks
+the spec it returns. Fixtures tell you the checks work; only this tells you the agent
+does. It needs:
+
+- `ANTHROPIC_API_KEY`
+- `creature-swarm/.environment_id`, written by `creature-swarm/setup_environment.py`
+- `creature-swarm/.interpreter_id`, from a one-off interpreter-only agent create
+
+Both ID files are account-specific and gitignored.
+
+```bash
+python evals/run_evals.py --target live
+python evals/run_evals.py --target live --case bee    # one drawing
+```
+
+Worth knowing what this is for: the fixtures are hand-authored and schema-conformant,
+so they pass whether or not the Interpreter obeys its own contract. That is how the
+palette-as-object and count-as-prose drift went unnoticed long enough to break the 3D
+Modeler. A conformant fixture cannot catch a producer that lies. This target can.
 
 ## Adding a case
 

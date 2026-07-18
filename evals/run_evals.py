@@ -2,14 +2,14 @@
 Creature Spec eval runner.
 
 Loops over the eval cases, obtains a creature spec for each (from a canned
-fixture, or from the live Field Interpreter agent once it exists), runs every
-deterministic check plus (optionally) the LLM judge, and prints a pass/fail
-table. Exits nonzero if any deterministic check fails, so it can gate CI.
+fixture, or from the live Field Interpreter agent), runs every deterministic
+check plus (optionally) the LLM judge, and prints a pass/fail table. Exits
+nonzero if any deterministic check fails, so it can gate CI.
 
 Usage:
     python evals/run_evals.py                    # fixtures, deterministic only
     python evals/run_evals.py --llm              # fixtures + LLM judge
-    python evals/run_evals.py --target live      # call the real interpreter (stub)
+    python evals/run_evals.py --target live      # call the real interpreter
     python evals/run_evals.py --case bee         # run a single case
 
 Run from the repo root.
