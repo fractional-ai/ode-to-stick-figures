@@ -179,22 +179,33 @@ async function load() {
         </div>` : ''}
       </div>`;
     if (c.animated) {
-      el.querySelector('[data-a=anim]').onclick = e => { e.stopPropagation(); open(c); };
+      el.querySelector('[data-a=anim]').onclick = e => { e.stopPropagation(); showWalk(c); };
       // A real link, not window.open + document.write from a fetch callback — that
       // reads as a popup and browsers block it, which is why this looked broken.
       el.querySelector('a.btn').onclick = e => e.stopPropagation();
-      el.onclick = () => open(c);
+      el.onclick = () => showWalk(c);
     }
     if (c.refused) el.title = 'Refused: ' + c.refused;
     grid.appendChild(el);
   }
 }
 
-function open(c) {
+// Named showWalk, not open: a top-level `function open` shadows window.open, which is
+// a trap waiting for the next person who reaches for it.
+function showWalk(c) {
   document.getElementById('dlg-name').textContent = c.name;
   document.getElementById('dlg-f').src = '/anim/' + encodeURIComponent(c.stem);
   dlg.showModal();
 }
+
+const closeDlg = () => dlg.close();
+document.getElementById('dlg-x').onclick = closeDlg;
+// clicking the backdrop closes too; the dialog element is the event target only when
+// the click lands outside its content box
+dlg.addEventListener('click', e => { if (e.target === dlg) closeDlg(); });
+// Blank the iframe on every close, however it happened (button, backdrop, Esc).
+// Otherwise the walk cycle keeps animating behind the scenes forever.
+dlg.addEventListener('close', () => { document.getElementById('dlg-f').src = 'about:blank'; });
 
 // ---- drag & drop -----------------------------------------------------------
 const drop = document.getElementById('drop');
