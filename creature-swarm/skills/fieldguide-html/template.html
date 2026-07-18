@@ -5,17 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Field Guide — {{creature_name}}</title>
 <style>
-  body { font-family: Georgia, serif; max-width: 820px; margin: 2rem auto; padding: 0 1rem; color:#222; }
-  h1 { margin-bottom: .2rem; } .tagline { color:#666; font-style: italic; margin-top:0; }
-  .doodle { max-width: 320px; border:1px solid #ccc; padding:8px; background:#fafafa; }
-  section { margin: 1.6rem 0; } .missing { color:#999; font-style: italic; }
-  h2 { border-bottom:2px solid #eee; padding-bottom:.2rem; }
+  /* The gallery respects the reader's theme and this page did not, so opening a guide
+     from it flashed white. Same variables, same intent. */
+  :root {
+    --bg:#fff; --fg:#222; --muted:#5f6b66; --rule:#e8e8e8; --edge:#ccc;
+    /* Paper stays light in BOTH themes: the sketch is ink on paper, and a dark
+       backing makes a black-marker drawing vanish. */
+    --paper:#fafafa; --stage:#f4f4f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1b2228; --fg:#e4ebe7; --muted:#a3b3ac; --rule:#33403a; --edge:#3d4a44;
+      --paper:#f2f4f2; --stage:#e9edea;
+    }
+  }
+  html { background: var(--bg); }
+  body {
+    font-family: Georgia, serif; max-width: 820px; margin: 2rem auto; padding: 0 1rem;
+    color: var(--fg); background: var(--bg);
+  }
+  h1 { margin-bottom: .2rem; }
+  /* was #666 on white: 5.7:1, but #999 on .missing was 2.8:1 and failed AA */
+  .tagline { color: var(--muted); font-style: italic; margin-top: 0; }
+  .doodle {
+    max-width: 320px; border: 1px solid var(--edge); padding: 8px;
+    background: var(--paper);
+  }
+  section { margin: 1.6rem 0; }
+  .missing { color: var(--muted); font-style: italic; }
+  h2 { border-bottom: 2px solid var(--rule); padding-bottom: .2rem; }
+  /* the walk-cycle iframe and model-viewer both letterboxed on narrow screens */
+  section iframe, section model-viewer { max-width: 100%; }
 </style>
 </head>
 <body>
   <h1>{{creature_name}}</h1>
   <p class="tagline">{{tagline}}</p>
-  <img class="doodle" src="{{doodle_img}}" alt="original field sketch">
+  <img class="doodle" src="{{doodle_img}}" alt="The original drawing of {{creature_name}}">
   <section><h2>Specimen</h2>{{model_viewer}}</section>
   <section><h2>In motion</h2>{{video}}</section>
   <section><h2>Biology</h2>{{biology_html}}</section>
