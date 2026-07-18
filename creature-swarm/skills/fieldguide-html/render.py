@@ -32,7 +32,7 @@ def render_field_guide(*, creature_name, tagline, doodle_path,
         model_viewer = (
             f'<script type="module" src="{MODEL_VIEWER_CDN}"></script>'
             f'<model-viewer src="{glb_uri}" camera-controls auto-rotate '
-            f'style="width:100%;height:480px;background:#f4f4f4"></model-viewer>'
+            f'style="width:100%;height:480px;background:var(--stage,#f4f4f4)"></model-viewer>'
         )
     else:
         model_viewer = '<p class="missing">3D model not available.</p>'
