@@ -36,6 +36,7 @@
   }
   #drop.hot{border-color:var(--accent); color:var(--ink); transform:scale(1.01)}
   #drop b{color:var(--ink)}
+  #drop .hint{font-size:.8rem; margin-top:.3rem}
 /* NOT display:none. That drops the input out of the tab order, and since the whole
      drop zone is a <label> wrapping it, the upload became unreachable without a mouse.
      Visually hidden but still focusable is the standard trick: the label stays clickable
@@ -124,12 +125,15 @@
 <body>
 <div class="wrap">
   <h1>Creature Gallery</h1>
-  <p class="sub">Children's drawings, walking around. Click any animated creature to watch it.</p>
+  <p class="sub">Children's drawings, brought to life. Watch one walk, or open its field
+    guide: a swarm of specialists studies the drawing and writes the creature up in
+    complete seriousness.</p>
 
   <label id="drop">
     <input type="file" accept="image/*" multiple>
-    <div><b>Drop a drawing here</b> — or click to pick a file</div>
-    <div style="font-size:.8rem;margin-top:.3rem">We'll key the paper away and tell you what we can do with it</div>
+    <div><b>Drop a drawing here</b>, or click to pick a file</div>
+    <div class="hint">We'll cut the paper away and report what we found. Rigging it for
+      animation still needs a hand.</div>
   </label>
 
   <div class="grid" id="grid"></div>
