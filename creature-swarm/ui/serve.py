@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #   "fastapi", "uvicorn", "python-multipart",
-#   "pillow", "numpy", "scipy", "anthropic", "python-dotenv", "markdown",
+#   "pillow", "numpy", "scipy", "anthropic", "python-dotenv", "markdown", "trimesh",
 # ]
 # ///
 """Creature gallery — browse the drawings we can animate, drop in new ones.

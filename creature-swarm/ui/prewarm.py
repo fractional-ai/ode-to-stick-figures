@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --quiet --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["anthropic", "pillow", "numpy", "scipy", "python-dotenv", "markdown"]
+# dependencies = ["anthropic", "pillow", "numpy", "scipy", "python-dotenv", "markdown", "trimesh"]
 # ///
 """Rig every drawing that lacks one, then build every field guide. Idempotent.
 

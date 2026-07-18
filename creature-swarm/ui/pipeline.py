@@ -24,8 +24,9 @@ REPO = Path(__file__).resolve().parents[2]
 SWARM = REPO / "creature-swarm"
 SKILL = SWARM / "skills" / "walk-cycle-anim"
 GUIDE = SWARM / "skills" / "fieldguide-html"
+MODELER = SWARM / "skills" / "procedural-creature-3d"
 
-for p in (SWARM, SKILL, GUIDE):
+for p in (SWARM, SKILL, GUIDE, MODELER):
     sys.path.insert(0, str(p))
 
 from agents.definitions import INTERPRETER, SPECIALISTS  # noqa: E402
@@ -207,6 +208,75 @@ def flat(v, sep: str = " ") -> str:
     return str(v)
 
 
+HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+
+
+def as_palette(v) -> list[str]:
+    """Coerce `palette` to the list of hex strings the schema promises.
+
+    The schema says array-of-hex, and the Interpreter returns a NAMED DICT
+    ({"body_fill": "#eef2f0", "outline": "#3d8b83"}) on 12 of our 13 real drawings —
+    only one happened to comply. The 3D Modeler indexes palette[0], so it died with
+    KeyError: 0 on almost every actual creature while its tests stayed green, because
+    the test fixture is schema-conformant and nobody had fed it live output.
+
+    Dict insertion order survives JSON parsing, so values() preserves the Interpreter's
+    own "most dominant first" ordering. Coerced here rather than in build.py because
+    that's another lane's file, and rather than by re-prompting because that would throw
+    away every cached Spec. The root cause is the Interpreter ignoring its own contract.
+    """
+    if isinstance(v, dict):
+        v = list(v.values())
+    if isinstance(v, str):
+        v = [v]
+    if not isinstance(v, (list, tuple)):
+        return ["#cccccc"]
+    out = [c for c in (str(x).strip() for x in v) if HEX.match(c)]
+    return out or ["#cccccc"]
+
+
+WORDS = {"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,
+         "nine":9,"ten":10,"a pair":2,"pair":2,"several":4,"many":8,"lots":8,"numerous":8}
+
+
+def as_count(v) -> int:
+    """Coerce parts[].count to the int the schema promises.
+
+    Same failure as `palette`: the schema says integer, the Interpreter writes prose
+    ("many, in two rows"), and int() raises deep inside the 3D Modeler. A child's
+    drawing genuinely invites "many" as an answer, so the model isn't being stupid —
+    the contract just doesn't allow it. Read a leading number if there is one, fall back
+    to a number word, else guess low rather than emit a hundred-legged mesh.
+    """
+    if isinstance(v, bool):
+        return 1
+    if isinstance(v, (int, float)):
+        return max(0, min(int(v), 64))
+    text = str(v).strip().lower()
+    m = re.match(r"\d+", text)
+    if m:
+        return max(0, min(int(m.group()), 64))
+    for word, n in WORDS.items():
+        if word in text:
+            return n
+    return 2
+
+
+def normalize_spec(spec: dict) -> dict:
+    """Make a live Creature Spec actually match its schema before anyone consumes it.
+
+    The Interpreter violates its own contract in ways its conformant test fixture never
+    shows, and every downstream lane trusts the schema. One place to repair it.
+    """
+    spec["palette"] = as_palette(spec.get("palette"))
+    parts = spec.get("parts")
+    if isinstance(parts, list):
+        for part in parts:
+            if isinstance(part, dict) and "count" in part:
+                part["count"] = as_count(part["count"])
+    return spec
+
+
 def choose_environment(habitat_md: str, spec: dict) -> str:
     """Let the Habitat Ecologist's section pick the animation's world.
 
@@ -268,6 +338,8 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
 
     # Phase 1 (serial): the Spec is the consistency seam — everyone keys off it.
     spec = cached(cache / f"{stem}.spec.json", lambda: interpret(doodle, keyed_b64()))
+    # Normalise before anything consumes it. Every downstream lane assumes the schema.
+    spec = normalize_spec(spec)
 
     # Phase 2 (parallel): three text lanes, each cached independently so one bad
     # response doesn't re-bill the other two.
@@ -288,8 +360,21 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
         lambda: choose_environment(results.get("habitat", ""), spec),
     ).strip()
 
+    # The 3D Modeler lane. Deterministic trimesh over the same Spec, so no API call and
+    # nothing to cache against the model: if the file is missing we just rebuild it.
+    # Without this every guide's Specimen section reads "3D model not available", which
+    # is a whole specialist's output missing from the page.
+    glb = cache / f"{stem}.glb"
+    if not glb.exists():
+        try:
+            from build import build_creature_glb
+
+            build_creature_glb(spec, str(glb))
+        except Exception as e:
+            print(f"  3D modeler failed for {stem}: {type(e).__name__}: {e}")
+
     anim = cache / f"{stem}.html"
-    palette = spec.get("palette")
+    palette = spec["palette"]
     build(
         doodle,
         rig,
@@ -299,7 +384,7 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
             "name": flat(spec.get("name")) or stem,
             "vibe": flat(spec.get("vibe")),
             "locomotion": flat(spec.get("locomotion")),
-            "palette": palette if isinstance(palette, list) else None,
+            "palette": palette,
             "environment": env,
         },
     )
@@ -311,7 +396,7 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
         biology_html=md_to_html(results.get("biologist", "_missing_")),
         habitat_html=md_to_html(results.get("habitat", "_missing_")),
         society_html=md_to_html(results.get("society", "_missing_")),
-        glb_path=None,
+        glb_path=str(glb) if glb.exists() else None,
         # {{video}} takes the walk-cycle HTML and inlines it as a data-URI iframe
         # (render.py, post-#23) — not an .mp4. That keeps the guide a single portable
         # file instead of depending on this dev server being up.
