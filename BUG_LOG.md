@@ -30,31 +30,24 @@ fixes below; all four fixes verified against the live server.
   every already-cached guide gets it without a rebuild.
 - **Status:** Fixed.
 
-## BUG-3 — Field guide is too verbose and repeats across sections
+## BUG-3 — Field guide repeats each section's title
 
-- **Symptom:** Guides read ~20% too long, and sections repeat each other.
-- **Root causes (three):**
-  1. **Duplicated section titles** — the template titles each section with an
-     `<h2>` (e.g. *Habitat & Ecology*), and some specialist sections also opened
-     with their own top-level `<h1>` of the same title, so it showed twice.
-  2. **Cross-section repetition** — each specialist independently re-described
-     the creature's appearance/anatomy; the prompt never told them to stay in
-     their lane.
-  3. **No length budget** — `specialist()` ran at `max_tokens=1200` with no word
-     target.
+- **Symptom:** Each section's title appeared twice (e.g. *Habitat & Ecology*
+  shown as a heading, then again immediately below).
+- **Root cause:** the template titles each section with an `<h2>`, and some
+  specialist sections also opened with their own top-level `<h1>` of the same
+  title, so it rendered twice.
 - **Fixes:**
   - `serve.py` `_present_guide`: drop an `<h1>` that immediately follows an
     `<h2>` (the creature-name `<h1>` at the top is preceded by `<body>`, so it's
     untouched). Cleans **already-cached** guides at serve time.
   - `render.py`: strip a leading `<h1>` from each section body so newly rendered
     guides never double-title.
-  - `pipeline.py` `specialist()`: `max_tokens` 1200 → 700, and the prompt now
-    asks for ~150 words (200 max), no top-level heading, and to stay strictly in
-    its lane without restating other sections.
-- **Status:** Duplicate-title fix is **live** for all guides. Verbosity and
-  cross-section overlap only shrink when a guide is **regenerated** (the checked-in
-  `prebuilt/*.guide.html` keep their current length until re-run with a key —
-  delete the cached `<stem>.*.md`/`<stem>.guide.html` and reopen the guide).
+- **Status:** Fixed (live for all guides).
+- **Deferred:** the original report also noted guides read ~20% too long with
+  overlap across sections. Making the guides shorter is **dropped for now** at the
+  team's request — no prompt/length changes. Can revisit later (would be a
+  `pipeline.py` prompt/`max_tokens` change plus regeneration).
 
 ## BUG-4 — Creature name mismatch / duplicated on the walk screen
 

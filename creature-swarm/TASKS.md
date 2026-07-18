@@ -22,7 +22,7 @@
   <br/>outputs: `creature-swarm/skills/procedural-creature-3d/build.py`, `creature-swarm/tests/test_creature3d.py`
 - [x] **Task 4** — Field-guide HTML renderer + template — _Lauren_
   <br/>outputs: `creature-swarm/skills/fieldguide-html/template.html`, `creature-swarm/skills/fieldguide-html/render.py`, `creature-swarm/tests/test_fieldguide.py`
-- [x] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft, Nicholas Bindela_
+- [x] **Task 5** — Author the specialist skills (SKILL.md files) — _AldenCraft_
   <br/>outputs: `creature-swarm/skills/creature-biology/SKILL.md`, `creature-swarm/skills/habitat-ecology/SKILL.md`, `creature-swarm/skills/folklore-society/SKILL.md`
 - [x] **Task 6** — Agent definitions (system prompts + roster config) — _AldenCraft, Nicholas Bindela_
   <br/>outputs: `creature-swarm/agents/definitions.py`
