@@ -52,7 +52,7 @@ CACHE = UI / ".cache"
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
 from build_walk_cycle import build, key  # noqa: E402
-from pipeline import load_env  # noqa: E402
+from pipeline import anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
 
 UPLOADS.mkdir(parents=True, exist_ok=True)
@@ -102,6 +102,51 @@ def thumb(src: Path) -> bytes:
         img.thumbnail((560, 560), Image.LANCZOS)
         img.save(out, "PNG", optimize=True)
     return out.read_bytes()
+
+
+def _spec_overrides(stem: str) -> dict | None:
+    """Rebuild the Spec-derived build arguments from what the swarm already cached.
+
+    The Spec and the chosen environment are both checked in, so we can reproduce the
+    swarm's own build offline: no API key, no model calls. Returns None when there's no
+    cached Spec (a freshly dropped drawing), in which case the rig's defaults are all
+    we have and all we can honestly use.
+    """
+    spec_file = PREBUILT / f"{stem}.spec.json"
+    if not spec_file.is_file():
+        return None
+    try:
+        spec = normalize_spec(json.loads(spec_file.read_text()))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return None
+    env_file = PREBUILT / f"{stem}.environment.txt"
+    env = env_file.read_text().strip() if env_file.is_file() else "meadow"
+    return anim_overrides(spec, env, stem)
+
+
+def animation(stem: str) -> str | None:
+    """The built walk cycle for one drawing, or None if we can't animate it.
+
+    Rebuild when the drawing, the rig, or the renderer template is newer than what we
+    have, so editing a rig or the template shows up on the next request instead of
+    serving a stale build forever. Rebuild through the same Spec overrides the swarm
+    used, or the refresh quietly downgrades the animation to the rig's raw defaults and
+    it stops matching the name and world on its own field guide.
+    """
+    src, rig = find(stem), rig_for(stem)
+    if not src or not rig:
+        return None
+    out = PREBUILT / f"{stem}.html"
+    stale = not out.exists() or out.stat().st_mtime < max(
+        src.stat().st_mtime, rig.stat().st_mtime, (SKILL / "template.html").stat().st_mtime
+    )
+    if stale:
+        overrides = _spec_overrides(stem)
+        if overrides:
+            build(src, rig, out, color=True, overrides=overrides)
+        else:
+            build(src, rig, out)
+    return out.read_text()
 
 
 @app.get("/thumb/{stem}")

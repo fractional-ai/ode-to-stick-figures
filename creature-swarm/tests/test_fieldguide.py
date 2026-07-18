@@ -40,13 +40,16 @@ def _base(tmp_path, **over):
 def test_all_slots_filled(tmp_path):
     html = render.render_field_guide(**_base(tmp_path, glb_path=_glb(tmp_path)))
     assert "Test Blob" in html
-    assert "model-viewer" in html
+    assert "<model-viewer" in html
     assert "{{" not in html  # no leftover placeholders
 
 
 def test_missing_glb_degrades(tmp_path):
     html = render.render_field_guide(**_base(tmp_path, glb_path=None))
-    assert "model-viewer" not in html
+    # Assert the ELEMENT is gone, not the bare string: the stylesheet names
+    # model-viewer in a selector and a comment, so a substring check matches the CSS
+    # and fails while the degrade path is working perfectly.
+    assert "<model-viewer" not in html
     assert "not available" in html
     assert "{{" not in html
 
