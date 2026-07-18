@@ -83,46 +83,24 @@ def find(stem: str) -> Path | None:
     return next((p for p in sources() if p.stem == stem), None)
 
 
-def figures_for(stem: str) -> int:
-    """How many separate figures this drawing's rig expects to keep."""
-    rig = rig_for(stem)
-    if not rig:
-        return 1
-    try:
-        return max(1, int(json.loads(rig.read_text()).get("figures", 1)))
-    except (json.JSONDecodeError, TypeError, ValueError):
-        return 1
-
-
 def thumb(src: Path) -> bytes:
-    """Keyed cutout on transparency: shows what the pipeline actually sees.
+    """The drawing as the child made it, just scaled down.
 
-    Honour the rig's `figures`, exactly as build() does. Keying with the default keep=1
-    while the animation keeps 2 made the card lie: poptart-and-person showed a lone
-    pop-tart on the card and a pop-tart plus its escort in the animation. The thumbnail's
-    whole job is to preview the animation.
+    This used to serve the alpha-keyed cutout on a transparency checkerboard, on the
+    theory that the thumbnail should show what the pipeline sees. That is a debugging
+    view, not a gallery: the keyed version is our intermediate artifact, and the thing
+    worth showing is the drawing. Keying also loses the paper, the crayon texture around
+    the edges, and any part of the scene we discarded, all of which is the child's work.
+
+    The keyed cutout is still what gets animated; it just isn't the poster frame.
     """
     out = CACHE / f"{src.stem}.thumb.png"
-    rig = rig_for(src.stem)
-    newest = max([src.stat().st_mtime] + ([rig.stat().st_mtime] if rig else []))
-    if not out.exists() or out.stat().st_mtime < newest:
-        keyed, _ = key(Image.open(src), keep=figures_for(src.stem))
-        keyed.thumbnail((420, 420), Image.LANCZOS)
-        keyed.save(out, "PNG", optimize=True)
+    if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
+        img = Image.open(src)
+        img = img.convert("RGB") if img.mode not in ("RGB", "L") else img
+        img.thumbnail((560, 560), Image.LANCZOS)
+        img.save(out, "PNG", optimize=True)
     return out.read_bytes()
-
-
-def animation(stem: str) -> str | None:
-    src, rig = find(stem), rig_for(stem)
-    if not src or not rig:
-        return None
-    out = PREBUILT / f"{stem}.html"
-    stale = not out.exists() or out.stat().st_mtime < max(
-        src.stat().st_mtime, rig.stat().st_mtime, (SKILL / "template.html").stat().st_mtime
-    )
-    if stale:
-        build(src, rig, out)
-    return out.read_text()
 
 
 @app.get("/thumb/{stem}")
