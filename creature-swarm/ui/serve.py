@@ -83,11 +83,30 @@ def find(stem: str) -> Path | None:
     return next((p for p in sources() if p.stem == stem), None)
 
 
+def figures_for(stem: str) -> int:
+    """How many separate figures this drawing's rig expects to keep."""
+    rig = rig_for(stem)
+    if not rig:
+        return 1
+    try:
+        return max(1, int(json.loads(rig.read_text()).get("figures", 1)))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return 1
+
+
 def thumb(src: Path) -> bytes:
-    """Keyed cutout on transparency — shows what the pipeline actually sees."""
+    """Keyed cutout on transparency: shows what the pipeline actually sees.
+
+    Honour the rig's `figures`, exactly as build() does. Keying with the default keep=1
+    while the animation keeps 2 made the card lie: poptart-and-person showed a lone
+    pop-tart on the card and a pop-tart plus its escort in the animation. The thumbnail's
+    whole job is to preview the animation.
+    """
     out = CACHE / f"{src.stem}.thumb.png"
-    if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
-        keyed, _ = key(Image.open(src))
+    rig = rig_for(src.stem)
+    newest = max([src.stat().st_mtime] + ([rig.stat().st_mtime] if rig else []))
+    if not out.exists() or out.stat().st_mtime < newest:
+        keyed, _ = key(Image.open(src), keep=figures_for(src.stem))
         keyed.thumbnail((420, 420), Image.LANCZOS)
         keyed.save(out, "PNG", optimize=True)
     return out.read_bytes()
