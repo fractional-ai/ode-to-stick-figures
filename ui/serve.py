@@ -1,15 +1,19 @@
 #!/usr/bin/env -S uv run --quiet
 """Creature gallery — browse the drawings we can animate, drop in new ones.
 
-Demo-grade on purpose. The filesystem IS the database:
+Demo-grade on purpose. The filesystem IS the database, locally:
 
     examples/drawings/           the drawings
     .../walk-cycle-anim/rigs/    <stem>.rig.json  -> this drawing is riggable
     ui/uploads/                  dropped images + their rigs
-    ui/.cache/                   built animations and thumbnails
 
 A drawing is "animated" iff a rig exists for its stem. No state anywhere else,
-nothing to migrate, and `rm -rf .cache` is a full reset.
+nothing to migrate, and `rm -rf ui/uploads` is a full reset.
+
+Deployed on Vercel, none of the directories above are writable — the filesystem is
+read-only outside of /tmp. Nothing here creates a directory at import time for
+exactly that reason: a module-load-time mkdir() against a path that doesn't exist
+in the deploy bundle would crash every cold start, before any route even ran.
 
     ./serve.py            # then open http://127.0.0.1:8000
 """
@@ -37,11 +41,9 @@ UPLOADS = UI / "uploads"
 # Checked in: the model-derived artifacts (Creature Spec, each text lane's markdown)
 # and the built walk cycles. They're small, deterministic to serve, and they cost real
 # API calls to produce — so the gallery is all cache hits on a fresh clone and nobody
-# has to prewarm (or pay) to demo. Regenerate any of it by deleting the file.
+# has to prewarm (or pay) to demo. Regenerate any of it by deleting the file. Always
+# exists already (bundled, committed) — never created here.
 PREBUILT = UI / "prebuilt"
-# Derived and disposable: thumbnails and assembled guides, both rebuildable offline
-# from PREBUILT with no API calls.
-CACHE = UI / ".cache"
 
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
@@ -49,9 +51,6 @@ from build_walk_cycle import build, key  # noqa: E402
 from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
 
-UPLOADS.mkdir(parents=True, exist_ok=True)
-CACHE.mkdir(parents=True, exist_ok=True)
-PREBUILT.mkdir(parents=True, exist_ok=True)
 HAVE_KEY = load_env()
 
 app = FastAPI()
@@ -87,14 +86,19 @@ def thumb(src: Path) -> bytes:
     the edges, and any part of the scene we discarded, all of which is the child's work.
 
     The keyed cutout is still what gets animated; it just isn't the poster frame.
+
+    Computed fresh on every request rather than cached to disk. A PIL resize on an
+    image this size costs low-single-digit milliseconds — cheap enough that a
+    persistent cache bought nothing but a write path, and Vercel's filesystem is
+    read-only outside /tmp, so that write path would need its own storage backend for
+    something this cheap to not have at all.
     """
-    out = CACHE / f"{src.stem}.thumb.png"
-    if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
-        img = Image.open(src)
-        img = img.convert("RGB") if img.mode not in ("RGB", "L") else img
-        img.thumbnail((560, 560), Image.LANCZOS)
-        img.save(out, "PNG", optimize=True)
-    return out.read_bytes()
+    img = Image.open(src)
+    img = img.convert("RGB") if img.mode not in ("RGB", "L") else img
+    img.thumbnail((560, 560), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()
 
 
 def _spec_overrides(stem: str) -> dict | None:
