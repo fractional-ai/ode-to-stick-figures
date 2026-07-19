@@ -24,6 +24,14 @@ from tests.conftest import load_module_from_path
 UI = Path(__file__).resolve().parents[1] / "ui"
 SKILL = Path(__file__).resolve().parents[1] / "skills" / "walk-cycle-anim"
 
+# A real, tiny, valid 1x1 PNG — needed anywhere a route actually decodes the bytes
+# (PIL for upload validation, thumbnailing), not just treats them as an opaque blob.
+_TINY_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0"
+    b"\x00\x00\x03\x01\x01\x00\x18\xdd\x8d\xb0\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
 
 def _load_serve():
     for p in (UI, SKILL):
@@ -188,14 +196,7 @@ def test_upload_route_calls_the_real_build_and_returns_its_result(monkeypatch):
     monkeypatch.setattr(serve.upload_build, "build_from_upload", fake_build_from_upload)
     client = TestClient(serve.app)
 
-    # A real, tiny, valid PNG — the route decodes it with PIL before ever reaching
-    # build_from_upload(), so it has to actually be a readable image.
-    png = (
-        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-        b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0"
-        b"\x00\x00\x03\x01\x01\x00\x18\xdd\x8d\xb0\x00\x00\x00\x00IEND\xaeB`\x82"
-    )
-    r = client.post("/api/upload", files={"file": ("drawing.png", png, "image/png")})
+    r = client.post("/api/upload", files={"file": ("drawing.png", _TINY_PNG, "image/png")})
 
     assert r.status_code == 200, r.text
     body = r.json()
@@ -220,3 +221,114 @@ def test_upload_route_rejects_before_calling_build_from_upload(monkeypatch):
 
     r = client.post("/api/upload", files={"file": ("not-an-image.txt", b"hello", "text/plain")})
     assert r.status_code == 415, r.text
+
+
+def _seed_upload(serve, storage, stem: str, *, refused: str | None = None):
+    """Write the artifact set upload_build.py's _sync_dir() would have produced for
+    a real upload, directly into a Storage instance — then point serve.UPLOAD_STORAGE
+    at it. Lets these tests drive the real routes against an "uploaded" creature
+    without a real vision/model call anywhere."""
+    import json
+
+    serve.UPLOAD_STORAGE = storage
+    if refused:
+        storage.write_bytes(
+            f"{stem}.rig.json", json.dumps({"refuse": True, "refuse_reason": refused}).encode()
+        )
+        return
+    storage.write_bytes(f"{stem}.png", _TINY_PNG)
+    storage.write_bytes(f"{stem}.rig.json", json.dumps({"name": "Test Upload"}).encode())
+    storage.write_bytes(f"{stem}.spec.json", json.dumps({"name": "Test Upload"}).encode())
+    storage.write_bytes(f"{stem}.html", b"<html>fake walk cycle</html>")
+    storage.write_bytes(f"{stem}.guide.html", b"<html><body>fake guide</body></html>")
+
+
+def test_uploaded_creature_is_fully_servable(monkeypatch, tmp_path):
+    """The whole point of this migration: an uploaded creature must be servable the
+    same way a bundled one is — /anim, /guide, /thumb, and present in the listing."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    store = LocalStorage(tmp_path / "uploads")
+    _seed_upload(serve, store, "up-abc123")
+    client = TestClient(serve.app)
+
+    anim_r = client.get("/anim/up-abc123")
+    assert anim_r.status_code == 200, anim_r.text
+    assert "fake walk cycle" in anim_r.text
+
+    guide_r = client.get("/guide/up-abc123")
+    assert guide_r.status_code == 200, guide_r.text
+    assert "fake guide" in guide_r.text
+
+    thumb_r = client.get("/thumb/up-abc123")
+    assert thumb_r.status_code == 200, thumb_r.text
+    assert thumb_r.headers["content-type"] == "image/png"
+
+    creatures = client.get("/api/creatures").json()
+    card = next((c for c in creatures if c["stem"] == "up-abc123"), None)
+    assert card is not None, "uploaded creature is missing from the listing entirely"
+    assert card["animated"] is True
+    assert card["uploaded"] is True
+    assert card["name"] == "Test Upload"
+
+
+def test_uploaded_refusal_holds_on_the_routes(monkeypatch, tmp_path):
+    """A refused upload must behave exactly like a refused bundled creature (e.g.
+    snowmen-scene): 422 on both /anim and /guide, never reaching any build attempt."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    store = LocalStorage(tmp_path / "uploads")
+    _seed_upload(serve, store, "up-refused1", refused="no animal in this drawing")
+    client = TestClient(serve.app)
+
+    for route in ("/anim/up-refused1", "/guide/up-refused1"):
+        r = client.get(route)
+        assert r.status_code == 422, f"{route}: {r.text}"
+        assert "no animal in this drawing" in r.text
+
+    creatures = client.get("/api/creatures").json()
+    card = next(c for c in creatures if c["stem"] == "up-refused1")
+    assert card["refused"] == "no animal in this drawing"
+    assert card["animated"] is False
+
+
+def test_uploaded_creature_still_building_degrades_instead_of_404ing(monkeypatch, tmp_path):
+    """A rig exists (the vision pass finished) but no guide/anim yet -- either the
+    build is still running or it crashed partway. That's a different, more honest
+    answer than "no rig for this drawing yet", which implies nothing happened at all.
+    """
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    store = LocalStorage(tmp_path / "uploads")
+    store.write_bytes("up-midbuild.rig.json", b'{"name": "Mid Build"}')
+    serve.UPLOAD_STORAGE = store
+    client = TestClient(serve.app)
+
+    anim_r = client.get("/anim/up-midbuild")
+    assert anim_r.status_code == 503, anim_r.text
+
+    guide_r = client.get("/guide/up-midbuild")
+    assert guide_r.status_code == 503, guide_r.text
+
+
+def test_unknown_upload_stem_still_404s(monkeypatch, tmp_path):
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    serve.UPLOAD_STORAGE = LocalStorage(tmp_path / "uploads")
+    client = TestClient(serve.app)
+
+    assert client.get("/anim/nothing-here-at-all").status_code == 404
+    assert client.get("/guide/nothing-here-at-all").status_code == 404
+    assert client.get("/thumb/nothing-here-at-all").status_code == 404

@@ -63,12 +63,20 @@ HAVE_KEY = load_env()
 # (a missing prewarm, a stale build) that should surface as "not available", not as a
 # crash. Locally this is always False, so nothing here changes local dev behavior.
 ON_VERCEL = os.environ.get("VERCEL") == "1"
+# Built once at import time (after load_env(), so a locally-set BLOB_READ_WRITE_TOKEN
+# from .env is already in os.environ by the time this checks for it). Every uploaded
+# creature's artifacts go through this, never a bare local Path — on a local dev
+# clone it's a LocalStorage rooted at UPLOADS (so it happens to be the same directory
+# sources() already scans); on Vercel it's Blob storage, where nothing is local at all.
+UPLOAD_STORAGE = upload_build.default_storage(UPLOADS)
 
 app = FastAPI()
 
 
 def sources() -> list[Path]:
-    """Every drawing we know about: shipped fixtures plus anything dropped in."""
+    """Every LOCAL drawing we know about: shipped fixtures, plus anything dropped in
+    on a dev clone (where an upload's doodle happens to land in this same directory).
+    Does not see a Blob-only upload — see _uploaded_stems() for that."""
     out = []
     for d in (DRAWINGS, UPLOADS):
         if d.is_dir():
@@ -76,18 +84,68 @@ def sources() -> list[Path]:
     return out
 
 
+def _uploaded_stems() -> list[str]:
+    """Every uploaded creature's stem, from Storage. On a dev clone this overlaps
+    with what sources() already finds locally (deduplicated by the caller) — on
+    Vercel it's the only way to discover an uploaded creature at all, since nothing
+    about Blob storage is a local directory sources() could scan.
+
+    Path(k).stem would be wrong here: ".rig.json" is two suffixes, so Path("x.rig.json").stem
+    is "x.rig", not "x" — strip the known literal suffix instead of asking Path to guess.
+    """
+    return sorted(
+        k.removesuffix(".rig.json") for k in UPLOAD_STORAGE.list_keys() if k.endswith(".rig.json")
+    )
+
+
 def rig_for(stem: str) -> Path | None:
-    for cand in (RIGS / f"{stem}.rig.json", UPLOADS / f"{stem}.rig.json"):
-        if cand.is_file():
-            return cand
+    """A BUNDLED creature's rig, as a local Path. None for anything else, including
+    an uploaded creature — its rig lives in Storage; see rig_bytes_for()."""
+    cand = RIGS / f"{stem}.rig.json"
+    return cand if cand.is_file() else None
+
+
+def rig_bytes_for(stem: str) -> bytes | None:
+    """This stem's rig, wherever it actually is: the bundled RIGS directory first,
+    then Storage. Storage is checked either way — on a dev clone that's a second,
+    redundant look at the same file rig_for() already found locally, which is cheap
+    and correct; it's the only path that resolves at all when Storage is Blob-backed."""
+    local = rig_for(stem)
+    if local:
+        return local.read_bytes()
+    return UPLOAD_STORAGE.read_bytes(f"{stem}.rig.json")
+
+
+def drawing_bytes_for(stem: str) -> bytes | None:
+    """This stem's source drawing, wherever it actually is. Bundled and dev-clone
+    uploads already have a local Path via find(); a Blob-only upload doesn't, so this
+    falls back to listing Storage for the one key matching stem + a known image
+    extension (Storage has no "get me the file with this stem, whatever its
+    extension" lookup, only exact keys)."""
+    src = find(stem)
+    if src:
+        return src.read_bytes()
+    for k in UPLOAD_STORAGE.list_keys(prefix=f"{stem}."):
+        if Path(k).suffix.lower() in IMG_EXT:
+            return UPLOAD_STORAGE.read_bytes(k)
     return None
+
+
+def _artifact(filename: str) -> bytes | None:
+    """One build artifact (spec.json, environment.txt, the walk-cycle html, the
+    guide html) — bundled PREBUILT first, then Storage. `filename` is the full name,
+    e.g. f"{stem}.spec.json"."""
+    local = PREBUILT / filename
+    if local.is_file():
+        return local.read_bytes()
+    return UPLOAD_STORAGE.read_bytes(filename)
 
 
 def find(stem: str) -> Path | None:
     return next((p for p in sources() if p.stem == stem), None)
 
 
-def thumb(src: Path) -> bytes:
+def thumb(raw: bytes) -> bytes:
     """The drawing as the child made it, just scaled down.
 
     This used to serve the alpha-keyed cutout on a transparency checkerboard, on the
@@ -103,8 +161,12 @@ def thumb(src: Path) -> bytes:
     persistent cache bought nothing but a write path, and Vercel's filesystem is
     read-only outside /tmp, so that write path would need its own storage backend for
     something this cheap to not have at all.
+
+    Takes bytes rather than a Path so it works the same whether the source is a
+    bundled local file or an uploaded creature's drawing fetched from Storage — see
+    drawing_bytes_for(), which resolves either case before calling this.
     """
-    img = Image.open(src)
+    img = Image.open(io.BytesIO(raw))
     img = img.convert("RGB") if img.mode not in ("RGB", "L") else img
     img.thumbnail((560, 560), Image.LANCZOS)
     buf = io.BytesIO()
@@ -145,9 +207,18 @@ def animation(stem: str) -> str | None:
     deploy, and the filesystem is read-only outside /tmp — attempting the write above
     would crash the request instead of degrading it. A missing PREBUILT entry there
     means a prewarm was skipped, not a cache to fill on demand.
+
+    An uploaded creature (rig_for() returns None — it isn't in the bundled RIGS
+    directory) was already built once, synchronously, at upload time. There's
+    nothing to rebuild here: either its walk cycle is already in Storage, or the
+    build is still running, failed, or the stem doesn't exist at all.
     """
-    src, rig = find(stem), rig_for(stem)
-    if not src or not rig:
+    rig = rig_for(stem)
+    if rig is None:
+        raw = UPLOAD_STORAGE.read_bytes(f"{stem}.html")
+        return raw.decode() if raw is not None else None
+    src = find(stem)
+    if not src:
         return None
     out = PREBUILT / f"{stem}.html"
     if ON_VERCEL:
@@ -166,10 +237,10 @@ def animation(stem: str) -> str | None:
 
 @app.get("/thumb/{stem}")
 def get_thumb(stem: str):
-    src = find(stem)
-    if not src:
+    raw = drawing_bytes_for(stem)
+    if raw is None:
         return Response(status_code=404)
-    return Response(thumb(src), media_type="image/png")
+    return Response(thumb(raw), media_type="image/png")
 
 
 @app.get("/anim/{stem}", response_class=HTMLResponse)
@@ -185,6 +256,15 @@ def get_anim(stem: str):
             return HTMLResponse(
                 "<p>This creature hasn't been built into this deployment yet. It "
                 "needs a <code>./prewarm.py</code> run and a redeploy.</p>",
+                status_code=503,
+            )
+        if rig_bytes_for(stem) is not None:
+            # A rig exists (an upload, since a bundled miss was just handled above)
+            # but nothing built yet — the build is still running, failed partway, or
+            # a concurrent request is mid-build. Distinct from "no rig at all."
+            return HTMLResponse(
+                "<p>This creature is still being built, or the build didn't finish. "
+                "Try again in a moment.</p>",
                 status_code=503,
             )
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
@@ -217,11 +297,11 @@ def refusal_for(stem: str) -> str | None:
     That is the plausible garbage the refusal exists to prevent, and it billed real
     model calls to produce it. Enforce where the work happens, not where it's advertised.
     """
-    rig = rig_for(stem)
-    if not rig:
+    raw = rig_bytes_for(stem)
+    if raw is None:
         return None
     try:
-        return refusal(json.loads(rig.read_text()))
+        return refusal(json.loads(raw))
     except (json.JSONDecodeError, TypeError, ValueError):
         return None
 
@@ -257,9 +337,34 @@ def get_guide(stem: str):
     a demo shouldn't pay that twice. On Vercel, a cache miss never runs the swarm here
     at all (see ON_VERCEL below) — the filesystem is read-only outside /tmp, and the
     bundled 13 are meant to always be prewarmed before a deploy.
+
+    An uploaded creature (rig is None below — not in the bundled RIGS directory) was
+    already built once, synchronously, at upload time (see upload_build.py). This
+    route never runs the swarm for one; it only ever reads back what's already in
+    Storage.
     """
-    src, rig = find(stem), rig_for(stem)
-    if not src or not rig:
+    rig = rig_for(stem)
+    if rig is None:
+        raw_rig = UPLOAD_STORAGE.read_bytes(f"{stem}.rig.json")
+        if raw_rig is None:
+            return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+        why = refusal_for(stem)
+        if why:
+            return HTMLResponse(
+                f"<p>We won't write a field guide for this one: {html_mod.escape(why)}</p>",
+                status_code=422,
+            )
+        raw_guide = UPLOAD_STORAGE.read_bytes(f"{stem}.guide.html")
+        if raw_guide is None:
+            return HTMLResponse(
+                "<p>This creature is still being built, or the build didn't finish. "
+                "Try again in a moment.</p>",
+                status_code=503,
+            )
+        return HTMLResponse(_present_guide(raw_guide.decode()))
+
+    src = find(stem)
+    if not src:
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
     why = refusal_for(stem)
     if why:
@@ -305,13 +410,22 @@ def _spec_name(spec: dict):
 
 @app.get("/api/creatures")
 def api_creatures():
+    # Local Paths (bundled + dev-clone uploads) union Storage-only stems (Blob
+    # uploads, invisible to sources() since none of Blob storage is a local
+    # directory). dict.setdefault so a dev-clone upload found by both isn't listed
+    # twice — sources() gives it a real Path (used only for the "uploaded" flag
+    # below); a Blob-only upload has none.
+    stems: dict[str, Path | None] = {p.stem: p for p in sources()}
+    for stem in _uploaded_stems():
+        stems.setdefault(stem, None)
+
     items = []
-    for p in sources():
-        rig = rig_for(p.stem)
-        name, vibe, why = p.stem.replace("-", " "), "", None
-        if rig:
+    for stem, p in stems.items():
+        raw_rig = rig_bytes_for(stem)
+        name, vibe, why = stem.replace("-", " "), "", None
+        if raw_rig is not None:
             try:
-                spec = json.loads(rig.read_text())
+                spec = json.loads(raw_rig)
                 name = spec.get("name") or name
                 vibe = spec.get("vibe") or ""
                 why = refusal(spec)
@@ -319,22 +433,22 @@ def api_creatures():
                 why = "rig file is not valid JSON"
         # The specialist agent's spec.json is the canonical creature name; align
         # the gallery to it so the card, walk caption, and field guide all match.
-        agent_spec = PREBUILT / f"{p.stem}.spec.json"
-        if agent_spec.exists():
+        agent_spec_raw = _artifact(f"{stem}.spec.json")
+        if agent_spec_raw is not None:
             try:
-                s = json.loads(agent_spec.read_text())
+                s = json.loads(agent_spec_raw)
                 name = _spec_name(s) or name
                 vibe = s.get("vibe") or vibe
             except json.JSONDecodeError:
                 pass
         items.append(
             {
-                "stem": p.stem,
+                "stem": stem,
                 "name": name,
                 "vibe": vibe,
-                "animated": rig is not None and why is None,
+                "animated": raw_rig is not None and why is None,
                 "refused": why,
-                "uploaded": p.parent == UPLOADS,
+                "uploaded": p is None or p.parent == UPLOADS,
             }
         )
     items.sort(key=lambda i: (not i["animated"], bool(i["refused"]), i["stem"]))
