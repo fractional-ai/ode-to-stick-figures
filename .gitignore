@@ -14,3 +14,10 @@ creature-swarm/ui/uploads/
 # transient claim markers / partial writes from the swarm cache
 creature-swarm/ui/prebuilt/*.lock
 creature-swarm/ui/prebuilt/*.tmp
+
+# Managed-agents local run state (account/workspace-specific — never shared)
+.environment_id
+.interpreter_id
+.coordinator_id
+.specialist_ids.json
+.last_session_id

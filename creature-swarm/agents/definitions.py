@@ -4,11 +4,23 @@ Kept separate from the API scripts so prompts are reviewable and testable
 without touching the network.
 """
 
+import json
+from pathlib import Path
+
 MODELS = {
     "coordinator": "claude-opus-4-8",
     "specialist": "claude-sonnet-5",
     "interpreter": "claude-sonnet-5",
 }
+
+# The Interpreter's format rules are generated from the frozen contract files,
+# not hand-copied, so a schema change can't silently desync the prompt.
+_CONTRACTS_DIR = Path(__file__).resolve().parent.parent / "contracts"
+_SCHEMA = json.loads((_CONTRACTS_DIR / "creature-spec.schema.json").read_text())
+_EXAMPLE_TEXT = (_CONTRACTS_DIR / "creature-spec.example.json").read_text().strip()
+_CORE_SHAPES = _SCHEMA["properties"]["body_plan"]["properties"]["core_shape"]["enum"]
+_SYMMETRIES = _SCHEMA["properties"]["body_plan"]["properties"]["symmetry"]["enum"]
+_LOCOMOTIONS = _SCHEMA["properties"]["locomotion"]["enum"]
 
 INTERPRETER = {
     "key": "interpreter",
@@ -35,11 +47,38 @@ INTERPRETER = {
         "eyes), invent the gap — but extend the drawing's own visible logic "
         "rather than reach for generic filler (e.g. no legs on an elongated body "
         "reads as 'legless, presumed subterranean', not a generic default).\n\n"
-        "The spec MUST conform to the creature-spec schema: name, body_plan "
-        "(core_shape, symmetry, size_est_m), parts (each with type, count, shape, "
-        "placement), palette (hex colors you actually see), distinctive_features, "
-        "locomotion, and a one-line vibe. Output ONLY the JSON object, nothing "
-        "else."
+        "Second governing rule, equally non-negotiable: every field below has a "
+        "FIXED type, and several are closed enums. These are hard constraints, not "
+        "prose prompts — populate them with an exact value from the list, never a "
+        "description of one. Detail and nuance that don't fit a typed field belong "
+        "in distinctive_features (a list of free-text strings) instead — never by "
+        "replacing a typed field's value with a sentence or turning it into a "
+        "nested object.\n\n"
+        '  - "name": ONE string — common name plus a mock-Latin binomial in '
+        'parentheses, e.g. "Warbling Blorb (Blorbus canticus)". Never an object, '
+        "never separate common/binomial fields.\n"
+        f'  - "body_plan.core_shape": exactly one value from {_CORE_SHAPES}. Pick '
+        "the closest single primitive — do not describe the shape in prose.\n"
+        f'  - "body_plan.symmetry": exactly one value from {_SYMMETRIES}. If the '
+        "drawing is imperfect/lopsided, still pick the nearest of the two and note "
+        "the asymmetry as a distinctive_feature instead.\n"
+        '  - "body_plan.size_est_m": a plain positive number (metres), your best '
+        "single estimate.\n"
+        '  - "parts": a list of objects, each with "type" (string), "count" (a '
+        'specific integer — never a word like "multiple" or "several", make your '
+        'best count), "shape" (string), "placement" (string).\n'
+        '  - "palette": a JSON ARRAY of hex color strings like "#aabbcc" — never '
+        "an object with named keys, most dominant color first.\n"
+        '  - "distinctive_features": a list of short free-text strings, at least '
+        "one — this is where nuance, exceptions, and hedges belong.\n"
+        f'  - "locomotion": exactly one value from {_LOCOMOTIONS}. Pick the closest '
+        "single verb — do not describe the motion in prose.\n"
+        '  - "vibe": one short free-text string.\n\n'
+        "Here is a real, valid Creature Spec showing the exact shape and typing "
+        f"expected (content is illustrative only, not a template to copy):\n\n"
+        f"{_EXAMPLE_TEXT}\n\n"
+        "Output ONLY the JSON object, nothing else — no markdown code fences, no "
+        "commentary before or after."
     ),
 }
 
