@@ -17,7 +17,7 @@ contract and can't silently drift.
 uv run evals/run_evals.py                 # all cases, deterministic checks only
 uv run evals/run_evals.py --llm           # also run the LLM-as-judge check
 uv run evals/run_evals.py --case bee       # just one case
-uv run evals/run_evals.py --target live    # call the real interpreter (stub for now)
+uv run evals/run_evals.py --target live    # call the real interpreter
 ```
 
 Exit code is `0` when every deterministic check passes, `1` otherwise — so it can
@@ -42,9 +42,9 @@ does. It needs:
 
 - `ANTHROPIC_API_KEY`
 - `.environment_id`, written by `setup_environment.py`
-- `.interpreter_id`, from a one-off interpreter-only agent create
+- the `"interpreter"` id inside `.specialist_ids.json`, written by `create_specialists.py`
 
-Both ID files are account-specific and gitignored.
+Both files are account-specific and gitignored.
 
 ```bash
 uv run evals/run_evals.py --target live

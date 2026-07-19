@@ -19,7 +19,7 @@ Two things make it work at all:
     image invites plausible-looking guesses; with a ruler in the picture the model
     reads them off. This is the same crutch a human rigger would want.
 
-    ./rig_from_image.py ../../../examples/drawings/sharpie-bird.jpg
+    ./rig_from_image.py ../../examples/drawings/sharpie-bird.jpg
 """
 
 from __future__ import annotations

@@ -21,6 +21,10 @@ SKILL_TO_SPECIALIST = {
     "creature-biology": "biologist",
     "habitat-ecology": "habitat",
     "folklore-society": "society",
+    # procedural-creature-3d has no SKILL.md, so the loop below skips it (and says so).
+    # Left mapped rather than deleted: the real 3D lane bypasses the hosted modeler
+    # entirely (ui/pipeline.py calls build_creature_glb() directly), so nothing outside
+    # the managed-agents provisioning scripts depends on this ever being attached.
     "procedural-creature-3d": "modeler",
     # fieldguide-html attaches to the coordinator (see create_coordinator.py),
     # not a specialist, so it is uploaded there.

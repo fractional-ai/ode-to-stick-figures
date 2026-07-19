@@ -84,11 +84,14 @@ skills/
 ├── creature-biology/    ─┐
 ├── habitat-ecology/      ├ the text lanes
 ├── folklore-society/    ─┘
-└── procedural-creature-3d/
+└── procedural-creature-3d/build.py   called directly, not a hosted skill (no SKILL.md)
 ui/                      the gallery: serve.py, pipeline.py, prewarm.py
 evals/                   Creature Spec eval harness
+examples/field-guides/   a full field guide assembled outside the gallery, for reference
 examples/drawings/       the drawings, ordered easy to hard
 tests/
+setup_environment.py, create_specialists.py, upload_skills.py, create_coordinator.py
+                         provision the managed-agents lane (see below); unused by the gallery
 ```
 
 ## The managed-agents lane

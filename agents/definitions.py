@@ -118,6 +118,11 @@ SPECIALISTS = [
         ),
     },
     {
+        # Provisioning-only. skills/procedural-creature-3d/ has no SKILL.md, so
+        # upload_skills.py never attaches anything here — a hosted agent given this
+        # prompt has no skill backing the claim it makes. The real 3D lane is
+        # ui/pipeline.py calling build_creature_glb() directly; this key is excluded
+        # from the text-lane fan-out there (see the SPECIALISTS filter in pipeline.py).
         "key": "modeler",
         "name": "3D Modeler",
         "model": MODELS["specialist"],
