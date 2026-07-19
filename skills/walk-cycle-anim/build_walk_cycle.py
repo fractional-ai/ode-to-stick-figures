@@ -3,6 +3,10 @@
 # requires-python = ">=3.12"
 # dependencies = ["pillow", "numpy", "scipy"]
 # ///
+# Keep this block even though the repo has a pyproject.toml. SKILL.md documents this file
+# as an agent-invocable entry point, and an agent given the skill directory gets these two
+# scripts and nothing else — no pyproject to resolve against. The duplicated floors are the
+# price of that portability; a skill that only runs from inside this checkout isn't a skill.
 """doodle + rig -> self-contained walk-cycle.html
 
 Two steps, both local and deterministic:

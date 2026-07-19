@@ -11,12 +11,11 @@ away, hinge the parts the child drew, and walk them. It stays recognisably their
 
 ```bash
 cp .env.example .env      # add your ANTHROPIC_API_KEY
-cd ui && ./serve.py       # http://127.0.0.1:8000
+uv run ui/serve.py        # http://127.0.0.1:8000
 ```
 
-The scripts are [uv](https://docs.astral.sh/uv/) scripts with inline dependency
-blocks, so `uv` fetches the interpreter and the deps on first run. Nothing to
-install.
+Dependencies and the Python version live in `pyproject.toml` and `uv.lock`, and
+[uv](https://docs.astral.sh/uv/) fetches both on first run. Nothing to install.
 
 The example drawings ship with their animations and field guides already built and
 checked in, so a fresh clone is all cache hits and costs no API calls. Drop a new
@@ -87,6 +86,22 @@ examples/drawings/       the drawings, ordered easy to hard
 tests/
 ```
 
+## The managed-agents lane
+
+The four scripts at the root provision the swarm as hosted agents on the
+managed-agents preview, in this order:
+
+```bash
+uv run setup_environment.py    # writes .environment_id
+uv run create_specialists.py   # writes .specialist_ids.json
+uv run upload_skills.py        # attaches the skills, writes .skill_ids.json
+uv run create_coordinator.py   # writes .coordinator_id
+```
+
+Nothing drives them afterwards. The gallery doesn't use them: `ui/pipeline.py` calls
+the Messages API directly and builds the same field guide locally. Treat this lane as
+provisioning for the preview, not as how the product runs.
+
 ## The animation, briefly
 
 Flat parts cut from the drawing, hinged at joints, drawn on a canvas. Paper Mario,
@@ -106,5 +121,11 @@ flat-paper pivot is the charm; it isn't a bug to smooth out.
 ## Tests
 
 ```bash
-pip install -r requirements.txt && pytest tests/
+uv run pytest
+```
+
+The Creature Spec eval suite runs offline against checked-in fixtures, no API key:
+
+```bash
+uv run evals/run_evals.py
 ```

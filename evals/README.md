@@ -14,10 +14,10 @@ contract and can't silently drift.
 
 ```bash
 # from the repo root
-python3 evals/run_evals.py                 # all cases, deterministic checks only
-python3 evals/run_evals.py --llm           # also run the LLM-as-judge check
-python3 evals/run_evals.py --case bee       # just one case
-python3 evals/run_evals.py --target live    # call the real interpreter (stub for now)
+uv run evals/run_evals.py                 # all cases, deterministic checks only
+uv run evals/run_evals.py --llm           # also run the LLM-as-judge check
+uv run evals/run_evals.py --case bee       # just one case
+uv run evals/run_evals.py --target live    # call the real interpreter (stub for now)
 ```
 
 Exit code is `0` when every deterministic check passes, `1` otherwise — so it can
@@ -47,8 +47,8 @@ does. It needs:
 Both ID files are account-specific and gitignored.
 
 ```bash
-python evals/run_evals.py --target live
-python evals/run_evals.py --target live --case bee    # one drawing
+uv run evals/run_evals.py --target live
+uv run evals/run_evals.py --target live --case bee    # one drawing
 ```
 
 Worth knowing what this is for: the fixtures are hand-authored and schema-conformant,

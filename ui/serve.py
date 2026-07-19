@@ -1,11 +1,4 @@
-#!/usr/bin/env -S uv run --quiet --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "fastapi", "uvicorn", "python-multipart",
-#   "pillow", "numpy", "scipy", "anthropic", "python-dotenv", "markdown", "trimesh",
-# ]
-# ///
+#!/usr/bin/env -S uv run --quiet
 """Creature gallery — browse the drawings we can animate, drop in new ones.
 
 Demo-grade on purpose. The filesystem IS the database:

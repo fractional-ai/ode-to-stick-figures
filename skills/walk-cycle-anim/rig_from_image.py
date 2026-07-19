@@ -3,6 +3,8 @@
 # requires-python = ">=3.12"
 # dependencies = ["anthropic", "pillow", "numpy", "scipy", "python-dotenv"]
 # ///
+# Kept deliberately — see the note in build_walk_cycle.py. This skill has to run from a
+# bare copy of its own directory, so it declares its own dependencies.
 """doodle -> rig.json, via a vision pass. The one genuinely unsolved step.
 
 Everything else in this lane is deterministic. Deciding "where are this creature's

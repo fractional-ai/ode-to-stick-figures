@@ -43,7 +43,8 @@ def main() -> None:
     Path(".coordinator_id").write_text(coordinator.id)
     print(f"Coordinator created: {coordinator.id}")
     print(f"Roster: {SPECIALIST_ROSTER_KEYS}")
-    print("Next: python setup_environment.py (if not done) then python run_creature_swarm.py")
+    print("Next: uv run setup_environment.py (if not done). Driving the coordinator is manual;")
+    print("see the managed-agents section of the README.")
 
 
 if __name__ == "__main__":

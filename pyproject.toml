@@ -1,0 +1,50 @@
+[project]
+name = "ode-to-stick-figures"
+version = "0.1.0"
+description = "Turn a child's drawing of a made-up animal into a straight-faced field guide entry, with the creature walking."
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "anthropic>=0.40",
+    "python-dotenv>=1.0.0",
+    "jsonschema>=4.20.0",
+    "markdown>=3.5",
+    # The gallery. fastapi and python-multipart are runtime, not test-only: serve.py
+    # imports fastapi unconditionally and its upload route takes an UploadFile, which
+    # fastapi refuses to handle without python-multipart. Both used to live only in
+    # serve.py's inline script block, so the documented "pip install -r requirements.txt
+    # && pytest" errored out on six tests.
+    "fastapi>=0.110.0",
+    "uvicorn>=0.30.0",
+    "python-multipart>=0.0.9",
+    # The image lane: alpha-key, rigs, the 2.5D cutout renderer, and the procedural GLB.
+    "pillow>=10.0.0",
+    "numpy>=1.24.0",
+    "trimesh>=4.0.0",
+    # trimesh needs scipy to export a GLB carrying vertex colours, and it hides the missing
+    # import behind its own ExceptionWrapper — so without this the 3D build dies deep inside
+    # the exporter instead of saying "install scipy". The alpha-key's morphology
+    # (binary_closing / fill_holes / label) is scipy.ndimage too.
+    "scipy>=1.11.0",
+]
+
+[dependency-groups]
+# uv installs the group named "dev" by default, so `uv run pytest` just works. Do not
+# rename it to "test": a differently-named group needs tool.uv.default-groups or an
+# explicit --group, and without that the runner isn't there.
+dev = [
+    "pytest>=8.0.0",
+    # the gallery's route tests drive serve.py through fastapi's TestClient, which needs httpx
+    "httpx>=0.27.0",
+]
+
+[tool.uv]
+# Nothing imports this repo as a library; the entry points are scripts and the modules
+# find each other by path. Virtual means uv resolves the dependencies without trying to
+# build and install the project itself.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
