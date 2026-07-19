@@ -1,10 +1,9 @@
-import importlib.util
 from pathlib import Path
 
+from tests.conftest import load_module_from_path
+
 SKILL = Path(__file__).resolve().parents[1] / "skills" / "fieldguide-html"
-_spec = importlib.util.spec_from_file_location("render", SKILL / "render.py")
-render = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(render)
+render = load_module_from_path("render", SKILL / "render.py")
 
 
 def _doodle(tmp_path):

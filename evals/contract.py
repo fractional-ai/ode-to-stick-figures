@@ -18,6 +18,7 @@ changes, they follow it.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 # --------------------------------------------------------------------------- #
@@ -78,13 +79,15 @@ class CheckResult:
         return "PASS" if self.passed else "FAIL"
 
 
-# A deterministic check is any callable with this signature:
+# A deterministic check is any callable with this signature. Case is defined below;
+# a PEP 695 type alias's value is lazily evaluated, so the forward reference is fine.
 #
-#     def check(spec: dict, case: Case) -> CheckResult
-#
-# It must NOT raise on a bad spec — catch and return CheckResult(passed=False).
+# It must NOT raise on a bad spec — catch and return CheckResult(passed=False). No
+# type can express that; it's a runtime contract, stated here instead.
+type Check = Callable[[dict, Case], CheckResult]
+
 # checks.py must expose:
-#     DETERMINISTIC_CHECKS: list[callable]   # the deterministic checks
+#     DETERMINISTIC_CHECKS: list[Check]   # the deterministic checks
 #     llm_judge_check(spec: dict, case: Case) -> CheckResult   # the one LLM judge
 
 
