@@ -18,6 +18,10 @@ dependencies = [
     "fastapi>=0.110.0",
     "uvicorn>=0.30.0",
     "python-multipart>=0.0.9",
+    # ui/storage.py's BlobStorage calls Vercel Blob's REST API directly (there's no
+    # official Python SDK for it) — a real runtime dependency now, not just something
+    # the test suite's TestClient happened to need.
+    "httpx>=0.27.0",
     # The image lane: alpha-key, rigs, the 2.5D cutout renderer, and the procedural GLB.
     "pillow>=10.0.0",
     "numpy>=1.24.0",
@@ -35,8 +39,6 @@ dependencies = [
 # explicit --group, and without that the runner isn't there.
 dev = [
     "pytest>=8.0.0",
-    # the gallery's route tests drive serve.py through fastapi's TestClient, which needs httpx
-    "httpx>=0.27.0",
     "ruff>=0.6",
     "lefthook>=1.10",
     "mypy>=1.13",
