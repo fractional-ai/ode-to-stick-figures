@@ -11,11 +11,16 @@ away, hinge the parts the child drew, and walk them. It stays recognisably their
 
 ```bash
 cp .env.example .env      # add your ANTHROPIC_API_KEY
+uv run lefthook install   # once per clone, wires the pre-commit/pre-push hooks
 uv run ui/serve.py        # http://127.0.0.1:8000
 ```
 
 Dependencies and the Python version live in `pyproject.toml` and `uv.lock`, and
 [uv](https://docs.astral.sh/uv/) fetches both on first run. Nothing to install.
+
+The `lefthook install` step matters: an uninstalled git hook is invisible and does
+nothing, which is exactly what happened to this repo's original `.githooks/` setup
+before it was retired.
 
 The example drawings ship with their animations and field guides already built and
 checked in, so a fresh clone is all cache hits and costs no API calls. Drop a new
