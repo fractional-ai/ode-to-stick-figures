@@ -16,14 +16,13 @@ nothing to migrate, and `rm -rf .cache` is a full reset.
 
 from __future__ import annotations
 
-import base64
 import io
 import json
 import re
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
@@ -186,8 +185,8 @@ def refusal(spec: dict) -> str | None:
 # the gallery. Fixed-position so it's reachable no matter how long the page is.
 _BACK_BAR = (
     '<a href="/" style="position:fixed;top:12px;left:12px;z-index:9999;'
-    'padding:.5rem .8rem;background:#1c2c26;color:#fff;border-radius:9px;'
-    'font:600 14px system-ui,-apple-system,sans-serif;text-decoration:none;'
+    "padding:.5rem .8rem;background:#1c2c26;color:#fff;border-radius:9px;"
+    "font:600 14px system-ui,-apple-system,sans-serif;text-decoration:none;"
     'box-shadow:0 4px 14px rgba(0,0,0,.25)">← Back to gallery</a>'
 )
 
@@ -195,15 +194,13 @@ _BACK_BAR = (
 # emit their own top-level <h1> title, so the page shows the title twice. Drop an
 # <h1> that immediately follows an <h2> (the creature-name <h1> at the top is
 # preceded by <body>, not an <h2>, so it's untouched). Fixes already-cached pages.
-_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>",
-                        re.IGNORECASE | re.DOTALL)
+_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>", re.IGNORECASE | re.DOTALL)
 
 
 def _present_guide(html: str) -> str:
     """Serve-time cleanup so cached guides get the fixes without a re-run."""
     html = _DUP_TITLE.sub(r"\1", html)
-    new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR,
-                     html, count=1)
+    new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR, html, count=1)
     return new if n else _BACK_BAR + html
 
 
@@ -228,8 +225,10 @@ def get_guide(stem: str):
         )
     try:
         return HTMLResponse(_present_guide(run_swarm(stem, src, rig, PREBUILT).read_text()))
-    except Exception as e:  # surface the real failure; never a silent blank page
-        return HTMLResponse(f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500)
+    except Exception as e:  # noqa: BLE001 — surface the real failure; never a silent blank page
+        return HTMLResponse(
+            f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500
+        )
 
 
 def _spec_name(spec: dict):
@@ -237,9 +236,7 @@ def _spec_name(spec: dict):
     {common_name, mock_latin_binomial} object — prefer the common name."""
     n = spec.get("name")
     if isinstance(n, dict):
-        return n.get("common_name") or n.get("common") or " ".join(
-            str(v) for v in n.values() if v
-        )
+        return n.get("common_name") or n.get("common") or " ".join(str(v) for v in n.values() if v)
     return n
 
 
@@ -302,7 +299,7 @@ async def api_upload(file: UploadFile = File(...)):
     try:
         img = Image.open(io.BytesIO(raw))
         img.load()
-    except Exception:
+    except Exception:  # noqa: BLE001 — PIL raises anything at all on a malformed upload
         return JSONResponse({"stem": stem, "error": "Not a readable image."}, status_code=415)
 
     dest = UPLOADS / f"{stem}{suffix}"
@@ -312,7 +309,9 @@ async def api_upload(file: UploadFile = File(...)):
         n += 1
     dest.write_bytes(raw)
 
-    keyed, stats = key(Image.open(dest))
+    # Only the stats matter here: this call is the alpha-key run purely to sanity-check what
+    # got dropped on us. The keyed image itself is rebuilt at animation time.
+    _, stats = key(Image.open(dest))
     warn = None
     if stats["blobs"] >= 3 and stats["dominance"] < 0.80:
         warn = (

@@ -107,20 +107,20 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     mask = nd.binary_dilation(mask, np.ones((3, 3)))
     stats["kept_frac"] = float(mask.mean())
 
-    alpha = Image.fromarray((mask * 255).astype(np.uint8)).filter(
-        ImageFilter.GaussianBlur(0.8)
-    )
-    return Image.fromarray(
-        np.dstack([a.astype(np.uint8), np.asarray(alpha)]), "RGBA"
-    ), stats
+    alpha = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
+    return Image.fromarray(np.dstack([a.astype(np.uint8), np.asarray(alpha)]), "RGBA"), stats
 
 
 # Bright, saturated, unashamed. A child's crayon box, not a designer's palette —
 # realism is not the goal and would actively hurt.
+# The 4x2 grid is the point: one colour per line reads as a list, not as a box of crayons.
+# The directive below has to be bare — a trailing comment on it makes ruff ignore it.
+# fmt: off
 CRAYON = [
     "#ff5964", "#ffb400", "#ffe14d", "#5ac85a",
     "#3aa7ff", "#a05ae0", "#ff8fc7", "#ff8a3d",
 ]
+# fmt: on
 
 
 def _hex(c: str) -> np.ndarray:
@@ -177,9 +177,7 @@ def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image
         # reads as crayon laid over paper instead of a flat vector fill.
         out[m] = np.clip(rgb[m] / 255.0 * col, 0, 255)
 
-    return Image.fromarray(
-        np.dstack([out.astype(np.uint8), alpha.astype(np.uint8)]), "RGBA"
-    )
+    return Image.fromarray(np.dstack([out.astype(np.uint8), alpha.astype(np.uint8)]), "RGBA")
 
 
 LOCOMOTIONS = ("walk", "stumble", "fly", "float", "hop", "slither")

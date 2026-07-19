@@ -37,6 +37,7 @@ dev = [
     "pytest>=8.0.0",
     # the gallery's route tests drive serve.py through fastapi's TestClient, which needs httpx
     "httpx>=0.27.0",
+    "ruff>=0.6",
 ]
 
 [tool.uv]
@@ -44,6 +45,52 @@ dev = [
 # find each other by path. Virtual means uv resolves the dependencies without trying to
 # build and install the project itself.
 package = false
+
+[tool.ruff]
+target-version = "py312"
+# 100, not the default 88. Measured against the tree as written: 16 lines exceed 100 and
+# 63 exceed 88, and reformatting at 88 churns 16 files instead of 10. 100 is the grain the
+# code was already written to.
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "UP",       # pyupgrade — we're >=3.12, so let it hold that line
+    "B",        # bugbear
+    "C4",       # comprehensions
+    "SIM",      # simplify
+    "RET",      # returns
+    "PIE",      # misc lints
+    "RUF",      # ruff's own, incl. RUF100 for noqa that stopped being true
+    "BLE",      # blind except — six `# noqa: BLE001` already exist, so this was assumed
+    "TID",      # tidy imports
+    "N",        # naming
+    "PTH",      # pathlib over os.path — already clean, selected to keep it that way
+]
+
+# Deliberately NOT selected, with reasons, so nobody has to re-derive them:
+#   S    — every S101 is a bare `assert` in tests/, which is the point of tests, and
+#          S603/S607 fire on the legitimate git subprocess calls.
+#   T20  — the prints are CLI progress reports, which is this repo's actual UI.
+#   ERA  — fires on evals/contract.py's deliberate example-spec doc comment.
+#   ANN  — hint coverage isn't there yet; mypy is scoped in separately.
+#   PLR2004 — the alpha-key and geometry constants are load-bearing magic numbers.
+#   COM, ISC — conflict with the formatter.
+#   TRY, EM, D — style opinions we don't hold.
+
+[tool.ruff.lint.flake8-bugbear]
+# fastapi's whole dependency-injection idiom is a call in an argument default
+# (`file: UploadFile = File(...)`), so B008 is a false positive against it rather than
+# a finding. This is the targeted fix; blanket-ignoring B008 would also hide real ones.
+extend-immutable-calls = ["fastapi.File", "fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+# The remaining long lines here are prose inside `notes=` strings describing what each
+# eval case is testing. Wrapping English mid-sentence to hit a column is worse to read.
+"evals/cases.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

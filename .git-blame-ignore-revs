@@ -1,0 +1,10 @@
+# Revisions that only moved whitespace around. Ignore them in blame:
+#
+#   git blame --ignore-revs-file .git-blame-ignore-revs <file>
+#
+# or set it once for this repo:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Apply ruff format
+e0af5e1a0457ab4869525481aa15e927d1819fe6

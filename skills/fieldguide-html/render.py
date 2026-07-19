@@ -18,6 +18,7 @@ _LEADING_H1 = re.compile(r"\A\s*<h1\b[^>]*>.*?</h1>\s*", re.IGNORECASE | re.DOTA
 def _strip_leading_title(section_html: str) -> str:
     return _LEADING_H1.sub("", section_html, count=1)
 
+
 MODEL_VIEWER_CDN = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
 
 
@@ -31,10 +32,18 @@ def _img_data_uri(path: str) -> str:
     return _data_uri(path, f"image/{ext}")
 
 
-def render_field_guide(*, creature_name, tagline, doodle_path,
-                       biology_html, habitat_html, society_html,
-                       glb_path=None, video_path=None,
-                       template_path=TEMPLATE_PATH) -> str:
+def render_field_guide(
+    *,
+    creature_name,
+    tagline,
+    doodle_path,
+    biology_html,
+    habitat_html,
+    society_html,
+    glb_path=None,
+    video_path=None,
+    template_path=TEMPLATE_PATH,
+) -> str:
     template = Path(template_path).read_text()
 
     if glb_path:

@@ -1,9 +1,7 @@
-import json
+import importlib.util
 from pathlib import Path
 
 import trimesh
-
-import importlib.util
 
 BUILD = Path(__file__).resolve().parents[1] / "skills" / "procedural-creature-3d" / "build.py"
 _spec = importlib.util.spec_from_file_location("build", BUILD)

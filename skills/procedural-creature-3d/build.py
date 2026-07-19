@@ -13,7 +13,7 @@ def _hex_to_rgba(hex_str: str):
     h = hex_str.lstrip("#")
     if len(h) == 3:
         h = "".join(c * 2 for c in h)
-    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    r, g, b = (int(h[i : i + 2], 16) for i in (0, 2, 4))
     return [r, g, b, 255]
 
 
