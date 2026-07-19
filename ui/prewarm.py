@@ -13,9 +13,9 @@ Everything is cached per API result, so re-running costs nothing for work alread
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -24,27 +24,29 @@ REPO = UI.parents[0]
 SKILL = REPO / "skills" / "walk-cycle-anim"
 RIGS = SKILL / "rigs"
 DRAWINGS = REPO / "examples" / "drawings"
-CACHE = UI / "prebuilt"  # committed: model-derived artifacts + built walk cycles
+PREBUILT = UI / "prebuilt"  # committed: model-derived artifacts + built walk cycles
 
 for p in (UI, SKILL, REPO):
     sys.path.insert(0, str(p))
 
-from pipeline import load_env, run  # noqa: E402
-
-IMG_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+from pipeline import IMG_EXT, load_env, run  # noqa: E402
 
 
-def drawings() -> list[Path]:
-    want = set(sys.argv[1:])
+def drawings(want: set[str]) -> list[Path]:
     out = [p for p in sorted(DRAWINGS.iterdir()) if p.suffix.lower() in IMG_EXT]
-    return [p for p in out if not want or p.stem in want]
+    matched = [p for p in out if not want or p.stem in want]
+    if want:
+        missing = want - {p.stem for p in matched}
+        if missing:
+            raise SystemExit(f"No drawing(s) named: {', '.join(sorted(missing))}")
+    return matched
 
 
-def ensure_rig(src: Path) -> tuple[str, str]:
-    """Author a rig if missing. Returns (stem, status)."""
+def ensure_rig(src: Path) -> str:
+    """Author a rig if missing. Returns a status string."""
     rig = RIGS / f"{src.stem}.rig.json"
     if rig.exists():
-        return src.stem, "rig: cached"
+        return "rig: cached"
     from rig_from_image import rig_from_image, validate
 
     spec = rig_from_image(src)
@@ -52,15 +54,12 @@ def ensure_rig(src: Path) -> tuple[str, str]:
         # A refusal is a real answer. Persist it so the gallery shows "won't animate"
         # with the reason instead of silently re-asking the model on every visit.
         rig.write_text(json.dumps(spec, indent=2))
-        return src.stem, f"rig: REFUSED — {spec.get('refuse_reason')}"
+        return f"rig: REFUSED — {spec.get('refuse_reason')}"
     problems = validate(spec)
     if problems:
-        return src.stem, f"rig: INVALID — {problems[0]}"
+        return f"rig: INVALID — {problems[0]}"
     rig.write_text(json.dumps(spec, indent=2))
-    return (
-        src.stem,
-        f"rig: authored ({len(spec.get('parts', []))} parts, faces={spec.get('faces')})",
-    )
+    return f"rig: authored ({len(spec.get('parts', []))} parts, faces={spec.get('faces')})"
 
 
 def ensure_guide(src: Path) -> str:
@@ -70,25 +69,29 @@ def ensure_guide(src: Path) -> str:
     spec = json.loads(rig.read_text())
     if spec.get("refuse") or "NEGATIVE fixture" in spec.get("_comment", ""):
         return "guide: skipped (refused drawing)"
-    if (CACHE / f"{src.stem}.guide.html").exists():
+    if (PREBUILT / f"{src.stem}.guide.html").exists():
         return "guide: cached"
-    run(src.stem, src, rig, CACHE)
+    run(src.stem, src, rig, PREBUILT)
     return "guide: built"
 
 
 def one(src: Path) -> str:
     try:
-        _, rig_status = ensure_rig(src)
+        rig_status = ensure_rig(src)
         return f"{src.stem:26} {rig_status:52} {ensure_guide(src)}"
     except Exception as e:  # noqa: BLE001 — one drawing failing must not abort the batch
         return f"{src.stem:26} FAILED: {type(e).__name__}: {str(e)[:90]}"
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("stems", nargs="*", help="only these drawings, by filename stem")
+    args = parser.parse_args()
+
     if not load_env():
         raise SystemExit("No ANTHROPIC_API_KEY found in any .env up the tree.")
-    CACHE.mkdir(parents=True, exist_ok=True)
-    todo = drawings()
+    PREBUILT.mkdir(parents=True, exist_ok=True)
+    todo = drawings(set(args.stems))
     print(f"prewarming {len(todo)} drawings…\n", flush=True)
     # Bounded but real concurrency: these are long provider calls and our limits are
     # nowhere near the constraint. Serialising this would take minutes we don't have.
@@ -99,8 +102,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        traceback.print_exc()
-        raise
+    # No try/except here: letting an unexpected exception propagate prints one clean
+    # traceback via Python's default handler. Catching it just to re-raise printed the
+    # same traceback twice — once by hand, once again when the re-raise crashed anyway.
+    main()

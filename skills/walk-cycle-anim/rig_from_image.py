@@ -187,11 +187,18 @@ def rig_from_image(doodle: Path, model: str = MODEL) -> dict:
 def main() -> None:
     from dotenv import load_dotenv
 
-    # HERE is skills/walk-cycle-anim, so parents[1] is the repo root.
-    for env in (HERE.parents[1] / ".env", HERE.parents[2] / ".env"):
-        if env.is_file():
-            load_dotenv(env)
-            break
+    # HERE is skills/walk-cycle-anim, so parents[1] is the repo root. Load every
+    # candidate rather than stopping at the first FILE: a keyless root .env used to
+    # shadow a parent .env that actually had the key, because the old version broke
+    # on "file exists" instead of "key is set". (This duplicates pipeline.py's
+    # load_env() on purpose — this script has to run from a bare copy of its own
+    # directory with no lib/ to import, per its inline dependency block.)
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        for env in (HERE.parents[1] / ".env", HERE.parents[2] / ".env"):
+            if env.is_file():
+                load_dotenv(env)
+                if os.environ.get("ANTHROPIC_API_KEY"):
+                    break
 
     ap = argparse.ArgumentParser()
     ap.add_argument("doodle", type=Path)

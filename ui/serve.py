@@ -19,6 +19,7 @@ from __future__ import annotations
 import html as html_mod  # aliased: `html` is a local variable in the route handlers
 import io
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -45,7 +46,7 @@ CACHE = UI / ".cache"
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
 from build_walk_cycle import build, key  # noqa: E402
-from pipeline import anim_overrides, load_env, normalize_spec  # noqa: E402
+from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
 
 UPLOADS.mkdir(parents=True, exist_ok=True)
@@ -53,7 +54,6 @@ CACHE.mkdir(parents=True, exist_ok=True)
 PREBUILT.mkdir(parents=True, exist_ok=True)
 HAVE_KEY = load_env()
 
-IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".heic", ".gif"}
 app = FastAPI()
 
 
@@ -148,14 +148,6 @@ def get_thumb(stem: str):
     if not src:
         return Response(status_code=404)
     return Response(thumb(src), media_type="image/png")
-
-
-@app.get("/raw/{stem}")
-def get_raw(stem: str):
-    src = find(stem)
-    if not src:
-        return Response(status_code=404)
-    return Response(src.read_bytes(), media_type="image/*")
 
 
 @app.get("/anim/{stem}", response_class=HTMLResponse)
@@ -259,9 +251,8 @@ def get_guide(stem: str):
     try:
         return HTMLResponse(_present_guide(run_swarm(stem, src, rig, PREBUILT).read_text()))
     except Exception as e:  # noqa: BLE001 — surface the real failure; never a silent blank page
-        return HTMLResponse(
-            f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500
-        )
+        detail = html_mod.escape(f"{type(e).__name__}: {e}")
+        return HTMLResponse(f"<h3>Swarm failed</h3><pre>{detail}</pre>", status_code=500)
 
 
 def _spec_name(spec: dict):
@@ -329,6 +320,13 @@ async def api_upload(file: UploadFile = File(...)):
             {"stem": stem, "error": "HEIC needs converting first (sips -s format jpeg)."},
             status_code=415,
         )
+    if suffix not in IMG_EXT:
+        # sources() only lists files whose suffix is in IMG_EXT, so anything else saved
+        # to UPLOADS is an orphan: this would return 200 with stats, then /thumb, /anim
+        # and /guide would all 404 for it and the gallery would never show it existed.
+        return JSONResponse(
+            {"stem": stem, "error": f"Unsupported file type {suffix!r}."}, status_code=415
+        )
     try:
         img = Image.open(io.BytesIO(raw))
         img.load()
@@ -368,5 +366,7 @@ def index():
 if __name__ == "__main__":
     import uvicorn
 
-    print("gallery: http://127.0.0.1:8000")
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "8000"))
+    print(f"gallery: http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port, log_level="warning")
