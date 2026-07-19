@@ -332,3 +332,61 @@ def test_unknown_upload_stem_still_404s(monkeypatch, tmp_path):
     assert client.get("/anim/nothing-here-at-all").status_code == 404
     assert client.get("/guide/nothing-here-at-all").status_code == 404
     assert client.get("/thumb/nothing-here-at-all").status_code == 404
+
+
+def test_upload_route_requires_auth_when_configured(monkeypatch):
+    """The actual wiring test: Depends(auth.require_upload_auth) on POST /api/upload
+    must really block an unauthenticated request once GOOGLE_CLIENT_ID/SECRET are
+    set, not just in auth.py's own isolated unit tests. serve.py's `import auth` is
+    a normal import, cached in sys.modules -- monkeypatch.delitem it first (not a bare
+    pop) so the fresh serve.py exec below re-executes auth.py against these env vars,
+    and the real cache entry is restored afterward rather than leaking a "configured"
+    auth module into whichever test happens to run next.
+    """
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "fake-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "fake-secret")
+    monkeypatch.setenv("SESSION_SECRET", "test-secret")
+    monkeypatch.delitem(sys.modules, "auth", raising=False)
+
+    serve = _load_serve()
+    client = TestClient(serve.app)
+
+    def fail_if_called(raw: bytes, suffix: str):
+        raise AssertionError("build_from_upload() must not run for an unauthenticated upload")
+
+    monkeypatch.setattr(serve.upload_build, "build_from_upload", fail_if_called)
+
+    r = client.post("/api/upload", files={"file": ("drawing.png", _TINY_PNG, "image/png")})
+    assert r.status_code == 401, r.text
+
+
+def test_login_redirects_to_google_when_configured(monkeypatch):
+    """/login doesn't exist at all when auth is unconfigured (see
+    test_upload_route_calls_the_real_build_and_returns_its_result's sibling checks in
+    the unconfigured suite) -- once configured, it must exist and start a real OAuth
+    redirect. Doesn't touch Google for real: authorize_redirect() needs the
+    discovery document Google actually serves, which is a live network call this
+    offline suite has no business making. Mocked at exactly that boundary."""
+    from unittest.mock import AsyncMock
+
+    from fastapi.responses import RedirectResponse
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "fake-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "fake-secret")
+    monkeypatch.setenv("SESSION_SECRET", "test-secret")
+    monkeypatch.delitem(sys.modules, "auth", raising=False)
+
+    serve = _load_serve()
+    monkeypatch.setattr(
+        serve.auth.oauth.google,
+        "authorize_redirect",
+        AsyncMock(return_value=RedirectResponse("https://accounts.google.com/o/oauth2/fake")),
+    )
+    client = TestClient(serve.app, follow_redirects=False)
+
+    r = client.get("/login")
+    assert r.status_code in (302, 307), r.text
+    assert "accounts.google.com" in r.headers["location"]

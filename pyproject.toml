@@ -31,6 +31,11 @@ dependencies = [
     # the exporter instead of saying "install scipy". The alpha-key's morphology
     # (binary_closing / fill_holes / label) is scipy.ndimage too.
     "scipy>=1.11.0",
+    # Gating uploads to a real Google Workspace account. authlib does the OAuth/OIDC
+    # flow and verifies the signed ID token; itsdangerous signs the session cookie
+    # Starlette's SessionMiddleware uses to remember who's signed in.
+    "authlib>=1.7.2",
+    "itsdangerous>=2.2.0",
 ]
 
 [dependency-groups]

@@ -29,7 +29,7 @@ import re
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import Depends, FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
@@ -48,6 +48,7 @@ PREBUILT = UI / "prebuilt"
 
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
+import auth  # noqa: E402
 import upload_build  # noqa: E402
 from build_walk_cycle import build, key  # noqa: E402
 from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
@@ -71,6 +72,10 @@ ON_VERCEL = os.environ.get("VERCEL") == "1"
 UPLOAD_STORAGE = upload_build.default_storage(UPLOADS)
 
 app = FastAPI()
+# No-op unless GOOGLE_CLIENT_ID/SECRET are set (see auth.py) — gates only
+# POST /api/upload, via Depends(auth.require_upload_auth) below. Every other route,
+# including browsing anything an already-uploaded creature produced, stays public.
+auth.install(app)
 
 
 def sources() -> list[Path]:
@@ -456,8 +461,14 @@ def api_creatures():
 
 
 @app.post("/api/upload")
-async def api_upload(file: UploadFile = File(...)):
+async def api_upload(
+    file: UploadFile = File(...), _user: dict | None = Depends(auth.require_upload_auth)
+):
     """Accept a dropped drawing and build it into a real animated creature.
+
+    Gated on a real Google Workspace account when auth is configured (see auth.py) —
+    everything else in this file stays public. `_user` isn't used for anything beyond
+    the dependency's own 401 on an unauthenticated request; there's no per-user state.
 
     This used to stop after storing the file and running the alpha-key sanity check —
     deliberately: authoring a rig needs a vision pass, and a spinner that never
