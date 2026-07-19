@@ -31,6 +31,40 @@ animal in it, and the gallery says so rather than animating paper slabs sliding
 sideways. An honest refusal is a feature; plausible garbage is the worst thing we
 could show.
 
+## Deploying to Vercel
+
+The gallery is a single FastAPI app (`ui/serve.py`); `api/index.py` just re-exports
+it from where Vercel's Python runtime expects to find one. Uploading a drawing is
+gated to a real Google Workspace account; browsing — including anything an
+already-uploaded creature produced — stays public regardless.
+
+What deploying needs, beyond `git push`:
+
+- **A Vercel Pro plan or higher.** A real upload build (rig authoring plus the full
+  swarm) measured at ~51s for one drawing with no retries. The Hobby plan's default
+  duration isn't enough headroom even with `vercel.json`'s explicit `maxDuration`.
+- **A Google Cloud OAuth 2.0 Client ID** (Web application), with
+  `https://<your-domain>/auth/callback` as an authorized redirect URI. Set
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `ALLOWED_EMAIL_DOMAINS` (see
+  `.env.example`) in the Vercel dashboard. Without these, uploads work with no login
+  at all — see `ui/auth.py` for why that's deliberate, not a gap.
+- **A `SESSION_SECRET`** — any long random string, signs the session cookie.
+  Required once `GOOGLE_CLIENT_ID` is set; `ui/auth.py` refuses to start without it.
+- **A Vercel Blob store**, linked to the project. Auto-injects
+  `BLOB_READ_WRITE_TOKEN`, which is what switches uploaded creatures from local disk
+  (`ui/storage.py`'s dev backend) to Blob (its production one) — nothing else about
+  the app changes. `BLOB_STORE_ID` is *not* confirmed to auto-inject the same way;
+  see `ui/storage.py`'s `BlobStorage` docstring for the smoke test that checks this
+  before trusting it in production.
+- **"Access to System Environment Variables"** enabled in Project Settings, so
+  `VERCEL=1` is actually populated at runtime — this is what tells the bundled 13
+  creatures never to attempt a live rebuild against Vercel's read-only filesystem
+  (see `ON_VERCEL` in `ui/serve.py`).
+- **`./prewarm.py` run before every deploy.** The bundled 13 creatures are shipped as
+  committed, read-only files; the deployed app never rebuilds them. Skipping this
+  before a deploy means a real gap, surfaced honestly as "needs a prewarm and a
+  redeploy" rather than a crash — not a cache the live app can fill on its own.
+
 ## How it works
 
 The **Field Interpreter** looks at the drawing once and emits a **Creature Spec**.

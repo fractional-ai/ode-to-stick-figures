@@ -76,10 +76,13 @@ class BlobStorage:
     NOT covered by the automated test suite: correctness here depends on a real Blob
     store and a real token, neither of which exists until the Vercel project is set
     up. Smoke-test this against a real store (upload a small key, read it back, confirm
-    the byte-for-byte content) before trusting it in production — in particular,
-    verify _API_BASE is still correct against current Vercel Blob docs; it's written
-    from the documented PUT/list/delete request *shapes*, not from a directly
-    confirmed literal hostname.
+    the byte-for-byte content) before trusting it in production. Two things this
+    smoke test specifically needs to confirm, not just assume:
+      1. _API_BASE — written from the documented PUT/list/delete request *shapes*,
+         not from a directly confirmed literal hostname.
+      2. BLOB_STORE_ID — BLOB_READ_WRITE_TOKEN is confirmed auto-injected once a Blob
+         store is linked to the Vercel project; this second env var is NOT confirmed
+         to be auto-injected the same way and may need setting by hand.
     """
 
     _API_BASE = "https://blob.vercel-storage.com"
