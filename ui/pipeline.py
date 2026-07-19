@@ -28,9 +28,10 @@ MODELER = REPO / "skills" / "procedural-creature-3d"
 for p in (REPO, SKILL, GUIDE, MODELER):
     sys.path.insert(0, str(p))
 
-from agents.definitions import INTERPRETER, SPECIALISTS  # noqa: E402
 from build_walk_cycle import build  # noqa: E402
 from render import render_field_guide  # noqa: E402
+
+from agents.definitions import INTERPRETER, SPECIALISTS  # noqa: E402
 
 
 def _client():
@@ -342,9 +343,8 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
     import base64
     import io
 
-    from PIL import Image
-
     from build_walk_cycle import key as key_fn
+    from PIL import Image
 
     def keyed_b64() -> str:
         keyed, _ = key_fn(Image.open(doodle))
@@ -386,7 +386,7 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
             from build import build_creature_glb
 
             build_creature_glb(spec, str(glb))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 3D is optional; the guide degrades without it
             print(f"  3D modeler failed for {stem}: {type(e).__name__}: {e}")
 
     anim = cache / f"{stem}.html"

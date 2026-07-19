@@ -20,7 +20,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
 # --------------------------------------------------------------------------- #
 # Creature Spec schema (mirrors specs/2026-07-17-creature-swarm-design.md)     #
 # --------------------------------------------------------------------------- #

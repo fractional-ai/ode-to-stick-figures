@@ -77,7 +77,7 @@ def one(src: Path) -> str:
     try:
         _, rig_status = ensure_rig(src)
         return f"{src.stem:26} {rig_status:52} {ensure_guide(src)}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — one drawing failing must not abort the batch
         return f"{src.stem:26} FAILED: {type(e).__name__}: {str(e)[:90]}"
 
 

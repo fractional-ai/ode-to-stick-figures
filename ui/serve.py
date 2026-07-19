@@ -16,14 +16,13 @@ nothing to migrate, and `rm -rf .cache` is a full reset.
 
 from __future__ import annotations
 
-import base64
 import io
 import json
 import re
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
@@ -228,8 +227,10 @@ def get_guide(stem: str):
         )
     try:
         return HTMLResponse(_present_guide(run_swarm(stem, src, rig, PREBUILT).read_text()))
-    except Exception as e:  # surface the real failure; never a silent blank page
-        return HTMLResponse(f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500)
+    except Exception as e:  # noqa: BLE001 — surface the real failure; never a silent blank page
+        return HTMLResponse(
+            f"<h3>Swarm failed</h3><pre>{type(e).__name__}: {e}</pre>", status_code=500
+        )
 
 
 def _spec_name(spec: dict):
@@ -302,7 +303,7 @@ async def api_upload(file: UploadFile = File(...)):
     try:
         img = Image.open(io.BytesIO(raw))
         img.load()
-    except Exception:
+    except Exception:  # noqa: BLE001 — PIL raises anything at all on a malformed upload
         return JSONResponse({"stem": stem, "error": "Not a readable image."}, status_code=415)
 
     dest = UPLOADS / f"{stem}{suffix}"
@@ -312,7 +313,9 @@ async def api_upload(file: UploadFile = File(...)):
         n += 1
     dest.write_bytes(raw)
 
-    keyed, stats = key(Image.open(dest))
+    # Only the stats matter here: this call is the alpha-key run purely to sanity-check what
+    # got dropped on us. The keyed image itself is rebuilt at animation time.
+    _, stats = key(Image.open(dest))
     warn = None
     if stats["blobs"] >= 3 and stats["dominance"] < 0.80:
         warn = (

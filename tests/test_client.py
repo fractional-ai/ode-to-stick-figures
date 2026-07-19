@@ -1,3 +1,5 @@
+import pytest
+
 import lib.client as client_mod
 
 
@@ -19,8 +21,5 @@ def test_managed_client_sets_beta_header(monkeypatch):
 
 def test_managed_client_requires_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    try:
+    with pytest.raises(SystemExit):
         client_mod.managed_client()
-        assert False, "expected SystemExit"
-    except SystemExit:
-        pass

@@ -1,4 +1,3 @@
-import base64
 import importlib.util
 from pathlib import Path
 
@@ -28,11 +27,14 @@ def _walk_cycle(tmp_path):
 
 
 def _base(tmp_path, **over):
-    args = dict(
-        creature_name="Test Blob", tagline="an earnest waddler",
-        doodle_path=_doodle(tmp_path),
-        biology_html="<p>bio</p>", habitat_html="<p>hab</p>", society_html="<p>soc</p>",
-    )
+    args = {
+        "creature_name": "Test Blob",
+        "tagline": "an earnest waddler",
+        "doodle_path": _doodle(tmp_path),
+        "biology_html": "<p>bio</p>",
+        "habitat_html": "<p>hab</p>",
+        "society_html": "<p>soc</p>",
+    }
     args.update(over)
     return args
 

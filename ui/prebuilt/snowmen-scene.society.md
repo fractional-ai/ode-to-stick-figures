@@ -1,0 +1,9 @@
+# Folklore & Society: The Kettlefolk of the Marsh Rings
+
+Among the reed-fen communities that border the slow floodwaters, the *Segmentus caputbalneus* is known colloquially as the **Kettlestack**, or more affectionately, **Old Brim-and-Bead**. Local wader-clans hold that each orange segment of its totem-pole body represents a season survived, and that a Kettlestack sighted with all five segments intact is a portent of a mild, generous year — while a creature seen with segments submerged or listing suggests hardship ahead. Elders count the visible rings the way one might read tree bark, treating the creature as a living almanac bobbing quietly at the water's edge.
+
+Practically, fen-dwelling communities have long used the Kettlestack's stillness as a natural water-gauge: because the creature floats with only its uppermost segments and hat above the waterline, villagers calibrate flood risk by how many "beads" remain visible above the jagged blue wash. A fully submerged stack, save for the hat, is taken as an urgent warning to move livestock to higher ground.
+
+The oversized black hat has become a symbol of humility and quiet endurance in local craft — woven reed hats modeled on its brim are gifted to new parents, meant to instill patience and a low profile against life's currents. The single red eye beneath the brim is interpreted not as watchfulness but as *restraint*: seeing without needing to act, floating without struggle.
+
+Its rumored pairing with a red-bodied, green-hatted companion has given rise to marriage-totems among riverside families — carved matched pairs, one orange-hatted-black, one red-hatted-green, exchanged at betrothal ceremonies to symbolize a bond that floats steady through any season's rise and fall.

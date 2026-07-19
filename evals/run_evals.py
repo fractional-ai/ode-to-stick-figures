@@ -25,9 +25,9 @@ from pathlib import Path
 # Allow `uv run evals/run_evals.py` from repo root.
 sys.path.insert(0, str(Path(__file__).parent))
 
-from cases import CASES  # noqa: E402
-from checks import DETERMINISTIC_CHECKS, llm_judge_check  # noqa: E402
-from contract import Case, CheckResult  # noqa: E402
+from cases import CASES
+from checks import DETERMINISTIC_CHECKS, llm_judge_check
+from contract import Case, CheckResult
 
 
 def get_spec(case: Case, target: str) -> dict:

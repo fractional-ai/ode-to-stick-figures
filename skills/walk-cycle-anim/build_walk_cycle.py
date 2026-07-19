@@ -117,10 +117,14 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
 
 # Bright, saturated, unashamed. A child's crayon box, not a designer's palette —
 # realism is not the goal and would actively hurt.
+# The 4x2 grid is the point: one colour per line reads as a list, not as a box of crayons.
+# The directive below has to be bare — a trailing comment on it makes ruff ignore it.
+# fmt: off
 CRAYON = [
     "#ff5964", "#ffb400", "#ffe14d", "#5ac85a",
     "#3aa7ff", "#a05ae0", "#ff8fc7", "#ff8a3d",
 ]
+# fmt: on
 
 
 def _hex(c: str) -> np.ndarray:
