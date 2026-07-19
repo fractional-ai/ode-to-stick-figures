@@ -114,6 +114,27 @@ def test_refused_drawings_do_not_claim_to_animate(creatures, client):
             assert not c["animated"], f"{c['stem']} is refused but marked animated"
 
 
+def test_refused_drawings_are_refused_by_the_routes_too(creatures, client):
+    """A refusal has to hold on the route, not just on the card.
+
+    This assertion is the one that was missing. The test above only checks the listing
+    agrees with itself, so hiding the buttons looked like enough. It wasn't: /anim/ and
+    /guide/ never consulted refusal(), and a direct URL walked straight past it. Hitting
+    /guide/snowmen-scene ran the whole swarm on a painting of two snowmen and invented
+    "Segmented Bucket-Hat Wader (Segmentus caputbalneus)" with locomotion "float", then
+    wrote it into ui/prebuilt/ where it got committed. Real model calls spent to
+    manufacture exactly the plausible garbage the refusal exists to prevent.
+    """
+    refused = [c["stem"] for c in creatures if c["refused"]]
+    assert refused, "no refused drawing in the gallery to test the bail path with"
+    for stem in refused:
+        for route in (f"/anim/{stem}", f"/guide/{stem}"):
+            r = client.get(route)
+            assert r.status_code == 422, (
+                f"{route} returned {r.status_code}, not a refusal — it is doing the work"
+            )
+
+
 def test_unknown_stem_404s(client):
     assert client.get("/anim/no-such-creature").status_code == 404
     assert client.get("/thumb/no-such-creature").status_code == 404

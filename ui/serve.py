@@ -16,6 +16,7 @@ nothing to migrate, and `rm -rf .cache` is a full reset.
 
 from __future__ import annotations
 
+import html as html_mod  # aliased: `html` is a local variable in the route handlers
 import io
 import json
 import re
@@ -159,6 +160,11 @@ def get_raw(stem: str):
 
 @app.get("/anim/{stem}", response_class=HTMLResponse)
 def get_anim(stem: str):
+    why = refusal_for(stem)
+    if why:
+        return HTMLResponse(
+            f"<p>We won't animate this one: {html_mod.escape(why)}</p>", status_code=422
+        )
     html = animation(stem)
     if html is None:
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
@@ -179,6 +185,25 @@ def refusal(spec: dict) -> str | None:
     if "NEGATIVE fixture" in spec.get("_comment", ""):
         return spec.get("vibe") or "documented as not animatable"
     return None
+
+
+def refusal_for(stem: str) -> str | None:
+    """The refusal reason for a stem, straight from its rig, or None.
+
+    The listing isn't the only way in. Hiding the buttons in the gallery leaves
+    /anim/<stem> and /guide/<stem> reachable by URL, and those routes did the work
+    anyway: hitting /guide/snowmen-scene ran the swarm on a painting of snowmen and
+    invented "Segmented Bucket-Hat Wader (Segmentus caputbalneus), locomotion: float".
+    That is the plausible garbage the refusal exists to prevent, and it billed real
+    model calls to produce it. Enforce where the work happens, not where it's advertised.
+    """
+    rig = rig_for(stem)
+    if not rig:
+        return None
+    try:
+        return refusal(json.loads(rig.read_text()))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return None
 
 
 # A field guide opens in its own tab with no chrome, so give it a way back to
@@ -214,6 +239,14 @@ def get_guide(stem: str):
     src, rig = find(stem), rig_for(stem)
     if not src or not rig:
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+    why = refusal_for(stem)
+    if why:
+        # Before the cache check, and before HAVE_KEY: a refusal must never reach the
+        # swarm. This route used to fabricate a creature for a drawing that has none.
+        return HTMLResponse(
+            f"<p>We won't write a field guide for this one: {html_mod.escape(why)}</p>",
+            status_code=422,
+        )
     out = PREBUILT / f"{stem}.guide.html"
     if out.exists():
         return HTMLResponse(_present_guide(out.read_text()))
