@@ -71,6 +71,6 @@ def test_walk_cycle_embedded_as_iframe(tmp_path):
     )
     assert "<iframe" in html
     assert "data:text/html" in html
-    assert "<video" not in html        # regression guard: was <video src=video/mp4>
+    assert "<video" not in html  # regression guard: was <video src=video/mp4>
     assert "video/mp4" not in html
     assert "{{" not in html

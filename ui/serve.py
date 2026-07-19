@@ -185,8 +185,8 @@ def refusal(spec: dict) -> str | None:
 # the gallery. Fixed-position so it's reachable no matter how long the page is.
 _BACK_BAR = (
     '<a href="/" style="position:fixed;top:12px;left:12px;z-index:9999;'
-    'padding:.5rem .8rem;background:#1c2c26;color:#fff;border-radius:9px;'
-    'font:600 14px system-ui,-apple-system,sans-serif;text-decoration:none;'
+    "padding:.5rem .8rem;background:#1c2c26;color:#fff;border-radius:9px;"
+    "font:600 14px system-ui,-apple-system,sans-serif;text-decoration:none;"
     'box-shadow:0 4px 14px rgba(0,0,0,.25)">← Back to gallery</a>'
 )
 
@@ -194,15 +194,13 @@ _BACK_BAR = (
 # emit their own top-level <h1> title, so the page shows the title twice. Drop an
 # <h1> that immediately follows an <h2> (the creature-name <h1> at the top is
 # preceded by <body>, not an <h2>, so it's untouched). Fixes already-cached pages.
-_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>",
-                        re.IGNORECASE | re.DOTALL)
+_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>", re.IGNORECASE | re.DOTALL)
 
 
 def _present_guide(html: str) -> str:
     """Serve-time cleanup so cached guides get the fixes without a re-run."""
     html = _DUP_TITLE.sub(r"\1", html)
-    new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR,
-                     html, count=1)
+    new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR, html, count=1)
     return new if n else _BACK_BAR + html
 
 
@@ -238,9 +236,7 @@ def _spec_name(spec: dict):
     {common_name, mock_latin_binomial} object — prefer the common name."""
     n = spec.get("name")
     if isinstance(n, dict):
-        return n.get("common_name") or n.get("common") or " ".join(
-            str(v) for v in n.values() if v
-        )
+        return n.get("common_name") or n.get("common") or " ".join(str(v) for v in n.values() if v)
     return n
 
 

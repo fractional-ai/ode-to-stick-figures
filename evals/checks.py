@@ -39,9 +39,7 @@ _HEX_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 # --------------------------------------------------------------------------- #
 # Load the canonical schema (single source of truth for enums + validation).  #
 # --------------------------------------------------------------------------- #
-_SCHEMA_PATH = (
-    Path(__file__).resolve().parent.parent / "contracts" / "creature-spec.schema.json"
-)
+_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "contracts" / "creature-spec.schema.json"
 
 try:
     _SCHEMA = json.loads(_SCHEMA_PATH.read_text())
@@ -81,11 +79,15 @@ def check_schema_valid(spec: dict, case: Case) -> CheckResult:
     """
     name = "schema-valid"
     if _SCHEMA is None:
-        return CheckResult(name=name, passed=True, detail=f"skipped: schema not found at {_SCHEMA_PATH}")
+        return CheckResult(
+            name=name, passed=True, detail=f"skipped: schema not found at {_SCHEMA_PATH}"
+        )
     try:
         from jsonschema import Draft202012Validator
     except Exception as exc:  # noqa: BLE001
-        return CheckResult(name=name, passed=True, detail=f"skipped: jsonschema unavailable ({exc})")
+        return CheckResult(
+            name=name, passed=True, detail=f"skipped: jsonschema unavailable ({exc})"
+        )
 
     validator = Draft202012Validator(_SCHEMA)
     errors = sorted(validator.iter_errors(spec), key=lambda e: list(e.path))
@@ -168,11 +170,15 @@ def check_parts(spec: dict, case: Case) -> CheckResult:
             return CheckResult(name=name, passed=False, detail=f"parts[{i}] is not a dict")
         missing = [k for k in REQUIRED_PART_KEYS if k not in part]
         if missing:
-            return CheckResult(name=name, passed=False, detail=f"parts[{i}] missing keys: {missing}")
+            return CheckResult(
+                name=name, passed=False, detail=f"parts[{i}] missing keys: {missing}"
+            )
         count = part.get("count")
         if isinstance(count, bool) or not isinstance(count, int) or count < 0:
             return CheckResult(
-                name=name, passed=False, detail=f"parts[{i}].count not a non-negative int: {count!r}"
+                name=name,
+                passed=False,
+                detail=f"parts[{i}].count not a non-negative int: {count!r}",
             )
     return CheckResult(name=name, passed=True)
 
@@ -187,7 +193,9 @@ def check_palette(spec: dict, case: Case) -> CheckResult:
         return CheckResult(name=name, passed=False, detail="palette missing or empty")
     for i, color in enumerate(palette):
         if not isinstance(color, str) or not _HEX_RE.match(color):
-            return CheckResult(name=name, passed=False, detail=f"palette[{i}] not a hex color: {color!r}")
+            return CheckResult(
+                name=name, passed=False, detail=f"palette[{i}] not a hex color: {color!r}"
+            )
     return CheckResult(name=name, passed=True)
 
 
@@ -202,7 +210,9 @@ def check_distinctive_features(spec: dict, case: Case) -> CheckResult:
     for i, feat in enumerate(features):
         if not _nonempty_str(feat):
             return CheckResult(
-                name=name, passed=False, detail=f"distinctive_features[{i}] not a non-empty string: {feat!r}"
+                name=name,
+                passed=False,
+                detail=f"distinctive_features[{i}] not a non-empty string: {feat!r}",
             )
     return CheckResult(name=name, passed=True)
 
@@ -215,7 +225,9 @@ def check_locomotion(spec: dict, case: Case) -> CheckResult:
     loco = spec.get("locomotion")
     if VALID_LOCOMOTION:
         if loco not in VALID_LOCOMOTION:
-            return CheckResult(name=name, passed=False, detail=f"locomotion {loco!r} not in {VALID_LOCOMOTION}")
+            return CheckResult(
+                name=name, passed=False, detail=f"locomotion {loco!r} not in {VALID_LOCOMOTION}"
+            )
     elif not _nonempty_str(loco):
         return CheckResult(name=name, passed=False, detail="locomotion missing or empty")
     return CheckResult(name=name, passed=True)
@@ -267,7 +279,9 @@ def llm_judge_check(spec: dict, case: Case) -> CheckResult:
     try:
         from anthropic import Anthropic
     except Exception as exc:  # noqa: BLE001 - any import failure means skip.
-        return CheckResult(name=name, passed=True, detail=f"skipped: anthropic import failed ({exc})")
+        return CheckResult(
+            name=name, passed=True, detail=f"skipped: anthropic import failed ({exc})"
+        )
 
     try:
         client = Anthropic()

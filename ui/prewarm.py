@@ -24,7 +24,7 @@ REPO = UI.parents[0]
 SKILL = REPO / "skills" / "walk-cycle-anim"
 RIGS = SKILL / "rigs"
 DRAWINGS = REPO / "examples" / "drawings"
-CACHE = UI / "prebuilt"   # committed: model-derived artifacts + built walk cycles
+CACHE = UI / "prebuilt"  # committed: model-derived artifacts + built walk cycles
 
 for p in (UI, SKILL, REPO):
     sys.path.insert(0, str(p))
@@ -57,7 +57,10 @@ def ensure_rig(src: Path) -> tuple[str, str]:
     if problems:
         return src.stem, f"rig: INVALID — {problems[0]}"
     rig.write_text(json.dumps(spec, indent=2))
-    return src.stem, f"rig: authored ({len(spec.get('parts', []))} parts, faces={spec.get('faces')})"
+    return (
+        src.stem,
+        f"rig: authored ({len(spec.get('parts', []))} parts, faces={spec.get('faces')})",
+    )
 
 
 def ensure_guide(src: Path) -> str:

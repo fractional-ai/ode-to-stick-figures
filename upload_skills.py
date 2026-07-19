@@ -76,9 +76,7 @@ def main() -> None:
             {"type": "custom", "skill_id": _skill_id_of(s), "version": "latest"}
             for s in current_skills
         ] + [{"type": "custom", "skill_id": skill_id, "version": "latest"}]
-        client.beta.agents.update(
-            specialist_id, version=current.version, skills=new_skills
-        )
+        client.beta.agents.update(specialist_id, version=current.version, skills=new_skills)
         print(f"  attached to {specialist_key} ✓")
 
     Path(".skill_ids.json").write_text(json.dumps(uploaded, indent=2))

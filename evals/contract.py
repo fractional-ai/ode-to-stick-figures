@@ -69,9 +69,9 @@ VALID_SYMMETRIES = ("bilateral", "radial")
 class CheckResult:
     """Result of a single check against one creature spec."""
 
-    name: str          # short check id, e.g. "valid-json" or "palette-is-hex"
+    name: str  # short check id, e.g. "valid-json" or "palette-is-hex"
     passed: bool
-    detail: str = ""   # human-readable reason, shown on failure
+    detail: str = ""  # human-readable reason, shown on failure
 
     @property
     def symbol(self) -> str:
@@ -95,11 +95,11 @@ class CheckResult:
 class Case:
     """One eval case: an input drawing + how to evaluate its spec."""
 
-    id: str                                   # "bee", "shark-dog", ...
-    drawing_path: str                         # examples/drawings/bee.webp
-    fixture_path: str                         # evals/fixtures/bee.json
+    id: str  # "bee", "shark-dog", ...
+    drawing_path: str  # examples/drawings/bee.webp
+    fixture_path: str  # evals/fixtures/bee.json
     expected_features: list[str] = field(default_factory=list)  # hints for the LLM judge
-    notes: str = ""                           # free-text, e.g. what the drawing shows
+    notes: str = ""  # free-text, e.g. what the drawing shows
 
 
 # cases.py must expose:

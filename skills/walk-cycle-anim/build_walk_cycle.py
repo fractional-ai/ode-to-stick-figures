@@ -107,12 +107,8 @@ def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     mask = nd.binary_dilation(mask, np.ones((3, 3)))
     stats["kept_frac"] = float(mask.mean())
 
-    alpha = Image.fromarray((mask * 255).astype(np.uint8)).filter(
-        ImageFilter.GaussianBlur(0.8)
-    )
-    return Image.fromarray(
-        np.dstack([a.astype(np.uint8), np.asarray(alpha)]), "RGBA"
-    ), stats
+    alpha = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
+    return Image.fromarray(np.dstack([a.astype(np.uint8), np.asarray(alpha)]), "RGBA"), stats
 
 
 # Bright, saturated, unashamed. A child's crayon box, not a designer's palette —
@@ -181,9 +177,7 @@ def colorize(rgba: Image.Image, palette: list[str] | None = None) -> Image.Image
         # reads as crayon laid over paper instead of a flat vector fill.
         out[m] = np.clip(rgb[m] / 255.0 * col, 0, 255)
 
-    return Image.fromarray(
-        np.dstack([out.astype(np.uint8), alpha.astype(np.uint8)]), "RGBA"
-    )
+    return Image.fromarray(np.dstack([out.astype(np.uint8), alpha.astype(np.uint8)]), "RGBA")
 
 
 LOCOMOTIONS = ("walk", "stumble", "fly", "float", "hop", "slither")

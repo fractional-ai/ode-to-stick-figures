@@ -234,8 +234,24 @@ def as_palette(v) -> list[str]:
     return out or ["#cccccc"]
 
 
-WORDS = {"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,
-         "nine":9,"ten":10,"a pair":2,"pair":2,"several":4,"many":8,"lots":8,"numerous":8}
+WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "a pair": 2,
+    "pair": 2,
+    "several": 4,
+    "many": 8,
+    "lots": 8,
+    "numerous": 8,
+}
 
 
 def as_count(v) -> int:
@@ -362,9 +378,7 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
     text_agents = [a for a in SPECIALISTS if a["key"] in ("biologist", "habitat", "society")]
 
     def lane(a: dict) -> tuple[str, str]:
-        return a["key"], cached(
-            cache / f"{stem}.{a['key']}.md", lambda: specialist(a, spec)[1]
-        )
+        return a["key"], cached(cache / f"{stem}.{a['key']}.md", lambda: specialist(a, spec)[1])
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = dict(pool.map(lane, text_agents))
