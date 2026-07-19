@@ -22,12 +22,16 @@ import json
 import sys
 from pathlib import Path
 
-# Allow `uv run evals/run_evals.py` from repo root.
+# Allow `uv run evals/run_evals.py` from repo root, and reach lib/ for the one shared
+# Anthropic client (so the beta header is set the same way everywhere it's needed).
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cases import CASES
 from checks import DETERMINISTIC_CHECKS, llm_judge_check
 from contract import Case, CheckResult
+
+from lib.client import managed_client
 
 
 def get_spec(case: Case, target: str) -> dict:
@@ -46,7 +50,6 @@ def get_spec(case: Case, target: str) -> dict:
 
 _SPECIALIST_IDS_PATH = Path(".specialist_ids.json")
 _ENVIRONMENT_ID_PATH = Path(".environment_id")
-_MANAGED_AGENTS_BETA = "managed-agents-2026-04-01"
 
 
 def _load_doodle_as_image_block(path: Path) -> dict:
@@ -85,8 +88,6 @@ def run_interpreter_live(case: Case) -> dict:
     """
     import os
 
-    from anthropic import Anthropic
-
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise SystemExit("Set ANTHROPIC_API_KEY before running --target live.")
     if not _ENVIRONMENT_ID_PATH.exists() or not _SPECIALIST_IDS_PATH.exists():
@@ -104,7 +105,7 @@ def run_interpreter_live(case: Case) -> dict:
         )
     interpreter_id = specialist_ids["interpreter"]
 
-    client = Anthropic(default_headers={"anthropic-beta": _MANAGED_AGENTS_BETA})
+    client = managed_client()
     image_block = _load_doodle_as_image_block(Path(case.drawing_path))
 
     session = client.beta.sessions.create(

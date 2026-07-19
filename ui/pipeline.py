@@ -12,6 +12,8 @@ they describe the same creature.
 
 from __future__ import annotations
 
+import base64
+import io
 import json
 import os
 import re
@@ -28,17 +30,25 @@ MODELER = REPO / "skills" / "procedural-creature-3d"
 for p in (REPO, SKILL, GUIDE, MODELER):
     sys.path.insert(0, str(p))
 
-from build_walk_cycle import build  # noqa: E402
+import markdown  # noqa: E402
+from anthropic import Anthropic  # noqa: E402
+from build_walk_cycle import ENVIRONMENTS, build  # noqa: E402
+from build_walk_cycle import key as key_fn  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+from PIL import Image  # noqa: E402
 from render import render_field_guide  # noqa: E402
 
 from agents.definitions import INTERPRETER, SPECIALISTS  # noqa: E402
 
+# The one set of extensions we treat as a drawing, shared by serve.py (scanning
+# examples/ and uploads/) and prewarm.py (scanning examples/ only). Used to diverge
+# between the two — .heic and .gif were accepted for uploads but not for the shipped
+# examples, which is fine today but drifts silently the moment either list is edited
+# without the other.
+IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".heic", ".gif"}
+
 
 def _client():
-    import os
-
-    from anthropic import Anthropic
-
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         raise RuntimeError("ANTHROPIC_API_KEY not set (looked for a .env up the tree)")
@@ -47,10 +57,6 @@ def _client():
 
 def load_env() -> bool:
     """Find a .env anywhere up the tree. The repo documents .env at the root."""
-    import os
-
-    from dotenv import load_dotenv
-
     if os.environ.get("ANTHROPIC_API_KEY"):
         return True
     for d in [REPO, *REPO.parents]:
@@ -301,8 +307,6 @@ def choose_environment(habitat_md: str, spec: dict) -> str:
     than every creature on the same strip of grass regardless of what we wrote about it.
     Haiku, because this is a 1-token classification over text we already have.
     """
-    from build_walk_cycle import ENVIRONMENTS
-
     c = _client()
     msg = c.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -342,12 +346,10 @@ def anim_overrides(spec: dict, env: str, stem: str) -> dict:
 
 
 def md_to_html(md: str) -> str:
-    try:
-        import markdown
-
-        return markdown.markdown(md, extensions=["extra"])
-    except ImportError:
-        return "".join(f"<p>{p.strip()}</p>" for p in md.split("\n\n") if p.strip())
+    # markdown is a locked runtime dependency (pyproject.toml), not optional here — a
+    # fallback that silently degraded to bare <p> tags used to hide a missing import by
+    # shipping raw "**bold**" markup straight into every guide section instead of erroring.
+    return markdown.markdown(md, extensions=["extra"])
 
 
 def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
@@ -356,11 +358,6 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
     Order matters: Interpreter is serial (everyone keys off its Spec), then the three
     text lanes and the animation run concurrently.
     """
-    import base64
-    import io
-
-    from build_walk_cycle import key as key_fn
-    from PIL import Image
 
     def keyed_b64() -> str:
         keyed, _ = key_fn(Image.open(doodle))
