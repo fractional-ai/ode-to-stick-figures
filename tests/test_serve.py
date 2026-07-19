@@ -14,11 +14,12 @@ no model calls.
 
 from __future__ import annotations
 
-import importlib.util
 import sys
 from pathlib import Path
 
 import pytest
+
+from tests.conftest import load_module_from_path
 
 UI = Path(__file__).resolve().parents[1] / "ui"
 SKILL = Path(__file__).resolve().parents[1] / "skills" / "walk-cycle-anim"
@@ -28,10 +29,7 @@ def _load_serve():
     for p in (UI, SKILL):
         if str(p) not in sys.path:
             sys.path.insert(0, str(p))
-    spec = importlib.util.spec_from_file_location("serve", UI / "serve.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return load_module_from_path("serve", UI / "serve.py")
 
 
 @pytest.fixture(scope="module")
@@ -58,20 +56,14 @@ def test_every_animated_creature_has_a_working_walk(creatures, client):
     """The one that matters. A 500 here is the gallery's ▶ walk button being dead."""
     animated = [c for c in creatures if c["animated"]]
     assert animated, "nothing is animated — the gallery has nothing to show"
-    broken = {
-        c["stem"]: client.get(f"/anim/{c['stem']}").status_code
-        for c in animated
-        if client.get(f"/anim/{c['stem']}").status_code != 200
-    }
+    codes = {c["stem"]: client.get(f"/anim/{c['stem']}").status_code for c in animated}
+    broken = {stem: code for stem, code in codes.items() if code != 200}
     assert not broken, f"/anim/ is broken for: {broken}"
 
 
 def test_every_creature_has_a_thumbnail(creatures, client):
-    broken = {
-        c["stem"]: client.get(f"/thumb/{c['stem']}").status_code
-        for c in creatures
-        if client.get(f"/thumb/{c['stem']}").status_code != 200
-    }
+    codes = {c["stem"]: client.get(f"/thumb/{c['stem']}").status_code for c in creatures}
+    broken = {stem: code for stem, code in codes.items() if code != 200}
     assert not broken, f"/thumb/ is broken for: {broken}"
 
 

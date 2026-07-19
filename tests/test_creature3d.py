@@ -1,12 +1,11 @@
-import importlib.util
 from pathlib import Path
 
 import trimesh
 
+from tests.conftest import load_module_from_path
+
 BUILD = Path(__file__).resolve().parents[1] / "skills" / "procedural-creature-3d" / "build.py"
-_spec = importlib.util.spec_from_file_location("build", BUILD)
-build = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(build)
+build = load_module_from_path("build", BUILD)
 
 SPEC = {
     "name": "Test Blob",

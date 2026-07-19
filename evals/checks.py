@@ -30,6 +30,7 @@ from contract import (
     REQUIRED_TOP_LEVEL_KEYS,
     VALID_SYMMETRIES,
     Case,
+    Check,
     CheckResult,
 )
 
@@ -245,7 +246,7 @@ def check_vibe(spec: dict, case: Case) -> CheckResult:
 
 # The deterministic suite, in execution order. Schema validation runs first as
 # the authoritative gate; the rest are readable per-field diagnostics.
-DETERMINISTIC_CHECKS: list[callable] = [
+DETERMINISTIC_CHECKS: list[Check] = [
     check_schema_valid,
     check_name_is_string,
     check_top_level_keys,

@@ -39,6 +39,8 @@ dev = [
     "httpx>=0.27.0",
     "ruff>=0.6",
     "lefthook>=1.10",
+    "mypy>=1.13",
+    "types-jsonschema>=4.26.0.20260518",
 ]
 
 [tool.uv]
@@ -96,3 +98,16 @@ extend-immutable-calls = ["fastapi.File", "fastapi.Depends", "fastapi.Query"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
+
+[tool.mypy]
+# Scoped to lib/ and agents/ deliberately, not the whole repo. Measured before
+# settling here: those two are clean under plain (non-strict) mypy. evals/ is not —
+# run_evals.py and checks.py both iterate over the Anthropic SDK's response-content
+# unions (checks.py: ~10 variants; run_evals.py's managed-agents streaming event union:
+# 40+ variants, a preview API). The code already narrows correctly at runtime
+# (`if block.type == "text"`), but mypy doesn't follow that narrowing through a
+# getattr-based check, so making evals/ typecheck clean means either widening the
+# unions with real narrowing helpers or a long run of per-line ignores against a
+# preview SDK surface that will keep shifting. Not worth doing as part of this
+# cleanup; revisit if evals/ ever becomes load-bearing rather than a harness.
+files = ["lib", "agents"]
