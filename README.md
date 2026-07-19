@@ -7,8 +7,6 @@ creature itself walking around.
 The animation is the drawing's own pixels, not a reconstruction. We cut the paper
 away, hinge the parts the child drew, and walk them. It stays recognisably theirs.
 
-See [PLAN.md](PLAN.md) for the concept and agent roles.
-
 ## Run the gallery
 
 ```bash
@@ -51,6 +49,24 @@ describe the same animal rather than four different ones.
 
 The Spec is a frozen contract with real enums, validated in
 `contracts/creature-spec.schema.json`.
+
+The roster, and what each lane reads and writes:
+
+| Agent | Reads | Writes |
+| --- | --- | --- |
+| **Field Interpreter** (vision) | the drawing | the Creature Spec |
+| **Creature Biologist** | Spec | the biology section |
+| **Habitat Ecologist** | Spec | the habitat section |
+| **Folklore & Society Specialist** | Spec | the society section |
+| **Animator** (vision) | the drawing, plus the Spec's name/vibe/palette | the walk cycle |
+| **3D Modeler** | Spec | a procedural `.glb` |
+| **Coordinator** | all of the above | the field guide page |
+
+Prompts and model tiers for every one of them are in `agents/definitions.py`, which
+is pure data — network-free and testable. The Animator gets the drawing itself, not
+just the Spec: image-space geometry is the one thing the Spec deliberately doesn't
+carry, so the frozen seam stays frozen. The 3D model is the weakest lane and the
+template degrades without it.
 
 ## Layout
 
