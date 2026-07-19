@@ -23,8 +23,6 @@ import pytest
 UI = Path(__file__).resolve().parents[1] / "ui"
 SKILL = Path(__file__).resolve().parents[1] / "skills" / "walk-cycle-anim"
 
-pytest.importorskip("fastapi", reason="gallery deps not installed")
-
 
 def _load_serve():
     for p in (UI, SKILL):

@@ -1,0 +1,21 @@
+# Installed once per clone: `lefthook install`. An uninstalled hook is invisible and
+# fixes nothing — the .githooks/ directory this replaces sat unused for the entire
+# life of this repo because nobody ever ran `git config core.hooksPath .githooks`.
+# CI is the actual authority; these are a fast local first pass. Skip either with
+# LEFTHOOK=0.
+pre-commit:
+  parallel: true
+  commands:
+    ruff-check:
+      glob: "*.py"
+      run: uv run ruff check --fix {staged_files}
+      stage_fixed: true
+    ruff-format:
+      glob: "*.py"
+      run: uv run ruff format {staged_files}
+      stage_fixed: true
+
+pre-push:
+  commands:
+    tests:
+      run: uv run pytest
