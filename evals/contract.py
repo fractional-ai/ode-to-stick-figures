@@ -9,7 +9,7 @@ JSON object. Every downstream agent (Biologist, Habitat, Society, 3D Modeler)
 depends on this shape, so these evals guard the most important seam in the swarm.
 
 AUTHORITATIVE SOURCE OF TRUTH: the machine-readable JSON Schema at
-creature-swarm/contracts/creature-spec.schema.json. checks.py validates every
+contracts/creature-spec.schema.json. checks.py validates every
 spec against it and reads enum values (core_shape, locomotion) straight out of
 it, so the checks can never drift from the frozen contract. The constants below
 mirror that schema for cheap, dependency-free field checks — if the schema

@@ -1,8 +1,9 @@
 __pycache__/
 *.pyc
+.pytest_cache/
 .worktrees/
-creature-swarm/ui/.cache/
-creature-swarm/ui/uploads/
+ui/.cache/
+ui/uploads/
 
 # never commit real credentials (.env.example is the template, .env is the secret)
 .env
@@ -12,8 +13,8 @@ creature-swarm/ui/uploads/
 # UI: thumbnails are derived and disposable; prebuilt/ is checked in on purpose
 
 # transient claim markers / partial writes from the swarm cache
-creature-swarm/ui/prebuilt/*.lock
-creature-swarm/ui/prebuilt/*.tmp
+ui/prebuilt/*.lock
+ui/prebuilt/*.tmp
 
 # Managed-agents local run state (account/workspace-specific — never shared)
 .environment_id

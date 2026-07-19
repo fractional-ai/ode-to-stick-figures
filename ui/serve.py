@@ -12,8 +12,8 @@ Demo-grade on purpose. The filesystem IS the database:
 
     examples/drawings/           the drawings
     .../walk-cycle-anim/rigs/    <stem>.rig.json  -> this drawing is riggable
-    creature-swarm/ui/uploads/   dropped images + their rigs
-    creature-swarm/ui/.cache/    built animations and thumbnails
+    ui/uploads/                  dropped images + their rigs
+    ui/.cache/                   built animations and thumbnails
 
 A drawing is "animated" iff a rig exists for its stem. No state anywhere else,
 nothing to migrate, and `rm -rf .cache` is a full reset.
@@ -34,11 +34,11 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
-REPO = Path(__file__).resolve().parents[2]
-SKILL = REPO / "creature-swarm" / "skills" / "walk-cycle-anim"
+REPO = Path(__file__).resolve().parents[1]
+SKILL = REPO / "skills" / "walk-cycle-anim"
 DRAWINGS = REPO / "examples" / "drawings"
 RIGS = SKILL / "rigs"
-UI = REPO / "creature-swarm" / "ui"
+UI = REPO / "ui"
 UPLOADS = UI / "uploads"
 # Checked in: the model-derived artifacts (Creature Spec, each text lane's markdown)
 # and the built walk cycles. They're small, deterministic to serve, and they cost real

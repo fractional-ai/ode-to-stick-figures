@@ -185,7 +185,8 @@ def rig_from_image(doodle: Path, model: str = MODEL) -> dict:
 def main() -> None:
     from dotenv import load_dotenv
 
-    for env in (HERE.parents[2] / ".env", HERE.parents[3] / ".env"):
+    # HERE is skills/walk-cycle-anim, so parents[1] is the repo root.
+    for env in (HERE.parents[1] / ".env", HERE.parents[2] / ".env"):
         if env.is_file():
             load_dotenv(env)
             break

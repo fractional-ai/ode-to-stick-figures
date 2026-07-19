@@ -20,13 +20,12 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SWARM = REPO / "creature-swarm"
-SKILL = SWARM / "skills" / "walk-cycle-anim"
-GUIDE = SWARM / "skills" / "fieldguide-html"
-MODELER = SWARM / "skills" / "procedural-creature-3d"
+REPO = Path(__file__).resolve().parents[1]
+SKILL = REPO / "skills" / "walk-cycle-anim"
+GUIDE = REPO / "skills" / "fieldguide-html"
+MODELER = REPO / "skills" / "procedural-creature-3d"
 
-for p in (SWARM, SKILL, GUIDE, MODELER):
+for p in (REPO, SKILL, GUIDE, MODELER):
     sys.path.insert(0, str(p))
 
 from agents.definitions import INTERPRETER, SPECIALISTS  # noqa: E402
@@ -46,15 +45,14 @@ def _client():
 
 
 def load_env() -> bool:
-    """Find a .env anywhere up the tree. The repo documents creature-swarm/.env."""
+    """Find a .env anywhere up the tree. The repo documents .env at the root."""
     import os
 
     from dotenv import load_dotenv
 
     if os.environ.get("ANTHROPIC_API_KEY"):
         return True
-    here = Path(__file__).resolve()
-    for d in [SWARM, REPO, *REPO.parents]:
+    for d in [REPO, *REPO.parents]:
         env = d / ".env"
         if env.is_file():
             load_dotenv(env)

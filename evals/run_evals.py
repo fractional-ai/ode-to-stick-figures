@@ -44,8 +44,8 @@ def get_spec(case: Case, target: str) -> dict:
     raise SystemExit(f"Unknown target: {target!r} (use 'fixture' or 'live')")
 
 
-_INTERPRETER_ID_PATH = Path("creature-swarm/.interpreter_id")
-_ENVIRONMENT_ID_PATH = Path("creature-swarm/.environment_id")
+_INTERPRETER_ID_PATH = Path(".interpreter_id")
+_ENVIRONMENT_ID_PATH = Path(".environment_id")
 _MANAGED_AGENTS_BETA = "managed-agents-2026-04-01"
 
 
@@ -77,8 +77,8 @@ def _parse_spec_text(text: str) -> dict:
 def run_interpreter_live(case: Case) -> dict:
     """Call the real Field Interpreter agent on case.drawing_path -> spec dict.
 
-    Requires ANTHROPIC_API_KEY plus creature-swarm/.environment_id and
-    creature-swarm/.interpreter_id (created by setup_environment.py and a
+    Requires ANTHROPIC_API_KEY plus .environment_id and .interpreter_id
+    (created by setup_environment.py and a
     one-off interpreter-only agent create — see evals/README.md). Sends the
     drawing as an image content block in a fresh session, streams the reply,
     and parses the Interpreter's JSON output as the creature spec.
@@ -92,7 +92,7 @@ def run_interpreter_live(case: Case) -> dict:
     if not _ENVIRONMENT_ID_PATH.exists() or not _INTERPRETER_ID_PATH.exists():
         raise SystemExit(
             f"Missing {_ENVIRONMENT_ID_PATH} or {_INTERPRETER_ID_PATH}. Run "
-            "creature-swarm/setup_environment.py and create the Interpreter "
+            "setup_environment.py and create the Interpreter "
             "agent first (see evals/README.md)."
         )
 

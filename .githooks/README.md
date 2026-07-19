@@ -13,7 +13,7 @@ That's it. After this, the hooks below run automatically.
 
 ## `pre-commit` — keep the task checklist in sync
 
-On every commit, regenerates `creature-swarm/TASKS.md` from the working tree and
+On every commit, regenerates `TASKS.md` from the working tree and
 stages it into the same commit. A task is checked off when all of its declared
 output files exist. The task→file mapping is defined in `update-tasks.py`; task
 detail lives in `docs/superpowers/plans/2026-07-17-creature-swarm.md`.

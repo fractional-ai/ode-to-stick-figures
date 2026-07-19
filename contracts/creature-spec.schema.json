@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/fractional-ai/ode-to-stick-figures/creature-swarm/contracts/creature-spec.schema.json",
+  "$id": "https://github.com/fractional-ai/ode-to-stick-figures/contracts/creature-spec.schema.json",
   "title": "Creature Spec",
   "description": "The canonical, frozen consistency contract for the creature-swarm pipeline. The Field Interpreter agent reads the doodle once and emits exactly one Creature Spec; every downstream specialist keys off it so they all describe the SAME creature. Text agents (Biologist/Habitat/Society) mine the descriptive half (name, distinctive_features, vibe, and loose reference to parts/palette); structural agents (3D Modeler/Animator) treat body_plan, parts, palette, and locomotion as literal build parameters. See docs/superpowers/specs/2026-07-17-creature-swarm-design.md, section 'Contract 1 — Creature Spec'.",
   "type": "object",
