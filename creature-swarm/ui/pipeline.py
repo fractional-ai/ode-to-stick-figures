@@ -308,6 +308,24 @@ def choose_environment(habitat_md: str, spec: dict) -> str:
     return pick if pick in ENVIRONMENTS else "meadow"
 
 
+def anim_overrides(spec: dict, env: str, stem: str) -> dict:
+    """The Spec-derived arguments the walk cycle is built with.
+
+    Defined once because two callers build animations: this module, on the first run,
+    and the gallery, when it rebuilds a stale one. When the gallery called bare
+    build() instead, its rebuild silently dropped every one of these and the animation
+    reverted to the rig's own defaults — a different name, palette and world than the
+    card and the field guide were showing for the same creature.
+    """
+    return {
+        "name": flat(spec.get("name")) or stem,
+        "vibe": flat(spec.get("vibe")),
+        "locomotion": flat(spec.get("locomotion")),
+        "palette": spec["palette"],
+        "environment": env,
+    }
+
+
 def md_to_html(md: str) -> str:
     try:
         import markdown
@@ -374,20 +392,7 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
             print(f"  3D modeler failed for {stem}: {type(e).__name__}: {e}")
 
     anim = cache / f"{stem}.html"
-    palette = spec["palette"]
-    build(
-        doodle,
-        rig,
-        anim,
-        color=True,
-        overrides={
-            "name": flat(spec.get("name")) or stem,
-            "vibe": flat(spec.get("vibe")),
-            "locomotion": flat(spec.get("locomotion")),
-            "palette": palette,
-            "environment": env,
-        },
-    )
+    build(doodle, rig, anim, color=True, overrides=anim_overrides(spec, env, stem))
 
     html = render_field_guide(
         creature_name=flat(spec.get("name")) or stem,
