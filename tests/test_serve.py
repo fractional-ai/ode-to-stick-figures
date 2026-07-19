@@ -128,3 +128,35 @@ def test_refused_drawings_are_refused_by_the_routes_too(creatures, client):
 def test_unknown_stem_404s(client):
     assert client.get("/anim/no-such-creature").status_code == 404
     assert client.get("/thumb/no-such-creature").status_code == 404
+
+
+def test_on_vercel_a_prebuild_miss_degrades_instead_of_writing(monkeypatch, tmp_path):
+    """On Vercel, a cache miss for a bundled creature must never attempt run_swarm().
+
+    The filesystem is read-only outside /tmp there, and animation()'s rebuild plus
+    get_guide()'s run_swarm() both write into PREBUILT on a miss. Simulate the
+    real failure mode without actually pointing at a read-only filesystem: load serve
+    with VERCEL=1 so ON_VERCEL is computed True, then redirect its PREBUILT constant to
+    an empty directory so every real, rigged creature looks like a missed prewarm. If
+    this test ever starts hitting run_swarm() instead of degrading, it will try to call
+    the live API and fail loudly (no ANTHROPIC_API_KEY in CI) rather than silently pass.
+    """
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("VERCEL", "1")
+    serve = _load_serve()
+    monkeypatch.setattr(serve, "PREBUILT", tmp_path)
+    client = TestClient(serve.app)
+
+    r = client.get("/api/creatures")
+    animated = [c for c in r.json() if c["animated"]]
+    assert animated, "need at least one real rigged creature to test against"
+    stem = animated[0]["stem"]
+
+    anim_r = client.get(f"/anim/{stem}")
+    assert anim_r.status_code == 503, anim_r.text
+    assert "prewarm.py" in anim_r.text
+
+    guide_r = client.get(f"/guide/{stem}")
+    assert guide_r.status_code == 503, guide_r.text
+    assert "prewarm.py" in guide_r.text

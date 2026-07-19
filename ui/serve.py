@@ -52,6 +52,15 @@ from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: 
 from pipeline import run as run_swarm  # noqa: E402
 
 HAVE_KEY = load_env()
+# Real, documented Vercel system env var, populated at runtime once "Access to System
+# Environment Variables" is enabled in Project Settings. Gates the two places that used
+# to rebuild-and-write a bundled creature's PREBUILT artifacts on a cache miss
+# (animation()'s staleness rebuild, get_guide()'s run_swarm() call) — both attempt a
+# filesystem write, and Vercel's filesystem is read-only outside /tmp. The bundled 13
+# creatures are meant to always be prewarmed before a deploy; a miss there is a real gap
+# (a missing prewarm, a stale build) that should surface as "not available", not as a
+# crash. Locally this is always False, so nothing here changes local dev behavior.
+ON_VERCEL = os.environ.get("VERCEL") == "1"
 
 app = FastAPI()
 
@@ -124,16 +133,23 @@ def _spec_overrides(stem: str) -> dict | None:
 def animation(stem: str) -> str | None:
     """The built walk cycle for one drawing, or None if we can't animate it.
 
-    Rebuild when the drawing, the rig, or the renderer template is newer than what we
-    have, so editing a rig or the template shows up on the next request instead of
-    serving a stale build forever. Rebuild through the same Spec overrides the swarm
+    Locally: rebuild when the drawing, the rig, or the renderer template is newer than
+    what we have, so editing a rig or the template shows up on the next request instead
+    of serving a stale build forever. Rebuild through the same Spec overrides the swarm
     used, or the refresh quietly downgrades the animation to the rig's raw defaults and
     it stops matching the name and world on its own field guide.
+
+    On Vercel: never rebuild. The bundled 13 are meant to always be prewarmed before a
+    deploy, and the filesystem is read-only outside /tmp — attempting the write above
+    would crash the request instead of degrading it. A missing PREBUILT entry there
+    means a prewarm was skipped, not a cache to fill on demand.
     """
     src, rig = find(stem), rig_for(stem)
     if not src or not rig:
         return None
     out = PREBUILT / f"{stem}.html"
+    if ON_VERCEL:
+        return out.read_text() if out.exists() else None
     stale = not out.exists() or out.stat().st_mtime < max(
         src.stat().st_mtime, rig.stat().st_mtime, (SKILL / "template.html").stat().st_mtime
     )
@@ -163,6 +179,12 @@ def get_anim(stem: str):
         )
     html = animation(stem)
     if html is None:
+        if ON_VERCEL and rig_for(stem) is not None:
+            return HTMLResponse(
+                "<p>This creature hasn't been built into this deployment yet. It "
+                "needs a <code>./prewarm.py</code> run and a redeploy.</p>",
+                status_code=503,
+            )
         return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
     return HTMLResponse(html)
 
@@ -230,7 +252,9 @@ def get_guide(stem: str):
     """The full field guide: Interpreter -> 3 text lanes + Animator -> assembled page.
 
     Cached to disk after the first run — the swarm is a few seconds of model calls and
-    a demo shouldn't pay that twice.
+    a demo shouldn't pay that twice. On Vercel, a cache miss never runs the swarm here
+    at all (see ON_VERCEL below) — the filesystem is read-only outside /tmp, and the
+    bundled 13 are meant to always be prewarmed before a deploy.
     """
     src, rig = find(stem), rig_for(stem)
     if not src or not rig:
@@ -246,6 +270,15 @@ def get_guide(stem: str):
     out = PREBUILT / f"{stem}.guide.html"
     if out.exists():
         return HTMLResponse(_present_guide(out.read_text()))
+    if ON_VERCEL:
+        # Never attempt run_swarm() here: PREBUILT is a read-only bundle on Vercel, and
+        # writing into it is exactly what run_swarm() does. A miss means a prewarm was
+        # skipped, not a cache to fill on demand.
+        return HTMLResponse(
+            "<p>This creature's field guide hasn't been built into this deployment "
+            "yet. It needs a <code>./prewarm.py</code> run and a redeploy.</p>",
+            status_code=503,
+        )
     if not HAVE_KEY:
         return HTMLResponse(
             "<p>No ANTHROPIC_API_KEY found, so the text lanes can't run. "
