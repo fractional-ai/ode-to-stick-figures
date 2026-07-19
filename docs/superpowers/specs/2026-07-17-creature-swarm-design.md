@@ -190,29 +190,10 @@ so the frozen seam stays frozen and the Interpreter lane needs no edits.
 
 ## Repo structure
 
-New self-contained folder alongside the existing workshop options, mirroring their
-file conventions:
-
-```
-creature-swarm/
-  README.md
-  requirements.txt          (anthropic, python-dotenv, trimesh, pillow, numpy, scipy)
-  create_specialists.py     (Interpreter + 5 specialists incl. Animator)
-  create_coordinator.py
-  upload_skills.py
-  setup_environment.py       (included from the start — original repo orphaned this)
-  run_creature_swarm.py      (upload doodle, stream events, download page + media)
-  download_deliverable.py
-  skills/
-    creature-biology/SKILL.md
-    habitat-ecology/SKILL.md
-    folklore-society/SKILL.md          (owner's discretion: prompt-only or skill)
-    procedural-creature-3d/SKILL.md
-    fieldguide-html/SKILL.md           (+ template.html)
-    walk-cycle-anim/SKILL.md           (2.5D cutout puppet — owned, in progress)
-  synthetic-data/
-    doodle-example.png                 (sample bad drawing to demo with)
-```
+The layout this section planned is obsolete — the `creature-swarm/` folder it
+describes was dissolved into the repo root, and several files it lists were never
+written or have since been deleted. See the README for the tree as it actually is.
+Kept as a section header only so the surrounding rationale still reads in order.
 
 ## Team split
 
