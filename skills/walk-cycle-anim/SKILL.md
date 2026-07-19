@@ -42,7 +42,7 @@ The frozen Creature Spec already carries all of it, so **no schema change is nee
 Any of these can be overridden per run without editing the rig:
 
 ```bash
-./build_walk_cycle.py ../../../examples/drawings/bee.webp --rig rigs/bee.rig.json --color \
+./build_walk_cycle.py ../../examples/drawings/bee.webp --rig rigs/bee.rig.json --color \
     --name "Bumbling Behemoth (Apis enormis)" --vibe "far too large for those legs" \
     --movement "flies in lazy loops, never quite lands" \
     --locomotion fly --speed 0.75 --faces right -o /tmp/wc.html
@@ -51,7 +51,7 @@ Any of these can be overridden per run without editing the rig:
 Runs standalone against a fixture rig — no swarm needed:
 
 ```bash
-./build_walk_cycle.py ../../../examples/drawings/shark-dog.webp \
+./build_walk_cycle.py ../../examples/drawings/shark-dog.webp \
     --rig rigs/shark-dog.rig.json -o walk-cycle.html
 ```
 

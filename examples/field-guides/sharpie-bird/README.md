@@ -21,12 +21,16 @@ field differs — that's expected; they're separate passes over the same doodle.
 
 ## How it was made
 
-The animation lane is the repo's own scripts, unchanged:
+The animation lane is the repo's own scripts, unchanged, run from the repo root. Note
+`-o` is resolved against the current directory, not against the input image — running
+these again would overwrite the committed rig and animation in this folder, not the
+ones checked in above, unless you point `-o` elsewhere:
 
 ```bash
-cd skills/walk-cycle-anim
-uv run rig_from_image.py  ../../../examples/drawings/sharpie-bird.jpg -o sharpie-bird.rig.json
-uv run build_walk_cycle.py ../../../examples/drawings/sharpie-bird.jpg --rig sharpie-bird.rig.json -o walk-cycle.html
+uv run skills/walk-cycle-anim/rig_from_image.py examples/drawings/sharpie-bird.jpg \
+    -o /tmp/sharpie-bird.rig.json
+uv run skills/walk-cycle-anim/build_walk_cycle.py examples/drawings/sharpie-bird.jpg \
+    --rig /tmp/sharpie-bird.rig.json -o /tmp/walk-cycle.html
 ```
 
 The text sections and final page use the specialist agent prompts from

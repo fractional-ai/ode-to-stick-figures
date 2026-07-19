@@ -35,7 +35,7 @@ def get_spec(case: Case, target: str) -> dict:
 
     'fixture' loads the hand-authored JSON committed alongside the harness, so
     evals run green before any agent exists. 'live' calls the real Field
-    Interpreter — stubbed until that agent lands.
+    Interpreter.
     """
     if target == "fixture":
         return json.loads(Path(case.fixture_path).read_text())
@@ -44,7 +44,7 @@ def get_spec(case: Case, target: str) -> dict:
     raise SystemExit(f"Unknown target: {target!r} (use 'fixture' or 'live')")
 
 
-_INTERPRETER_ID_PATH = Path(".interpreter_id")
+_SPECIALIST_IDS_PATH = Path(".specialist_ids.json")
 _ENVIRONMENT_ID_PATH = Path(".environment_id")
 _MANAGED_AGENTS_BETA = "managed-agents-2026-04-01"
 
@@ -77,11 +77,11 @@ def _parse_spec_text(text: str) -> dict:
 def run_interpreter_live(case: Case) -> dict:
     """Call the real Field Interpreter agent on case.drawing_path -> spec dict.
 
-    Requires ANTHROPIC_API_KEY plus .environment_id and .interpreter_id
-    (created by setup_environment.py and a
-    one-off interpreter-only agent create — see evals/README.md). Sends the
-    drawing as an image content block in a fresh session, streams the reply,
-    and parses the Interpreter's JSON output as the creature spec.
+    Requires ANTHROPIC_API_KEY, .environment_id (written by setup_environment.py),
+    and the "interpreter" id in .specialist_ids.json (written by
+    create_specialists.py — see evals/README.md). Sends the drawing as an image
+    content block in a fresh session, streams the reply, and parses the
+    Interpreter's JSON output as the creature spec.
     """
     import os
 
@@ -89,15 +89,20 @@ def run_interpreter_live(case: Case) -> dict:
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise SystemExit("Set ANTHROPIC_API_KEY before running --target live.")
-    if not _ENVIRONMENT_ID_PATH.exists() or not _INTERPRETER_ID_PATH.exists():
+    if not _ENVIRONMENT_ID_PATH.exists() or not _SPECIALIST_IDS_PATH.exists():
         raise SystemExit(
-            f"Missing {_ENVIRONMENT_ID_PATH} or {_INTERPRETER_ID_PATH}. Run "
-            "setup_environment.py and create the Interpreter "
-            "agent first (see evals/README.md)."
+            f"Missing {_ENVIRONMENT_ID_PATH} or {_SPECIALIST_IDS_PATH}. Run "
+            "setup_environment.py and create_specialists.py first "
+            "(see evals/README.md)."
         )
 
     environment_id = _ENVIRONMENT_ID_PATH.read_text().strip()
-    interpreter_id = _INTERPRETER_ID_PATH.read_text().strip()
+    specialist_ids = json.loads(_SPECIALIST_IDS_PATH.read_text())
+    if "interpreter" not in specialist_ids:
+        raise SystemExit(
+            f'{_SPECIALIST_IDS_PATH} has no "interpreter" key. Re-run create_specialists.py.'
+        )
+    interpreter_id = specialist_ids["interpreter"]
 
     client = Anthropic(default_headers={"anthropic-beta": _MANAGED_AGENTS_BETA})
     image_block = _load_doodle_as_image_block(Path(case.drawing_path))

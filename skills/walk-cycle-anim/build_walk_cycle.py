@@ -14,9 +14,10 @@ Two steps, both local and deterministic:
   1. key()   strip the white paper to transparency so part polygons can be loose
   2. build() inline the keyed PNG + rig as base64/JSON into a single HTML file
 
-Runs standalone against a fixture rig, no swarm and no other lane required:
+Runs standalone against a fixture rig, no swarm and no other lane required. Run from
+this directory — both paths below are relative to it:
 
-    ./build_walk_cycle.py examples/drawings/shark-dog.webp \
+    ./build_walk_cycle.py ../../examples/drawings/shark-dog.webp \
         --rig rigs/shark-dog.rig.json -o walk-cycle.html
 """
 
