@@ -20,6 +20,7 @@ in the deploy bundle would crash every cold start, before any route even ran.
 
 from __future__ import annotations
 
+import asyncio
 import html as html_mod  # aliased: `html` is a local variable in the route handlers
 import io
 import json
@@ -47,6 +48,7 @@ PREBUILT = UI / "prebuilt"
 
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
+import upload_build  # noqa: E402
 from build_walk_cycle import build, key  # noqa: E402
 from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
@@ -341,12 +343,20 @@ def api_creatures():
 
 @app.post("/api/upload")
 async def api_upload(file: UploadFile = File(...)):
-    """Accept a dropped drawing, key it, and report what we can and can't do.
+    """Accept a dropped drawing and build it into a real animated creature.
 
-    We deliberately do NOT claim to animate it. Keying is deterministic and runs
-    here; authoring a rig (image-space polygons and pivots) needs a vision pass,
-    which is the one genuinely unsolved step. Saying so is better than a spinner
-    that never resolves.
+    This used to stop after storing the file and running the alpha-key sanity check —
+    deliberately: authoring a rig needs a vision pass, and a spinner that never
+    resolves is worse than an honest "we can't animate this yet." That's no longer
+    the right call to make. Upload is supposed to produce an animated creature with a
+    field guide, the same as any of the 13 bundled ones — see upload_build.py, which
+    does the actual rig-authoring + swarm run.
+
+    The build takes on the order of a minute (measured: ~51s for a real drawing, rig
+    authoring plus the full swarm, no retries). Runs in a thread so it doesn't block
+    the event loop for the whole request — a plain blocking call here would stall
+    every other concurrent request against this same server for as long as this one
+    upload takes to build.
     """
     raw = await file.read()
     stem = Path(file.filename or "dropped").stem
@@ -358,9 +368,6 @@ async def api_upload(file: UploadFile = File(...)):
             status_code=415,
         )
     if suffix not in IMG_EXT:
-        # sources() only lists files whose suffix is in IMG_EXT, so anything else saved
-        # to UPLOADS is an orphan: this would return 200 with stats, then /thumb, /anim
-        # and /guide would all 404 for it and the gallery would never show it existed.
         return JSONResponse(
             {"stem": stem, "error": f"Unsupported file type {suffix!r}."}, status_code=415
         )
@@ -370,28 +377,24 @@ async def api_upload(file: UploadFile = File(...)):
     except Exception:  # noqa: BLE001 — PIL raises anything at all on a malformed upload
         return JSONResponse({"stem": stem, "error": "Not a readable image."}, status_code=415)
 
-    dest = UPLOADS / f"{stem}{suffix}"
-    n = 1
-    while dest.exists():
-        dest = UPLOADS / f"{stem}-{n}{suffix}"
-        n += 1
-    dest.write_bytes(raw)
-
-    # Only the stats matter here: this call is the alpha-key run purely to sanity-check what
-    # got dropped on us. The keyed image itself is rebuilt at animation time.
-    _, stats = key(Image.open(dest))
+    # A fast, free, heuristic pre-flight signal, independent of the real (much
+    # smarter) refusal the vision pass below can make. Kept because it's informative
+    # before spending a model call: multiple comparable blobs usually means several
+    # figures or no single clear subject.
+    _, stats = key(img)
     warn = None
     if stats["blobs"] >= 3 and stats["dominance"] < 0.80:
         warn = (
             f"{stats['blobs']} comparable blobs (dominance {stats['dominance']:.2f}) — "
             "either several figures, or no single creature to animate."
         )
+
+    result = await asyncio.to_thread(upload_build.build_from_upload, raw, suffix)
     return {
-        "stem": dest.stem,
-        "animated": rig_for(dest.stem) is not None,
-        "stats": {k: round(v, 3) if isinstance(v, float) else v for k, v in stats.items()},
+        "id": result.id,
+        "refused": result.refused,
         "warning": warn,
-        "needs_rig": True,
+        "stats": {k: round(v, 3) if isinstance(v, float) else v for k, v in stats.items()},
     }
 
 

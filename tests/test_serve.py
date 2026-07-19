@@ -160,3 +160,63 @@ def test_on_vercel_a_prebuild_miss_degrades_instead_of_writing(monkeypatch, tmp_
     guide_r = client.get(f"/guide/{stem}")
     assert guide_r.status_code == 503, guide_r.text
     assert "prewarm.py" in guide_r.text
+
+
+def test_upload_route_calls_the_real_build_and_returns_its_result(monkeypatch):
+    """The wiring test for /api/upload: no real vision/model call (that's
+    upload_build's own offline suite in tests/test_upload_build.py), just proof that
+    the route actually calls build_from_upload() in a thread and shapes the response
+    from whatever it returns, rather than the route silently doing something else.
+    """
+    from dataclasses import dataclass
+
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+
+    @dataclass
+    class FakeResult:
+        id: str
+        refused: str | None = None
+
+    calls = []
+
+    def fake_build_from_upload(raw: bytes, suffix: str):
+        calls.append((raw, suffix))
+        return FakeResult(id="fake0001", refused=None)
+
+    monkeypatch.setattr(serve.upload_build, "build_from_upload", fake_build_from_upload)
+    client = TestClient(serve.app)
+
+    # A real, tiny, valid PNG — the route decodes it with PIL before ever reaching
+    # build_from_upload(), so it has to actually be a readable image.
+    png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0"
+        b"\x00\x00\x03\x01\x01\x00\x18\xdd\x8d\xb0\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    r = client.post("/api/upload", files={"file": ("drawing.png", png, "image/png")})
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["id"] == "fake0001"
+    assert body["refused"] is None
+    assert len(calls) == 1
+    assert calls[0][1] == ".png"
+
+
+def test_upload_route_rejects_before_calling_build_from_upload(monkeypatch):
+    """The existing fast, cheap gates (bad extension, undecodable bytes) must still
+    reject before ever calling build_from_upload() — that call is the expensive one."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+
+    def fail_if_called(raw: bytes, suffix: str):
+        raise AssertionError("build_from_upload() must not run for a rejected upload")
+
+    monkeypatch.setattr(serve.upload_build, "build_from_upload", fail_if_called)
+    client = TestClient(serve.app)
+
+    r = client.post("/api/upload", files={"file": ("not-an-image.txt", b"hello", "text/plain")})
+    assert r.status_code == 415, r.text
