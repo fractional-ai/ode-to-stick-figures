@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --quiet --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = ["anthropic", "pillow", "numpy", "scipy", "python-dotenv", "markdown", "trimesh"]
-# ///
+#!/usr/bin/env -S uv run --quiet
 """Rig every drawing that lacks one, then build every field guide. Idempotent.
 
 The gallery is only as good as its rig coverage: a drawing with no rig reads "needs a

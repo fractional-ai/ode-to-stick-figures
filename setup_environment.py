@@ -24,7 +24,7 @@ def main() -> None:
     )
     env_path.write_text(environment.id)
     print(f"Environment created: {environment.id}")
-    print("Next: python create_specialists.py")
+    print("Next: uv run create_specialists.py")
 
 
 if __name__ == "__main__":

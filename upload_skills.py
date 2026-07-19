@@ -5,7 +5,7 @@ attach. Handles retrieved skill entries whether the SDK returns dicts or model
 objects (the original workshop repo assumed dicts and crashed on re-run).
 
 Usage:
-    python upload_skills.py
+    uv run upload_skills.py
 """
 
 import json
@@ -83,7 +83,7 @@ def main() -> None:
 
     Path(".skill_ids.json").write_text(json.dumps(uploaded, indent=2))
     print(f"\nUploaded/attached {len(uploaded)} skills.")
-    print("Next: python create_coordinator.py")
+    print("Next: uv run create_coordinator.py")
 
 
 if __name__ == "__main__":

@@ -7,10 +7,10 @@ check plus (optionally) the LLM judge, and prints a pass/fail table. Exits
 nonzero if any deterministic check fails, so it can gate CI.
 
 Usage:
-    python evals/run_evals.py                    # fixtures, deterministic only
-    python evals/run_evals.py --llm              # fixtures + LLM judge
-    python evals/run_evals.py --target live      # call the real interpreter
-    python evals/run_evals.py --case bee         # run a single case
+    uv run evals/run_evals.py                    # fixtures, deterministic only
+    uv run evals/run_evals.py --llm              # fixtures + LLM judge
+    uv run evals/run_evals.py --target live      # call the real interpreter
+    uv run evals/run_evals.py --case bee         # run a single case
 
 Run from the repo root.
 """
@@ -22,7 +22,7 @@ import json
 import sys
 from pathlib import Path
 
-# Allow `python evals/run_evals.py` from repo root.
+# Allow `uv run evals/run_evals.py` from repo root.
 sys.path.insert(0, str(Path(__file__).parent))
 
 from cases import CASES  # noqa: E402

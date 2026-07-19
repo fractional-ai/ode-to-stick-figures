@@ -32,7 +32,7 @@ def main() -> None:
         ids[spec["key"]] = _create(client, spec)
     Path(".specialist_ids.json").write_text(json.dumps(ids, indent=2))
     print(f"\nSaved {len(ids)} agent IDs to .specialist_ids.json")
-    print("Next: python upload_skills.py")
+    print("Next: uv run upload_skills.py")
 
 
 if __name__ == "__main__":
