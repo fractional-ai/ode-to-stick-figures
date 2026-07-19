@@ -1,4 +1,4 @@
-# Bug Log — creature gallery (`creature-swarm/ui`)
+# Bug Log — creature gallery (`ui/`)
 
 Found while clicking through the running gallery (`ui/serve.py`). Root causes and
 fixes below; all four fixes verified against the live server.

@@ -44,6 +44,6 @@ inventing a divergent creature.
 ## Source of truth
 
 The authoritative shape is defined in the approved design doc at
-[`docs/superpowers/specs/2026-07-17-creature-swarm-design.md`](../../docs/superpowers/specs/2026-07-17-creature-swarm-design.md),
+[`docs/superpowers/specs/2026-07-17-creature-swarm-design.md`](../docs/superpowers/specs/2026-07-17-creature-swarm-design.md),
 section "Contract 1 — Creature Spec". This schema formalizes that section; if the two
 ever disagree, the design doc wins until this contract is updated to match.

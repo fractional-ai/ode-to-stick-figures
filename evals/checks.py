@@ -6,7 +6,7 @@ Two flavors live here, both keyed off contract.py:
   * llm_judge_check      — one Claude-as-judge check for drawing plausibility.
 
 The FIRST deterministic check validates the spec against the canonical, frozen
-JSON Schema at creature-swarm/contracts/creature-spec.schema.json — the same
+JSON Schema at contracts/creature-spec.schema.json — the same
 contract the live Field Interpreter is held to. The remaining checks are
 readable per-field diagnostics; the enum values they use are read out of that
 schema at import time, so they can never drift from the contract.
@@ -40,10 +40,7 @@ _HEX_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 # Load the canonical schema (single source of truth for enums + validation).  #
 # --------------------------------------------------------------------------- #
 _SCHEMA_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "creature-swarm"
-    / "contracts"
-    / "creature-spec.schema.json"
+    Path(__file__).resolve().parent.parent / "contracts" / "creature-spec.schema.json"
 )
 
 try:

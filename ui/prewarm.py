@@ -24,14 +24,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 UI = Path(__file__).resolve().parent
-SWARM = UI.parents[0]
-REPO = UI.parents[1]
-SKILL = SWARM / "skills" / "walk-cycle-anim"
+REPO = UI.parents[0]
+SKILL = REPO / "skills" / "walk-cycle-anim"
 RIGS = SKILL / "rigs"
 DRAWINGS = REPO / "examples" / "drawings"
 CACHE = UI / "prebuilt"   # committed: model-derived artifacts + built walk cycles
 
-for p in (UI, SKILL, SWARM):
+for p in (UI, SKILL, REPO):
     sys.path.insert(0, str(p))
 
 from pipeline import load_env, run  # noqa: E402

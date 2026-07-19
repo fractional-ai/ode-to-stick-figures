@@ -6,7 +6,7 @@ depends on. If the spec is malformed, the whole swarm diverges, so this is the
 seam worth guarding.
 
 Specs are validated against the canonical, frozen schema at
-`creature-swarm/contracts/creature-spec.schema.json` (via `jsonschema`), and the
+`contracts/creature-spec.schema.json` (via `jsonschema`), and the
 per-field checks read their enums straight from it — so the evals track the real
 contract and can't silently drift.
 
@@ -41,8 +41,8 @@ the spec it returns. Fixtures tell you the checks work; only this tells you the 
 does. It needs:
 
 - `ANTHROPIC_API_KEY`
-- `creature-swarm/.environment_id`, written by `creature-swarm/setup_environment.py`
-- `creature-swarm/.interpreter_id`, from a one-off interpreter-only agent create
+- `.environment_id`, written by `setup_environment.py`
+- `.interpreter_id`, from a one-off interpreter-only agent create
 
 Both ID files are account-specific and gitignored.
 

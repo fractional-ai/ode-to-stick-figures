@@ -13,7 +13,7 @@ all inlined, no server or network needed.
 | --- | --- |
 | `field-guide.html` | The deliverable: creature name + tagline, biology/habitat/society sections, the original doodle, and the walk-cycle animation embedded live. |
 | `walk-cycle.html` | The animation on its own — the drawing cut into a 2.5D puppet and walked. Embedded in `field-guide.html` as an iframe. |
-| `sharpie-bird.rig.json` | The rig the vision pass authored from the drawing (image-space polygons, pivots, parent hierarchy). A real AI-generated rig, useful as a reference next to the hand-authored fixtures in `creature-swarm/skills/walk-cycle-anim/rigs/`. |
+| `sharpie-bird.rig.json` | The rig the vision pass authored from the drawing (image-space polygons, pivots, parent hierarchy). A real AI-generated rig, useful as a reference next to the hand-authored fixtures in `skills/walk-cycle-anim/rigs/`. |
 
 The interpreter named the specimen **Duckbill Jag-Wing (*Anatoserratus
 alarazor*)**. The rigging pass reads the drawing independently, so its `name`
@@ -24,14 +24,14 @@ field differs — that's expected; they're separate passes over the same doodle.
 The animation lane is the repo's own scripts, unchanged:
 
 ```bash
-cd creature-swarm/skills/walk-cycle-anim
+cd skills/walk-cycle-anim
 uv run rig_from_image.py  ../../../examples/drawings/sharpie-bird.jpg -o sharpie-bird.rig.json
 uv run build_walk_cycle.py ../../../examples/drawings/sharpie-bird.jpg --rig sharpie-bird.rig.json -o walk-cycle.html
 ```
 
 The text sections and final page use the specialist agent prompts from
-`creature-swarm/agents/definitions.py` and the `fieldguide-html` renderer
-(`creature-swarm/skills/fieldguide-html/render.py`): the Field Interpreter turns
+`agents/definitions.py` and the `fieldguide-html` renderer
+(`skills/fieldguide-html/render.py`): the Field Interpreter turns
 the drawing into a Creature Spec, the Biologist / Habitat Ecologist / Folklore &
 Society specialists each write their section from that spec, and `render.py` fills
 the template slots. There's no 3D lane, so that slot degrades gracefully.

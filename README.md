@@ -12,9 +12,8 @@ See [PLAN.md](PLAN.md) for the concept and agent roles.
 ## Run the gallery
 
 ```bash
-cp creature-swarm/.env.example creature-swarm/.env   # add your ANTHROPIC_API_KEY
-cd creature-swarm/ui
-./serve.py                                           # http://127.0.0.1:8000
+cp .env.example .env      # add your ANTHROPIC_API_KEY
+cd ui && ./serve.py       # http://127.0.0.1:8000
 ```
 
 The scripts are [uv](https://docs.astral.sh/uv/) scripts with inline dependency
@@ -51,26 +50,25 @@ describe the same animal rather than four different ones.
 ```
 
 The Spec is a frozen contract with real enums, validated in
-`creature-swarm/contracts/creature-spec.schema.json`.
+`contracts/creature-spec.schema.json`.
 
 ## Layout
 
 ```
-creature-swarm/
-├── agents/definitions.py    the roster and every prompt, network-free and testable
-├── contracts/               the Creature Spec schema + example (the frozen contract)
-├── lib/                     shared Anthropic client, spec validation
-├── skills/
-│   ├── walk-cycle-anim/     the 2.5D cutout animator: alpha-key, rigs, renderer
-│   ├── fieldguide-html/     assembles the page
-│   ├── creature-biology/    ─┐
-│   ├── habitat-ecology/      ├ the text lanes
-│   ├── folklore-society/    ─┘
-│   └── procedural-creature-3d/
-├── tests/
-└── ui/                      the gallery: serve.py, pipeline.py, prewarm.py
-evals/                       Creature Spec eval harness
-examples/drawings/           the drawings, ordered easy to hard
+agents/definitions.py    the roster and every prompt, network-free and testable
+contracts/               the Creature Spec schema + example (the frozen contract)
+lib/                     shared Anthropic client, spec validation
+skills/
+├── walk-cycle-anim/     the 2.5D cutout animator: alpha-key, rigs, renderer
+├── fieldguide-html/     assembles the page
+├── creature-biology/    ─┐
+├── habitat-ecology/      ├ the text lanes
+├── folklore-society/    ─┘
+└── procedural-creature-3d/
+ui/                      the gallery: serve.py, pipeline.py, prewarm.py
+evals/                   Creature Spec eval harness
+examples/drawings/       the drawings, ordered easy to hard
+tests/
 ```
 
 ## The animation, briefly
@@ -92,5 +90,5 @@ flat-paper pivot is the charm; it isn't a bug to smooth out.
 ## Tests
 
 ```bash
-cd creature-swarm && pip install -r requirements.txt && pytest tests/
+pip install -r requirements.txt && pytest tests/
 ```
