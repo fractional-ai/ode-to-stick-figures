@@ -100,3 +100,36 @@ def test_prose_locomotion_resolves_to_a_gait_the_renderer_implements():
     assert specs, "no bundled specs to check against"
     gaits = {resolve_gait(json.loads(p.read_text()).get("locomotion")) for p in specs}
     assert len(gaits) > 1, f"every creature resolved to the same gait ({gaits}) — dispatch is dead"
+
+
+def test_bundled_guides_embed_the_same_gait_their_walk_cycle_uses():
+    """A guide embeds its walk cycle as a base64 data URI, so it carries a *copy*.
+    Rebuilding `<stem>.html` therefore does nothing for `/guide/<stem>` — the guide kept
+    serving the animation it was assembled with. That divergence shipped: /anim/bee flew
+    while /guide/bee still walked."""
+    import base64
+
+    prebuilt = REPO / "ui" / "prebuilt"
+    guides = sorted(prebuilt.glob("*.guide.html"))
+    assert guides, "no bundled guides to check"
+
+    checked = 0
+    for guide in guides:
+        stem = guide.name.removesuffix(".guide.html")
+        walk = prebuilt / f"{stem}.html"
+        if not walk.is_file():
+            continue
+        embedded = re.search(r'src="data:text/html;base64,([^"]+)"', guide.read_text())
+        assert embedded, f"{guide.name}: no embedded walk cycle"
+        inner = base64.b64decode(embedded.group(1)).decode("utf-8", "replace")
+
+        def gait(html: str) -> str | None:
+            m = re.search(r'"locomotion":\s*"([^"]*)"', html)
+            return m.group(1) if m else None
+
+        assert gait(inner) == gait(walk.read_text()), (
+            f"{stem}: the guide embeds gait {gait(inner)!r} but its walk cycle uses "
+            f"{gait(walk.read_text())!r} — regenerate the .guide.html artifacts"
+        )
+        checked += 1
+    assert checked, "no stem had both a guide and a walk cycle"

@@ -345,10 +345,16 @@ def choose_environment(habitat_md: str, spec: dict) -> str:
 # Note the absence of a bare "legs" hint: nearly every description mentions legs
 # somewhere, including the bee's ("dangling legs used for landing on flowers"), so it
 # identifies nothing. The verb is the signal.
+#
+# "crawl" sits with slither, not walk. An exact `"crawl"` from the Spec is mapped to the
+# slither model by LOCO_MODEL in the renderer, and prose has to agree with that or the
+# same word means two different gaits depending on which path it took. Legged prose
+# still lands on walk via its own verb — "low crawling/walking gait using two mismatched
+# legs" matches "walk" first.
 _GAIT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("walk", ("walk", "waddle", "trot", "amble", "stride", "skitter", "march", "crawl")),
+    ("walk", ("walk", "waddle", "trot", "amble", "stride", "skitter", "march")),
     ("fly", ("fly", "flying", "flight", "buzz", "flap", "airborne")),
-    ("slither", ("slither", "undulat", "serpent", "ribbon", "sinuous", "wriggle")),
+    ("slither", ("slither", "undulat", "serpent", "ribbon", "sinuous", "wriggle", "crawl")),
     ("hop", ("hop", "bounce", "bound", "leap", "spring", "roll")),
     # Before float, and this ordering is the point of the whole exercise. A Spec that
     # states the creature is immobile and then hedges ("presumed to lie flat and
@@ -360,11 +366,32 @@ _GAIT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+# Enum value -> gait model, mirroring LOCO_MODEL in template.html. Kept in step with it
+# by test_every_locomotion_the_spec_allows_resolves_to_a_real_animation_model.
+_ENUM_MODEL = {
+    "waddle": "walk",
+    "crawl": "slither",
+    "swim": "float",
+    "roll": "hop",
+    "stationary": "stumble",  # no longer in the enum; Specs on disk may still say it
+}
+
+
 def resolve_gait(locomotion: str | None) -> str:
-    """One of the renderer's gait models, from an enum value or from free prose."""
+    """One of the renderer's gait models, from an enum value or from free prose.
+
+    An exact enum value is honoured before the prose hints get a look in. Otherwise a
+    Spec that correctly says "crawl" would be run through the keyword matcher and could
+    land somewhere other than where LOCO_MODEL sends the same word — one value meaning
+    two gaits depending on which path it travelled.
+    """
     text = (locomotion or "").strip().lower()
     if not text:
         return "stumble"
+    if text in _ENUM_MODEL:
+        return _ENUM_MODEL[text]
+    if any(text == model for model, _ in _GAIT_HINTS):
+        return text
     for model, hints in _GAIT_HINTS:
         if any(h in text for h in hints):
             return model
