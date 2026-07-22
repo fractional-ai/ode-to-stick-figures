@@ -321,17 +321,37 @@ _BACK_BAR = (
 )
 
 # The template titles each section with an <h2>; some specialist sections also
-# emit their own top-level <h1> title, so the page shows the title twice. Drop an
-# <h1> that immediately follows an <h2> (the creature-name <h1> at the top is
-# preceded by <body>, not an <h2>, so it's untouched). Fixes already-cached pages.
-_DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>", re.IGNORECASE | re.DOTALL)
+# emit their own heading right after it, so the page shows the title twice. Match a
+# section <h2> followed by an <h1>-<h3>, and drop the second only when its text
+# repeats the section title — identical ("Habitat & Ecology" / "Habitat & Ecology")
+# or the title as a prefix ("Folklore & Society" / "Folklore & Society: ..."). A
+# genuinely different subhead ("Folk Traditions of the ... Peoples") is left alone.
+# The creature-name <h1> at the top follows <body>, not an <h2>, so it's untouched.
+# Fixes already-cached pages. [^<]* keeps each heading's text from spanning markup.
+_DUP_TITLE = re.compile(
+    r"(<h2\b[^>]*>([^<]*)</h2>)\s*<h(?P<lvl>[1-3])\b[^>]*>(?P<txt>[^<]*)</h(?P=lvl)>",
+    re.IGNORECASE,
+)
+
+
+def _norm_heading(text: str) -> str:
+    """Lower-case, alphanumerics only — a lenient compare that ignores case,
+    whitespace, punctuation, and entity spelling (&amp; vs &)."""
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def _dedup_heading(m: re.Match[str]) -> str:
+    section, following = _norm_heading(m.group(2)), _norm_heading(m.group("txt"))
+    if section and (following == section or following.startswith(section)):
+        return m.group(1)  # drop the repeated heading, keep the section <h2>
+    return m.group(0)  # a different subhead — leave both
 
 
 def _present_guide_body(html: str) -> str:
     """Serve-time cleanup so cached guides get the fixes without a re-run. No back bar:
     inside the sandboxed frame that link would navigate the frame, not the tab, so the
     wrapper page owns it instead."""
-    return _DUP_TITLE.sub(r"\1", html)
+    return _DUP_TITLE.sub(_dedup_heading, html)
 
 
 def _present_guide(html: str) -> str:
