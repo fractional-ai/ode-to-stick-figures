@@ -36,6 +36,7 @@ dependencies = [
     # Starlette's SessionMiddleware uses to remember who's signed in.
     "authlib>=1.7.2",
     "itsdangerous>=2.2.0",
+    "logfire[anthropic,fastapi,httpx]>=4.38.0",
 ]
 
 [dependency-groups]

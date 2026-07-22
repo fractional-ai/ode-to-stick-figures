@@ -94,6 +94,24 @@ producing nothing:
 - **Prewarm before deploying.** The bundled creatures ship as committed artifacts and
   the deployed app never rebuilds them.
 
+## Debugging a deployed problem
+
+Logfire traces everything: request spans (FastAPI), outbound HTTP (both Anthropic and the
+hand-rolled Blob calls), Anthropic token usage, plus explicit spans on the expensive
+upload path — the alpha key with the image dimensions on it, each swarm phase, and each
+text lane separately. `lib/telemetry.py` installs it.
+
+Two things to know before touching it:
+
+- **It is a no-op without `LOGFIRE_TOKEN`.** Spans are created and discarded, so local
+  runs and the offline suite behave identically with and without it. `ODE_TELEMETRY=off`
+  skips instrumentation outright, which is what the test suite sets — otherwise a
+  developer with a token exported would ship test traces to the real project.
+- **`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` is load-bearing, not tidiness.**
+  `instrument_anthropic()` records request bodies, and every vision call here carries a
+  base64 PNG of a child's drawing. Unlimited, that is multi-megabyte spans per upload and
+  someone's artwork sent to a third party. Don't raise it without reading the test.
+
 ## The bits that will surprise you
 
 - **`locomotion` is a closed enum because it's a dispatch key** into animation models

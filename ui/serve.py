@@ -48,11 +48,18 @@ PREBUILT = UI / "prebuilt"
 
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(UI))
+# REPO explicitly, for `lib`. pipeline.py happens to insert it as an import side effect,
+# so `from lib import ...` here worked by accident of import order — not something to
+# leave load-bearing.
+sys.path.insert(0, str(REPO))
 import auth  # noqa: E402
+import logfire  # noqa: E402
 import upload_build  # noqa: E402
 from build_walk_cycle import build, key  # noqa: E402
 from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
+
+from lib import telemetry  # noqa: E402
 
 HAVE_KEY = load_env()
 # Real, documented Vercel system env var, populated at runtime once "Access to System
@@ -76,6 +83,9 @@ app = FastAPI()
 # POST /api/upload, via Depends(auth.require_upload_auth) below. Every other route,
 # including browsing anything an already-uploaded creature produced, stays public.
 auth.install(app)
+# Also a no-op without LOGFIRE_TOKEN, so local runs and the offline test suite are
+# unaffected. See lib/telemetry.py.
+telemetry.install(app)
 
 
 def sources() -> list[Path]:
@@ -587,6 +597,14 @@ async def api_upload(
     # smarter) refusal the vision pass below can make. Kept because it's informative
     # before spending a model call: multiple comparable blobs usually means several
     # figures or no single clear subject.
+    logfire.info(
+        "upload received {filename} {width}x{height} ({megapixels:.1f}MP, {kb}KB)",
+        filename=file.filename,
+        width=img.width,
+        height=img.height,
+        megapixels=(img.width * img.height) / 1e6,
+        kb=len(raw) // 1024,
+    )
     _, stats = key(img)
     warn = None
     if stats["blobs"] >= 3 and stats["dominance"] < 0.80:
@@ -595,7 +613,18 @@ async def api_upload(
             "either several figures, or no single creature to animate."
         )
 
-    result = await asyncio.to_thread(upload_build.build_from_upload, raw, suffix)
+    with logfire.span(
+        "upload build {filename}",
+        filename=file.filename,
+        bytes=len(raw),
+        width=img.width,
+        height=img.height,
+        megapixels=(img.width * img.height) / 1e6,
+    ):
+        result = await asyncio.to_thread(upload_build.build_from_upload, raw, suffix)
+    # Serverless: a batched exporter can be frozen before it ships anything, and this
+    # request is the one that takes a minute. Push what we have while we still can.
+    logfire.force_flush()
     return {
         "id": result.id,
         "refused": result.refused,

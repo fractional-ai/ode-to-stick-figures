@@ -132,3 +132,45 @@ def test_bundled_guides_embed_the_same_gait_their_walk_cycle_uses():
         )
         checked += 1
     assert checked, "no stem had both a guide and a walk cycle"
+
+
+def test_a_huge_span_attribute_is_truncated_not_shipped_whole():
+    """The assumption telemetry.install() rests on: OpenTelemetry honours
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, so instrument_anthropic() can't ship a base64
+    drawing to Logfire.
+
+    That matters because logfire's anthropic instrumentation records the request body,
+    and every vision call here carries a base64 PNG of a child's drawing. Measured with
+    a 16KB image, the whole thing landed in `request_data` on two spans. At real sizes
+    that is multi-megabyte spans per upload and someone's artwork sent to a third party.
+
+    Runs in a subprocess because the limit is read when the tracer provider is built, and
+    this suite already configured logfire in conftest.
+    """
+    import subprocess
+    import sys
+
+    program = """
+import os
+os.environ["OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "4096"
+import logfire
+from logfire.testing import TestExporter
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+exp = TestExporter()
+logfire.configure(send_to_logfire=False, console=False,
+                  additional_span_processors=[SimpleSpanProcessor(exp)])
+with logfire.span("big", payload="x" * 200_000):
+    pass
+sizes = [len(str(v)) for s in exp.exported_spans for v in (s.attributes or {}).values()]
+print(max(sizes))
+"""
+    out = subprocess.run(
+        [sys.executable, "-c", program], capture_output=True, text=True, timeout=120
+    )
+    assert out.returncode == 0, out.stderr[-800:]
+    biggest = int(out.stdout.strip().splitlines()[-1])
+    assert biggest <= 4096, (
+        f"a 200,000-char attribute survived at {biggest} chars — the limit is not being "
+        "honoured, so instrument_anthropic() would ship whole base64 drawings"
+    )

@@ -30,6 +30,7 @@ MODELER = REPO / "skills" / "procedural-creature-3d"
 for p in (REPO, SKILL, GUIDE, MODELER):
     sys.path.insert(0, str(p))
 
+import logfire  # noqa: E402
 import markdown  # noqa: E402
 from anthropic import Anthropic  # noqa: E402
 from build_walk_cycle import ENVIRONMENTS, build  # noqa: E402
@@ -430,6 +431,8 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
     text lanes and the animation run concurrently.
     """
 
+    logfire.info("swarm start {stem}", stem=stem, cache=str(cache))
+
     def keyed_b64() -> str:
         keyed, _ = key_fn(Image.open(doodle))
         buf = io.BytesIO()
@@ -437,7 +440,8 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
         return base64.b64encode(buf.getvalue()).decode()
 
     # Phase 1 (serial): the Spec is the consistency seam — everyone keys off it.
-    spec = cached(cache / f"{stem}.spec.json", lambda: interpret(doodle, keyed_b64()))
+    with logfire.span("interpret {stem}", stem=stem):
+        spec = cached(cache / f"{stem}.spec.json", lambda: interpret(doodle, keyed_b64()))
     # Normalise before anything consumes it. Every downstream lane assumes the schema.
     spec = normalize_spec(spec)
 
@@ -446,17 +450,22 @@ def run(stem: str, doodle: Path, rig: Path, cache: Path) -> Path:
     text_agents = [a for a in SPECIALISTS if a["key"] in ("biologist", "habitat", "society")]
 
     def lane(a: dict) -> tuple[str, str]:
-        return a["key"], cached(cache / f"{stem}.{a['key']}.md", lambda: specialist(a, spec)[1])
+        with logfire.span("lane {lane}", lane=a["key"]):
+            return a["key"], cached(cache / f"{stem}.{a['key']}.md", lambda: specialist(a, spec)[1])
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with (
+        logfire.span("text lanes {lanes}", lanes=[a["key"] for a in text_agents]),
+        ThreadPoolExecutor(max_workers=4) as pool,
+    ):
         results = dict(pool.map(lane, text_agents))
 
     # Animation: drive it from the Spec so the walk matches the described creature.
     # The Habitat lane picks the world; cached like any other model call.
-    env = cached(
-        cache / f"{stem}.environment.txt",
-        lambda: choose_environment(results.get("habitat", ""), spec),
-    ).strip()
+    with logfire.span("choose environment"):
+        env = cached(
+            cache / f"{stem}.environment.txt",
+            lambda: choose_environment(results.get("habitat", ""), spec),
+        ).strip()
 
     # The 3D Modeler lane. Deterministic trimesh over the same Spec, so no API call and
     # nothing to cache against the model: if the file is missing we just rebuild it.
