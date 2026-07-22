@@ -7,14 +7,14 @@ implementation is one answer, not the requirement.
 ## Purpose
 
 A child draws an animal that doesn't exist. The site takes that drawing and returns two
-things: the creature **walking**, animated from the drawing's own pixels, and a
+things: the creature **in motion**, animated from the drawing's own pixels, and a
 **straight-faced field guide entry** about it — biology, anatomy, diet, habitat,
 folklore — written as though the animal were real and well studied.
 
 The joke, and the whole appeal, is the collision of a wobbly crayon drawing with the
 register of a natural history reference. Both halves have to land. If the drawing gets
 smoothed, corrected, or redrawn into something more polished, the piece stops working:
-the animation is the child's own marks, hinged and walked, and it must stay
+the animation is the child's own marks, hinged and set moving, and it must stay
 recognisably theirs.
 
 ## Audience
@@ -41,7 +41,10 @@ One **creature** is the unit. Each has:
 - A **name** and a one-line **tagline**, both model-written, both part of the humour.
   Either can be long. Taglines run to a dozen-plus words and the punchline is usually at
   the end, so anything that truncates them destroys the joke.
-- A **walk cycle** — the drawing's parts, hinged and animated, looping.
+- An **animation** — the drawing's parts, hinged and moving, looping. Called a walk
+  cycle internally, but only 3 of the 13 creatures actually walk: the rest buzz,
+  undulate, slither, waddle, skitter, drag, or barely move at all. Each carries its own
+  `locomotion` description and the interface should not promise a gait it hasn't got.
 - A **field guide** — a long document, currently ~8 sections (Specimen, In motion,
   Biology, Anatomy, Diet & Life Cycle, Notable Adaptation, Habitat & Ecology, Folklore &
   Society). Mixed prose, images, and an embedded 3D/animated view. Long enough to scroll
@@ -74,7 +77,7 @@ grid of the original drawings; the arrangement is open. Ordering should favour t
 animated ones — a visitor's first impression shouldn't be a row of things that don't
 move.
 
-**Watch a creature walk.** The single most important interaction, and the one the child
+**Watch a creature move.** The single most important interaction, and the one the child
 cares about. It's a looping animation with a caption. Currently a modal over the
 collection; it does not have to be. Requirements: reachable in one action from the
 collection, dismissable in one action, and the animation must actually stop when
@@ -123,7 +126,7 @@ drawing. They should land back where they were, not at the top of the site.
   square. Nothing should crop them or letterbox them into uniform tiles.
 - **Names and taglines must be free to wrap.** See above; truncation kills the joke.
 - **Keyboard and screen-reader access to every interaction**, including file submission
-  and dismissing the walk view. The current build's file input is visually hidden but
+  and dismissing the animation view. The current build's file input is visually hidden but
   still focusable specifically so submission works without a mouse — whatever replaces
   it needs the same property.
 - **Both light and dark presentation** are supported today and should stay supported.
@@ -140,7 +143,7 @@ drawing. They should land back where they were, not at the top of the site.
   ownership shown, no moderation queue. Worth flagging if a design implies otherwise.
 - **Is there any personalisation or account surface?** No. Sign-in exists solely to
   authorise submission. There's no profile, no "my creatures."
-- **Can you link to one creature?** Field guides and walk cycles have their own URLs.
+- **Can you link to one creature?** Field guides and animations have their own URLs.
   There is no per-creature landing page combining them.
 - **How many creatures are there?** Currently 14. Design for tens, not thousands, but
   don't assume it stays at 14.
