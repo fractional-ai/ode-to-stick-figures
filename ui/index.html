@@ -221,7 +221,20 @@ async function send(files) {
     try {
       const r = await fetch('/api/upload', { method: 'POST', body: fd });
       const j = await r.json();
-      if (j.error) { log.textContent += ` ✗ ${j.error}`; continue; }
+      // 401 means uploads are gated and there's no session. Without this the next
+      // line reads j.stats off a {detail: ...} body and throws a TypeError at
+      // someone who just needed to sign in.
+      if (r.status === 401) {
+        log.textContent += ` — sign in to upload`;
+        const next = encodeURIComponent(location.pathname + location.search);
+        location.href = `/login?next=${next}`;
+        return;
+      }
+      if (!r.ok || j.error) { log.textContent += ` ✗ ${j.error || j.detail || r.status}`; continue; }
+      // A refusal is a 200 — the build ran and declined, which is a real verdict, not an
+      // error. Nothing was persisted, so falling through to the "kept ..." stats line
+      // would report success for a drawing that never entered the gallery.
+      if (j.refused) { log.textContent += `\n  — not animated: ${j.refused}`; continue; }
       const s = j.stats;
       log.textContent += ` kept ${(s.kept_frac*100).toFixed(0)}% · ${s.blobs} blob(s) · dominance ${s.dominance}`;
       if (j.warning) log.textContent += `\n  ⚠ ${j.warning}`;

@@ -31,6 +31,46 @@ animal in it, and the gallery says so rather than animating paper slabs sliding
 sideways. An honest refusal is a feature; plausible garbage is the worst thing we
 could show.
 
+## Deploying to Vercel
+
+The gallery is a single FastAPI app (`ui/serve.py`); `api/index.py` just re-exports
+it from where Vercel's Python runtime expects to find one. Uploading a drawing is
+gated to a real Google Workspace account; browsing — including anything an
+already-uploaded creature produced — stays public regardless.
+
+Live at <https://ode-to-stick-figures.vercel.app>, on the `fractional-ai` team.
+
+What deploying needs, beyond `git push`:
+
+- **A plan whose function duration covers a real upload build.** Rig authoring plus
+  the full swarm measured at ~51s for one drawing with no retries, and `vercel.json`
+  asks for `maxDuration: 180`. Pro covers this comfortably. (An earlier version of this
+  section claimed Hobby's ceiling was the blocker; the default is 300s across plans
+  now, so duration wasn't the reason to be on Pro.)
+- **A Google Cloud OAuth 2.0 Client ID** (Web application), with
+  `https://<your-domain>/auth/callback` as an authorized redirect URI — exactly, or
+  Google fails the sign-in with `redirect_uri_mismatch`. Set `GOOGLE_CLIENT_ID`,
+  `GOOGLE_CLIENT_SECRET`, and `ALLOWED_EMAIL_DOMAINS` (see `.env.example`). Setting
+  neither client var leaves uploads open with no login, which is deliberate for local
+  dev; setting only one disables uploads outright rather than quietly opening them —
+  see `ui/auth.py`.
+- **A `SESSION_SECRET`** — any long random string, signs the session cookie.
+  Required once `GOOGLE_CLIENT_ID` is set; `ui/auth.py` refuses to start without it.
+- **A Vercel Blob store**, linked to the project. Auto-injects
+  `BLOB_READ_WRITE_TOKEN`, which is what switches uploaded creatures from local disk
+  (`ui/storage.py`'s dev backend) to Blob (its production one) — nothing else about
+  the app changes. `BLOB_STORE_ID` is *not* injected and isn't needed: the token
+  embeds the store id and `BlobStorage` derives it.
+- **"Access to System Environment Variables"** enabled in Project Settings, so
+  `VERCEL=1` is actually populated at runtime — this is what tells the bundled 13
+  creatures never to attempt a live rebuild against Vercel's read-only filesystem
+  (see `ON_VERCEL` in `ui/serve.py`).
+- **`ui/prewarm.py` run before every deploy.** The bundled 13 creatures are shipped as
+  committed, read-only files; the deployed app never rebuilds them. Skipping this
+  before a deploy means a real gap, surfaced honestly as "needs a prewarm and a
+  redeploy" rather than a crash — not a cache the live app can fill on its own.
+  Issue #61 tracks moving these out of git so they stop riding along with a deploy.
+
 ## How it works
 
 The **Field Interpreter** looks at the drawing once and emits a **Creature Spec**.

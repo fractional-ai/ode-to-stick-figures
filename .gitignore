@@ -4,7 +4,6 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .worktrees/
-ui/.cache/
 ui/uploads/
 
 # never commit real credentials (.env.example is the template, .env is the secret)
@@ -25,3 +24,5 @@ ui/prebuilt/*.tmp
 .specialist_ids.json
 .skill_ids.json
 .last_session_id
+.vercel
+.env*
