@@ -223,6 +223,26 @@ def test_upload_route_rejects_before_calling_build_from_upload(monkeypatch):
     assert r.status_code == 415, r.text
 
 
+def test_upload_without_an_api_key_503s_instead_of_500ing(monkeypatch):
+    """rig_from_image() indexes os.environ["ANTHROPIC_API_KEY"] directly, so with no key
+    the upload used to die as an opaque 500 — after the request had been accepted and
+    the expensive path entered. Say so up front instead."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    monkeypatch.setattr(serve, "HAVE_KEY", False)
+
+    def fail_if_called(raw: bytes, suffix: str):
+        raise AssertionError("build_from_upload() must not run without an API key")
+
+    monkeypatch.setattr(serve.upload_build, "build_from_upload", fail_if_called)
+    client = TestClient(serve.app)
+
+    r = client.post("/api/upload", files={"file": ("drawing.png", _TINY_PNG, "image/png")})
+    assert r.status_code == 503, r.text
+    assert "ANTHROPIC_API_KEY" in r.json()["error"]
+
+
 def _seed_upload(serve, storage, stem: str, *, refused: str | None = None):
     """Write the artifact set upload_build.py's _sync_dir() would have produced for
     a real upload, directly into a Storage instance — then point serve.UPLOAD_STORAGE

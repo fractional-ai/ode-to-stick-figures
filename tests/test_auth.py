@@ -17,31 +17,54 @@ if str(UI) not in sys.path:
 
 
 def _fresh_auth(monkeypatch):
-    """auth.py computes _CONFIGURED and registers the OAuth client at import time,
-    so a test that changes GOOGLE_CLIENT_ID/etc. needs a genuinely fresh module, not
-    whatever's cached in sys.modules from an earlier test or import. monkeypatch.delitem
-    (not a bare pop) so the previous sys.modules entry is restored at teardown --
-    otherwise the next test to call _load_serve() would pick up THIS test's configured
-    auth module regardless of its own env vars, since serve.py's own 'import auth'
-    just reads whatever is cached."""
+    """A genuinely fresh auth module, not whatever's cached in sys.modules.
+
+    auth.py reads its credentials lazily now, so config no longer depends on when the
+    module was imported — but install() still registers the OAuth client as module
+    state, so a clean import keeps tests independent of each other. monkeypatch.delitem
+    (not a bare pop) restores the previous sys.modules entry at teardown; a bare pop
+    leaked a configured auth module into whichever test ran next, which broke seven
+    unrelated tests depending on file execution order."""
     monkeypatch.delitem(sys.modules, "auth", raising=False)
     import auth
 
     return auth
 
 
+def test_credentials_are_read_lazily_not_at_import(monkeypatch):
+    """The gate must not depend on import order. serve.py imports auth BEFORE its
+    load_env() call, so credentials from a .env file land in os.environ after the
+    import — and reading them at import time made auth silently ungate uploads on
+    exactly the .env-based setups most likely to be a first real deploy."""
+    monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
+    monkeypatch.delenv("GOOGLE_CLIENT_SECRET", raising=False)
+    auth = _fresh_auth(monkeypatch)
+    assert auth.is_configured() is False
+
+    # Imported while unconfigured, credentials arrive afterwards — as load_env() does it.
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "arrived-late")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "also-late")
+    assert auth.is_configured() is True
+
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        auth.require_upload_auth(_FakeRequest())
+    assert exc_info.value.status_code == 401, "late-arriving credentials must still gate"
+
+
 def test_unconfigured_without_google_credentials(monkeypatch):
     monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
     monkeypatch.delenv("GOOGLE_CLIENT_SECRET", raising=False)
     auth = _fresh_auth(monkeypatch)
-    assert auth._CONFIGURED is False
+    assert auth.is_configured() is False
 
 
 def test_configured_with_both_credentials(monkeypatch):
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "fake-id")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "fake-secret")
     auth = _fresh_auth(monkeypatch)
-    assert auth._CONFIGURED is True
+    assert auth.is_configured() is True
 
 
 def test_allowed_domains_parses_comma_separated_list(monkeypatch):
@@ -102,8 +125,8 @@ def test_half_configured_blocks_uploads_instead_of_opening_them(monkeypatch, pre
     monkeypatch.delenv(f"GOOGLE_CLIENT_{missing}", raising=False)
     auth = _fresh_auth(monkeypatch)
 
-    assert auth._CONFIGURED is False
-    assert auth._PARTIAL is True
+    assert auth.is_configured() is False
+    assert auth.is_partial() is True
 
     from fastapi import HTTPException
 
@@ -116,7 +139,7 @@ def test_no_credentials_at_all_is_not_partial(monkeypatch):
     monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
     monkeypatch.delenv("GOOGLE_CLIENT_SECRET", raising=False)
     auth = _fresh_auth(monkeypatch)
-    assert auth._PARTIAL is False
+    assert auth.is_partial() is False
 
 
 @pytest.mark.parametrize(

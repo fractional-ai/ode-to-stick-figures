@@ -569,6 +569,20 @@ async def api_upload(
     except Exception:  # noqa: BLE001 — PIL raises anything at all on a malformed upload
         return JSONResponse({"stem": stem, "error": "Not a readable image."}, status_code=415)
 
+    # Before the build, not during it: rig_from_image() reads os.environ["ANTHROPIC_API_KEY"]
+    # directly, so without a key the whole upload died as a KeyError-shaped 500 a minute
+    # in. The read-only routes already gate on HAVE_KEY; this one has more reason to,
+    # since it's the expensive path.
+    if not HAVE_KEY:
+        return JSONResponse(
+            {
+                "stem": stem,
+                "error": "No ANTHROPIC_API_KEY on this deployment, so a drawing can't "
+                "be built into a creature. Browsing still works.",
+            },
+            status_code=503,
+        )
+
     # A fast, free, heuristic pre-flight signal, independent of the real (much
     # smarter) refusal the vision pass below can make. Kept because it's informative
     # before spending a model call: multiple comparable blobs usually means several

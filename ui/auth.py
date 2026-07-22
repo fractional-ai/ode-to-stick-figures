@@ -29,25 +29,33 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-_CONFIGURED = bool(_CLIENT_ID and _CLIENT_SECRET)
-
-# Exactly one of the two set. Not the same thing as "auth is off": all-empty is a dev
-# machine deliberately running without a login, but half-empty is a deployment someone
-# meant to gate and typo'd. Treating that as "off" would silently open uploads — so it
-# blocks uploads instead (see require_upload_auth), while leaving the public gallery up.
-_PARTIAL = bool(_CLIENT_ID or _CLIENT_SECRET) and not _CONFIGURED
-
 oauth = OAuth()
-if _CONFIGURED:
-    oauth.register(
-        name="google",
-        client_id=_CLIENT_ID,
-        client_secret=_CLIENT_SECRET,
-        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-        client_kwargs={"scope": "openid email profile"},
-    )
+
+
+def _creds() -> tuple[str | None, str | None]:
+    """Read every time, never cached at import.
+
+    This used to be module-level constants, which made the gate depend on import order:
+    serve.py's `import auth` runs before its load_env(), so credentials supplied through
+    a .env file weren't in os.environ yet and auth read as "off" — silently ungating
+    uploads on exactly the .env-based setups most likely to be someone's first real
+    deploy. Reading lazily means no caller can get that wrong.
+    """
+    return os.environ.get("GOOGLE_CLIENT_ID"), os.environ.get("GOOGLE_CLIENT_SECRET")
+
+
+def is_configured() -> bool:
+    client_id, client_secret = _creds()
+    return bool(client_id and client_secret)
+
+
+def is_partial() -> bool:
+    """Exactly one of the two set. Not the same thing as "auth is off": all-empty is a
+    dev machine deliberately running without a login, but half-empty is a deployment
+    someone meant to gate and typo'd. Treating that as "off" would silently open uploads
+    — so it blocks them instead (see require_upload_auth), leaving the gallery up."""
+    client_id, client_secret = _creds()
+    return bool(client_id or client_secret) and not (client_id and client_secret)
 
 
 def _callback_url(request: Request) -> str:
@@ -79,13 +87,22 @@ def allowed_domains() -> set[str]:
 def install(app: FastAPI) -> None:
     """Wire the session middleware and /login, /auth/callback onto `app`. No-op if
     GOOGLE_CLIENT_ID/SECRET aren't set — see the module docstring for why."""
-    if not _CONFIGURED:
+    if not is_configured():
         return
 
     secret = os.environ.get("SESSION_SECRET")
     if not secret:
         raise SystemExit("SESSION_SECRET must be set when GOOGLE_CLIENT_ID is configured.")
     app.add_middleware(SessionMiddleware, secret_key=secret)
+
+    client_id, client_secret = _creds()
+    oauth.register(
+        name="google",
+        client_id=client_id,
+        client_secret=client_secret,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
 
     @app.get("/login")
     async def login(request: Request):
@@ -123,15 +140,15 @@ def require_upload_auth(request: Request) -> dict | None:
     via Depends() ONLY on POST /api/upload.
 
     request.session raises AssertionError, not a clean 401, if SessionMiddleware was
-    never installed (auth not configured) — so check _CONFIGURED first rather than
+    never installed (auth not configured) — so check is_configured() first rather than
     let that surface as an opaque 500 for every upload on an unconfigured deployment.
     """
-    if _PARTIAL:
+    if is_partial():
         raise HTTPException(
             status_code=503,
             detail="Upload auth is misconfigured on this deployment; uploads are disabled.",
         )
-    if not _CONFIGURED:
+    if not is_configured():
         return None
     user = request.session.get("user")
     if not user:
