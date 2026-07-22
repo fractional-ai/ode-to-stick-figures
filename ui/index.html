@@ -94,8 +94,12 @@
     break-inside:avoid; margin:0 0 26px; display:inline-block; width:100%;
     border:0; padding:0; background:none; text-align:left; font:inherit; color:inherit;
   }
-  .card.live{cursor:pointer}
   .card.live:hover .plate{opacity:.82}
+  .plate-btn{display:block; width:100%; padding:0; border:0; background:none; cursor:pointer; font:inherit}
+  /* a button that reads as the label it replaced */
+  .linky{border:0; background:none; padding:0; cursor:pointer; font:inherit; text-align:left}
+  .linky:hover,.acts a:hover{opacity:.62}
+  .linky:focus-visible,.acts a:focus-visible{outline:2px solid var(--flag); outline-offset:2px}
   .plate{
     background:var(--plate); border:1px solid var(--rule); border-radius:8px;
     padding:14px; display:block; transition:opacity .25s linear;
@@ -138,6 +142,9 @@
   dialog iframe{display:block; width:100%; height:min(70vh,620px); border:0; background:var(--plate)}
 
   .aside{display:flex; gap:8px; align-items:flex-start; font-size:14px; color:var(--ink-62)}
+  /* one block per file in a multi-file drop, ruled apart */
+  .res{display:flex; flex-direction:column; gap:12px}
+  .res + .res{border-top:1px solid var(--rule); padding-top:20px; margin-top:20px}
   .hidden{display:none !important}
 </style>
 </head>
@@ -254,34 +261,43 @@ async function load() {
   document.getElementById('n-declined').textContent = declined ? `${declined} declined` : '';
 
   for (const c of items) {
-    // A <button> when it does something. The whole card is the click target for a
-    // animation, so it has to be focusable and activatable from the keyboard.
-    const el = document.createElement(c.animated ? 'button' : 'div');
+    // Always a plain <div>. The card used to be a <button> wrapping everything, which
+    // put the field-guide <a> inside a control — invalid nesting that lets assistive
+    // tech skip the link or fire the dialog instead of following it.
+    // The two real controls are siblings now: the plate, and the guide link.
+    const el = document.createElement('div');
     el.className = 'card' + (c.animated ? ' live' : '');
-    if (c.animated) el.type = 'button';
     el.innerHTML = `
-      <span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
-            alt="${esc(c.name)} — the original drawing"></span>
-      <span class="meta">
-        <span class="nm">${esc(c.name)}</span>
+      ${c.animated
+        // aria-hidden + tabindex=-1: this is a redundant mouse target for the same
+        // action as "Watch it move" below, so it must not be a second tab stop or a
+        // second announcement of the same thing.
+        ? `<button class="plate-btn" type="button" aria-hidden="true" tabindex="-1">
+             <span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+                   alt="${esc(c.name)} — the original drawing"></span>
+           </button>`
+        : `<span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+                 alt="${esc(c.name)} — the original drawing"></span>`}
+      <div class="meta">
+        <div class="nm">${esc(c.name)}</div>
         ${c.animated ? `
-          <span class="vb">${esc(c.vibe) || '&nbsp;'}</span>
-          <span class="acts lbl">
-            <span class="lbl-ink">Watch it move →</span>
+          <div class="vb">${esc(c.vibe) || '&nbsp;'}</div>
+          <div class="acts lbl">
+            <button class="linky lbl lbl-ink" type="button">Watch it move →</button>
             <a class="lbl" href="/guide/${encodeURIComponent(c.stem)}"
                target="_blank" rel="noopener">Field guide</a>
-          </span>` : ''}
+          </div>` : ''}
         ${c.refused ? `
-          <span class="refused"><span class="dot">•</span>
+          <div class="refused"><span class="dot">•</span>
             <span><span style="color:var(--ink)">We didn't animate this one:</span>
-              ${esc(c.refused)}</span></span>
-          <span class="lbl" style="color:var(--ink-40)">A considered call</span>` : ''}
+              ${esc(c.refused)}</span></div>
+          <div class="lbl" style="color:var(--ink-40)">A considered call</div>` : ''}
         ${!c.animated && !c.refused ? `
-          <span class="lbl">Still being built</span>` : ''}
-      </span>`;
+          <div class="lbl">Still being built</div>` : ''}
+      </div>`;
     if (c.animated) {
-      el.querySelector('a').onclick = e => e.stopPropagation();
-      el.onclick = () => showWalk(c);
+      el.querySelector('.plate-btn').onclick = () => showWalk(c);
+      el.querySelector('.linky').onclick = () => showWalk(c);
     }
     grid.appendChild(el);
   }
@@ -320,6 +336,10 @@ input.addEventListener('change', () => send([...input.files]));
 // before you add anything. A build only changes the header and reveals the thumbnail.
 let clockTimer = null;
 function startClock() {
+  // Clear first. A second batch dropped while one is in flight used to overwrite
+  // clockTimer and orphan the old interval, which then kept writing to the meter
+  // after the panel had been reset.
+  if (clockTimer) clearInterval(clockTimer);
   const t0 = Date.now();
   const el = document.getElementById('w-meter');
   const paint = () => {
@@ -335,11 +355,34 @@ function stopClock() {
   document.getElementById('w-meter').textContent = 'About a minute';
   document.getElementById('w-thumbwrap').classList.add('hidden');
 }
-function panel(html) { result.innerHTML = html; result.classList.remove('hidden'); }
+// One entry per file, appended. This used to replace the whole panel, so in a
+// multi-file drop every outcome but the last was overwritten before anyone read it —
+// and a refusal is exactly the outcome you most need to see.
+function entry(html, name) {
+  result.classList.remove('hidden');
+  const div = document.createElement('div');
+  div.className = 'res';
+  div.innerHTML = (name ? `<div class="lbl" style="color:var(--ink-40)">${esc(name)}</div>` : '') + html;
+  result.appendChild(div);
+}
 
+let busy = false;
 async function send(files) {
+  if (busy) return;
+  busy = true;
+  input.disabled = true;
+  try {
+    await runBatch(files);
+  } finally {
+    busy = false;
+    input.disabled = false;
+  }
+}
+
+async function runBatch(files) {
+  result.innerHTML = '';
+  result.classList.add('hidden');
   for (const [i, f] of files.entries()) {
-    result.classList.add('hidden');
     document.getElementById('w-title').textContent =
       files.length > 1 ? `Working on it · drawing ${i + 1} of ${files.length}` : 'Working on it';
     const thumb = document.getElementById('w-thumb');
@@ -358,7 +401,7 @@ async function send(files) {
       // Not signed in: offer the sign-in rather than dereferencing j.stats off a
       // {detail: ...} body, and come back to this page afterwards.
       if (r.status === 401) {
-        panel(`<div class="lbl">Before we can add it</div>
+        entry(`<div class="lbl">Before we can add it</div>
           <h2>One sign-in, then we'll get started.</h2>
           <p class="s15 dim">Adding a drawing is the only thing here that asks. We'll bring you
             straight back — you won't have to find this again.</p>
@@ -369,32 +412,30 @@ async function send(files) {
       }
       // A refusal is a 200 and a verdict, not a failure. Frame it that way.
       if (j.refused) {
-        panel(`<div class="lbl">A verdict, not an error</div>
+        entry(`<div class="lbl">A verdict, not an error</div>
           <h2>We looked, and we're not going to animate this one.</h2>
           <div class="aside"><span class="dot">•</span><span>${esc(j.refused)}</span></div>
           <p class="s14 dim">We'd rather say so than make paper slabs slide sideways and call it
-            an animal.</p>
-          <div><button class="btn" onclick="document.getElementById('drop').click()">Try another drawing</button></div>`);
+            an animal.</p>`, f.name);
         continue;
       }
       if (!r.ok || j.error) {
-        panel(`<div class="lbl">A mistake, easily fixed</div>
+        entry(`<div class="lbl">A mistake, easily fixed</div>
           <h2>That one didn't go in.</h2>
-          <p class="s15 dim">${esc(j.error || j.detail || `Error ${r.status}`)}</p>
-          <div><button class="btn" onclick="document.getElementById('drop').click()">Choose another file</button></div>`);
+          <p class="s15 dim">${esc(j.error || j.detail || `Error ${r.status}`)}</p>`, f.name);
         continue;
       }
       const s = j.stats || {};
-      panel(`<div class="lbl">It worked</div>
+      entry(`<div class="lbl">It worked</div>
         <h2>${esc(f.name)} is in the gallery.</h2>
         <p class="s14 dim">Kept ${((s.kept_frac ?? 0) * 100).toFixed(0)}% of the paper ·
           ${esc(s.blobs)} blob(s) · dominance ${esc(s.dominance)}</p>
-        ${j.warning ? `<div class="aside"><span class="dot">•</span><span>${esc(j.warning)}</span></div>` : ''}`);
+        ${j.warning ? `<div class="aside"><span class="dot">•</span><span>${esc(j.warning)}</span></div>` : ''}`, f.name);
     } catch (err) {
       stopClock();
-      panel(`<div class="lbl">That didn't reach us</div>
+      entry(`<div class="lbl">That didn't reach us</div>
         <h2>The upload failed on the way out.</h2>
-        <p class="s15 dim">${esc(err)}</p>`);
+        <p class="s15 dim">${esc(err)}</p>`, f.name);
     }
   }
   load();
