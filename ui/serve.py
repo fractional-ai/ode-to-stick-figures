@@ -29,7 +29,7 @@ import re
 import sys
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from PIL import Image
 
@@ -327,11 +327,49 @@ _BACK_BAR = (
 _DUP_TITLE = re.compile(r"(<h2\b[^>]*>.*?</h2>)\s*<h1\b[^>]*>.*?</h1>", re.IGNORECASE | re.DOTALL)
 
 
+def _present_guide_body(html: str) -> str:
+    """Serve-time cleanup so cached guides get the fixes without a re-run. No back bar:
+    inside the sandboxed frame that link would navigate the frame, not the tab, so the
+    wrapper page owns it instead."""
+    return _DUP_TITLE.sub(r"\1", html)
+
+
 def _present_guide(html: str) -> str:
-    """Serve-time cleanup so cached guides get the fixes without a re-run."""
-    html = _DUP_TITLE.sub(r"\1", html)
+    """Cleanup plus the back bar, for guides served as the top-level document."""
+    html = _present_guide_body(html)
     new, n = re.subn(r"(<body[^>]*>)", lambda m: m.group(1) + _BACK_BAR, html, count=1)
     return new if n else _BACK_BAR + html
+
+
+# An uploaded guide is model-written prose assembled from a drawing that a signed-in
+# uploader chose, and nothing in the render path strips HTML — so serving one as
+# first-party content lets an uploader persist script that runs for every visitor,
+# with the gallery's own origin and cookies.
+#
+# Sanitizing was the other option and it doesn't work here: guides carry an inline
+# <script> that drives the walk-cycle canvas plus an external model-viewer import, so
+# an allowlist strict enough to be safe would break every uploaded guide's animation.
+#
+# A sandboxed iframe keeps the animation and still contains it. `allow-scripts` WITHOUT
+# `allow-same-origin` is the whole trick: script runs, but in an opaque origin, so it
+# can't read the session cookie, touch the parent DOM, or call our API as the viewer.
+# Bundled guides are repo-authored and skip all of this.
+_GUIDE_SANDBOX = "allow-scripts allow-popups"
+
+
+def _sandboxed_guide_page(stem: str) -> str:
+    """The wrapper the browser actually loads: our chrome, guide in a sandboxed frame."""
+    src = f"/guide/{html_mod.escape(stem, quote=True)}/raw"
+    return (
+        "<!doctype html><html><head><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<title>Field guide</title>"
+        "<style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;"
+        "display:block}</style></head><body>"
+        f"{_BACK_BAR}"
+        f"<iframe sandbox=\"{_GUIDE_SANDBOX}\" src='{src}' title='Field guide'></iframe>"
+        "</body></html>"
+    )
 
 
 @app.get("/guide/{stem}", response_class=HTMLResponse)
@@ -359,14 +397,14 @@ def get_guide(stem: str):
                 f"<p>We won't write a field guide for this one: {html_mod.escape(why)}</p>",
                 status_code=422,
             )
-        raw_guide = UPLOAD_STORAGE.read_bytes(f"{stem}.guide.html")
-        if raw_guide is None:
+        if not UPLOAD_STORAGE.exists(f"{stem}.guide.html"):
             return HTMLResponse(
                 "<p>This creature is still being built, or the build didn't finish. "
                 "Try again in a moment.</p>",
                 status_code=503,
             )
-        return HTMLResponse(_present_guide(raw_guide.decode()))
+        # Never the guide's own HTML at this URL — see _sandboxed_guide_page.
+        return HTMLResponse(_sandboxed_guide_page(stem))
 
     src = find(stem)
     if not src:
@@ -402,6 +440,28 @@ def get_guide(stem: str):
     except Exception as e:  # noqa: BLE001 — surface the real failure; never a silent blank page
         detail = html_mod.escape(f"{type(e).__name__}: {e}")
         return HTMLResponse(f"<h3>Swarm failed</h3><pre>{detail}</pre>", status_code=500)
+
+
+@app.get("/guide/{stem}/raw", response_class=HTMLResponse)
+def get_guide_raw(stem: str):
+    """The uploaded guide's own HTML, for the sandboxed iframe in /guide/{stem}.
+
+    Uploaded creatures only — a bundled stem 404s here, since bundled guides are served
+    directly and have no reason to exist at this URL.
+
+    The CSP `sandbox` directive repeats the iframe's sandbox attribute as a response
+    header so the isolation holds even when this URL is opened directly, which a
+    determined attacker would obviously try rather than politely staying in the frame.
+    """
+    if rig_for(stem) is not None:
+        raise HTTPException(status_code=404, detail="Not an uploaded creature.")
+    raw_guide = UPLOAD_STORAGE.read_bytes(f"{stem}.guide.html")
+    if raw_guide is None:
+        raise HTTPException(status_code=404, detail="No guide for this creature.")
+    return HTMLResponse(
+        _present_guide_body(raw_guide.decode()),
+        headers={"Content-Security-Policy": f"sandbox {_GUIDE_SANDBOX}"},
+    )
 
 
 def _spec_name(spec: dict):
@@ -451,7 +511,14 @@ def api_creatures():
                 "stem": stem,
                 "name": name,
                 "vibe": vibe,
-                "animated": raw_rig is not None and why is None,
+                # For an uploaded creature the rig alone isn't enough: /anim reads the
+                # stored walk cycle and never rebuilds one, so a rig-only stem (partial
+                # Blob sync, or a build that died after the rig) would advertise live
+                # walk/guide controls that both 503. Bundled stems keep the old test —
+                # their artifacts ship in the bundle alongside the rig.
+                "animated": raw_rig is not None
+                and why is None
+                and (p is not None or UPLOAD_STORAGE.exists(f"{stem}.html")),
                 "refused": why,
                 "uploaded": p is None or p.parent == UPLOADS,
             }

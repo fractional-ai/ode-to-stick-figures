@@ -259,9 +259,16 @@ def test_uploaded_creature_is_fully_servable(monkeypatch, tmp_path):
     assert anim_r.status_code == 200, anim_r.text
     assert "fake walk cycle" in anim_r.text
 
+    # /guide serves a wrapper, not the model-written HTML — see _sandboxed_guide_page.
     guide_r = client.get("/guide/up-abc123")
     assert guide_r.status_code == 200, guide_r.text
-    assert "fake guide" in guide_r.text
+    assert "fake guide" not in guide_r.text
+    assert 'sandbox="allow-scripts allow-popups"' in guide_r.text
+    assert "/guide/up-abc123/raw" in guide_r.text
+
+    raw_r = client.get("/guide/up-abc123/raw")
+    assert raw_r.status_code == 200, raw_r.text
+    assert "fake guide" in raw_r.text
 
     thumb_r = client.get("/thumb/up-abc123")
     assert thumb_r.status_code == 200, thumb_r.text
@@ -318,6 +325,73 @@ def test_uploaded_creature_still_building_degrades_instead_of_404ing(monkeypatch
 
     guide_r = client.get("/guide/up-midbuild")
     assert guide_r.status_code == 503, guide_r.text
+
+
+def test_uploaded_guide_script_cannot_reach_the_gallerys_origin(monkeypatch, tmp_path):
+    """The XSS containment, stated as the property that matters: an uploader's script
+    never executes with the gallery's origin.
+
+    Uses a guide whose body is an actual payload, and checks both doors — the page a
+    visitor loads, and the raw URL an attacker would send them to directly.
+    """
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    payload = b"<html><body><script>fetch('/api/steal?c='+document.cookie)</script></body></html>"
+    store = LocalStorage(tmp_path / "uploads")
+    _seed_upload(serve, store, "up-evil")
+    store.write_bytes("up-evil.guide.html", payload)
+    client = TestClient(serve.app)
+
+    # Door 1: the wrapper never inlines the payload, so nothing runs first-party.
+    wrapper = client.get("/guide/up-evil")
+    assert wrapper.status_code == 200
+    assert "document.cookie" not in wrapper.text
+    assert 'sandbox="allow-scripts allow-popups"' in wrapper.text
+
+    # Door 2: opened directly, the CSP header re-applies the same sandbox, so the
+    # script still runs in an opaque origin rather than ours.
+    raw = client.get("/guide/up-evil/raw")
+    assert raw.status_code == 200
+    assert "document.cookie" in raw.text, "the guide itself is served, just contained"
+    csp = raw.headers["content-security-policy"]
+    assert csp == "sandbox allow-scripts allow-popups"
+    assert "allow-same-origin" not in csp, "allow-same-origin would undo the whole point"
+
+
+def test_bundled_guide_has_no_raw_route(monkeypatch, tmp_path):
+    """Bundled guides are repo-authored and served directly; /raw is for uploads only."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    serve.UPLOAD_STORAGE = LocalStorage(tmp_path / "uploads")
+    client = TestClient(serve.app)
+
+    assert client.get("/guide/bee/raw").status_code == 404
+
+
+def test_rig_only_upload_is_not_advertised_as_animated(monkeypatch, tmp_path):
+    """A build that died after the rig, or a partial Blob sync. /anim and /guide both
+    503 in that state, so a card claiming "animated" links to two broken pages."""
+    from fastapi.testclient import TestClient
+
+    serve = _load_serve()
+    from storage import LocalStorage
+
+    store = LocalStorage(tmp_path / "uploads")
+    store.write_bytes("up-halfbuilt.rig.json", b'{"name": "Half Built"}')
+    store.write_bytes("up-halfbuilt.png", _TINY_PNG)
+    serve.UPLOAD_STORAGE = store
+    client = TestClient(serve.app)
+
+    card = next(c for c in client.get("/api/creatures").json() if c["stem"] == "up-halfbuilt")
+    assert card["animated"] is False
+    assert client.get("/anim/up-halfbuilt").status_code == 503
+    assert client.get("/guide/up-halfbuilt").status_code == 503
 
 
 def test_unknown_upload_stem_still_404s(monkeypatch, tmp_path):

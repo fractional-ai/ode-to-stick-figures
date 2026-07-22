@@ -89,6 +89,9 @@ def install(app: FastAPI) -> None:
 
     @app.get("/login")
     async def login(request: Request):
+        # Google doesn't forward our query params to the callback, so where the user was
+        # headed has to ride in the session or it's lost across the roundtrip.
+        request.session["next"] = _safe_next(request.query_params.get("next"))
         return await oauth.google.authorize_redirect(request, _callback_url(request))
 
     @app.get("/auth/callback")
@@ -105,7 +108,9 @@ def install(app: FastAPI) -> None:
                 status_code=403,
             )
         request.session["user"] = {"email": userinfo.get("email"), "name": userinfo.get("name")}
-        return RedirectResponse(_safe_next(request.query_params.get("next")))
+        # Re-checked on the way out, not just on the way in: the session is signed, but
+        # _safe_next is cheap and this keeps the guarantee at the redirect itself.
+        return RedirectResponse(_safe_next(request.session.pop("next", None)))
 
     @app.get("/logout")
     async def logout(request: Request):
