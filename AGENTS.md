@@ -94,6 +94,34 @@ producing nothing:
 - **Prewarm before deploying.** The bundled creatures ship as committed artifacts and
   the deployed app never rebuilds them.
 
+## Debugging a deployed problem
+
+Logfire traces everything: request spans (FastAPI), outbound HTTP (both Anthropic and the
+hand-rolled Blob calls), Anthropic token usage, plus explicit spans on the expensive
+upload path — the alpha key with the image dimensions on it, each swarm phase, and each
+text lane separately. `lib/telemetry.py` installs it.
+
+Two things to know before touching it:
+
+- **Tracing from your laptop is encouraged.** Set `LOGFIRE_TOKEN` locally and dev
+  traces arrive tagged `local`, kept apart from `production` and `preview` — watching the
+  swarm's spans is the fastest way to see what it's actually doing. Without a token
+  nothing is exported: spans are created and discarded, so behaviour is identical either
+  way. `ODE_TELEMETRY=off` skips instrumentation outright and **only the test suite sets
+  it**, because `logfire.configure()` is last-call-wins and otherwise a developer with a
+  token exported would ship test traces at the real project.
+- **Every trace is tagged with its environment** — `production`, `preview`,
+  `development` (`vercel dev`) or `local`. All of them run the same expensive upload path
+  against the same Blob store, so this is what makes the traces readable.
+  `LOGFIRE_ENVIRONMENT` overrides it for a one-off.
+- **`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` is load-bearing.** `instrument_anthropic()`
+  records request bodies, and every vision call here carries a base64 PNG of a drawing —
+  uncapped that is multi-megabyte spans per upload, at risk of being dropped whole. The
+  image isn't worthless (a keying failure is easier to see than to describe), but a trace
+  is the wrong place to pay for the pixels, and the alpha-key span keeps the cheap half of
+  the signal: dimensions and megapixels. Raise it while chasing something specific; don't
+  raise the default.
+
 ## The bits that will surprise you
 
 - **`locomotion` is a closed enum because it's a dispatch key** into animation models

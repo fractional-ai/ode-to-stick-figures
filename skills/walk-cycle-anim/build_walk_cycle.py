@@ -37,6 +37,32 @@ HERE = Path(__file__).parent
 
 
 def key(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
+    """Traced wrapper around the alpha key. See _key_impl for the actual algorithm.
+
+    This is the hot spot of the whole upload, and it was invisible: the cost scales
+    with pixel count, and nothing downscales a phone photo, so the same call that
+    takes 0.3s on a bundled drawing takes 14s+ on a 12MP JPEG. One upload runs it
+    four times. That combination timed out a production upload at 180s and the logs
+    said only "Task timed out" — see issue #88. Now the span carries the dimensions,
+    so the next time this is slow the trace says why.
+    """
+    import logfire
+
+    mp = (img.width * img.height) / 1e6
+    with logfire.span(
+        "alpha key {width}x{height} ({megapixels:.1f}MP)",
+        width=img.width,
+        height=img.height,
+        megapixels=mp,
+        keep=keep,
+    ) as span:
+        keyed, stats = _key_impl(img, keep=keep)
+        span.set_attribute("blobs", stats.get("blobs"))
+        span.set_attribute("kept_frac", stats.get("kept_frac"))
+        return keyed, stats
+
+
+def _key_impl(img: Image.Image, keep: int = 1) -> tuple[Image.Image, dict]:
     """White paper -> alpha 0, creature -> alpha 255, interior holes filled.
 
     Ink is either dark (outlines) or saturated (crayon fill); paper is bright and

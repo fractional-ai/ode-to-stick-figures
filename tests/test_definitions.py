@@ -11,8 +11,11 @@ What is left is the stuff a prompt or schema edit can genuinely break somewhere 
 """
 
 import json
+import os
 import re
 from pathlib import Path
+
+import pytest
 
 from agents import definitions as d
 
@@ -132,3 +135,90 @@ def test_bundled_guides_embed_the_same_gait_their_walk_cycle_uses():
         )
         checked += 1
     assert checked, "no stem had both a guide and a walk cycle"
+
+
+def test_a_huge_span_attribute_is_truncated_not_shipped_whole():
+    """The assumption telemetry.install() rests on: OpenTelemetry honours
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, so instrument_anthropic() can't ship a base64
+    drawing to Logfire.
+
+    That matters because logfire's anthropic instrumentation records the request body,
+    and every vision call here carries a base64 PNG of a child's drawing. Measured with
+    a 16KB image, the whole thing landed in `request_data` on two spans. At real sizes
+    that is multi-megabyte spans per upload and someone's artwork sent to a third party.
+
+    Runs in a subprocess because the limit is read when the tracer provider is built, and
+    this suite already configured logfire in conftest.
+    """
+    import subprocess
+    import sys
+
+    program = """
+import os
+os.environ["OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "4096"
+import logfire
+from logfire.testing import TestExporter
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+exp = TestExporter()
+logfire.configure(send_to_logfire=False, console=False,
+                  additional_span_processors=[SimpleSpanProcessor(exp)])
+with logfire.span("big", payload="x" * 200_000):
+    pass
+sizes = [len(str(v)) for s in exp.exported_spans for v in (s.attributes or {}).values()]
+print(max(sizes))
+"""
+    out = subprocess.run(
+        [sys.executable, "-c", program], capture_output=True, text=True, timeout=120
+    )
+    assert out.returncode == 0, out.stderr[-800:]
+    biggest = int(out.stdout.strip().splitlines()[-1])
+    assert biggest <= 4096, (
+        f"a 200,000-char attribute survived at {biggest} chars — the limit is not being "
+        "honoured, so instrument_anthropic() would ship whole base64 drawings"
+    )
+
+
+@pytest.mark.parametrize(
+    "env,expected",
+    [
+        ({"VERCEL_ENV": "production"}, "production"),
+        ({"VERCEL_ENV": "preview"}, "preview"),
+        ({"VERCEL_ENV": "development"}, "development"),
+        ({}, "local"),
+        # An explicit tag wins, for tracing one experiment on its own.
+        ({"VERCEL_ENV": "production", "LOGFIRE_ENVIRONMENT": "spike"}, "spike"),
+    ],
+)
+def test_traces_are_tagged_with_the_environment_they_came_from(monkeypatch, env, expected):
+    """Production, preview and a laptop all run the same expensive upload path against the
+    same Blob store, so traces are only readable if they say which is which.
+
+    Asserts the value Logfire is actually configured with, in a subprocess — configure()
+    is once-per-process and conftest has already called it.
+    """
+    import subprocess
+    import sys
+
+    program = (
+        "import os, sys\n"
+        f"sys.path.insert(0, {str(REPO)!r})\n"
+        'os.environ.pop("ODE_TELEMETRY", None)\n'
+        "from lib import telemetry\n"
+        "telemetry.install()\n"
+        "import logfire\n"
+        "print(logfire.DEFAULT_LOGFIRE_INSTANCE.config.environment)\n"
+    )
+
+    clean = {k: v for k, v in os.environ.items() if k not in ("VERCEL_ENV", "LOGFIRE_ENVIRONMENT")}
+    clean.pop("LOGFIRE_TOKEN", None)  # don't export from a test, whatever the developer has set
+    clean["ODE_TELEMETRY"] = ""
+    out = subprocess.run(
+        [sys.executable, "-c", program],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        env={**clean, **env},
+    )
+    assert out.returncode == 0, out.stderr[-800:]
+    assert out.stdout.strip().splitlines()[-1] == expected

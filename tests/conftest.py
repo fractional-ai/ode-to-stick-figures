@@ -21,3 +21,22 @@ def load_module_from_path(name: str, path: Path) -> ModuleType:
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def pytest_configure() -> None:
+    """Pin Logfire to local-only for the whole suite.
+
+    Without this the first span in a test auto-configures the SDK and warns about it,
+    and a developer who happens to have LOGFIRE_TOKEN exported — it lives in a .env one
+    directory above this repo — would ship test traces to the real project. The suite is
+    offline by contract; that has to include telemetry.
+    """
+    import os
+
+    import logfire
+
+    # Both halves matter. The env var stops the app's own telemetry.install() from
+    # reconfiguring over this pin (logfire.configure is last-call-wins), and the
+    # configure call here means a span in a test doesn't auto-configure and warn.
+    os.environ["ODE_TELEMETRY"] = "off"
+    logfire.configure(send_to_logfire=False, console=False)
