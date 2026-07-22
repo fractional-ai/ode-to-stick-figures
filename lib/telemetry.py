@@ -30,11 +30,36 @@ _INSTALLED = False
 _OFF_SWITCH = "ODE_TELEMETRY"
 
 
+def deployment_environment() -> str:
+    """Which environment these traces came from, for filtering in Logfire.
+
+    Four distinct values, because they behave differently and are worth separating:
+    `production` and `preview` (both from Vercel's own VERCEL_ENV, which is populated now
+    that system env vars are enabled), `development` for `vercel dev`, and `local` for a
+    laptop running `uv run ui/serve.py`.
+
+    The last one is not lumped in with `development` on purpose: a local run has a
+    developer watching it and often points at a different Blob store, so mixing it into
+    the same bucket as a deployed environment makes both harder to read.
+
+    LOGFIRE_ENVIRONMENT wins over all of it, for when you want a run tagged separately —
+    tracing one experiment, say, without it landing in `local` alongside everything else.
+    """
+    explicit = os.environ.get("LOGFIRE_ENVIRONMENT")
+    if explicit:
+        return explicit
+    return os.environ.get("VERCEL_ENV") or "local"
+
+
 def install(app: FastAPI | None = None) -> None:
     """Configure Logfire once, and instrument what this app actually uses.
 
     Safe to call from any entry point and safe to call twice. Pass the FastAPI app to
     get request spans; omit it for the CLI paths (prewarm, evals) that have no server.
+
+    Exporting from a laptop is a feature, not an accident: set LOGFIRE_TOKEN locally and
+    your dev traces go to Logfire tagged `local`, which is the fastest way to see what the
+    swarm is doing. Only the test suite is forced off, via _OFF_SWITCH.
     """
     global _INSTALLED
     if _INSTALLED or os.environ.get(_OFF_SWITCH) == "off":
@@ -44,24 +69,27 @@ def install(app: FastAPI | None = None) -> None:
     # Cap attribute size BEFORE configure(), because the tracer provider reads OTel's
     # limits when it's built.
     #
-    # This is not a nice-to-have. instrument_anthropic() records the request body, and
-    # every vision call in this pipeline carries a base64 PNG of a child's drawing — a
-    # keyed 12MP photo is megabytes. Measured with a 16KB test image: the full base64
-    # landed in `request_data` on two separate spans, 34KB of span payload for 16KB of
-    # image. At real sizes that is multi-megabyte spans on every upload, which costs
-    # quota, risks the span being dropped outright, and ships children's drawings to a
-    # third party for no diagnostic benefit. 4096 chars keeps the useful head of a
-    # request (model, message shape) and throws the pixels away.
+    # instrument_anthropic() records request bodies, and every vision call here carries a
+    # base64 PNG of a child's drawing. Measured with a 16KB test image, the full base64
+    # landed in `request_data` on two separate spans — 34KB of span payload for 16KB of
+    # image, and a keyed 12MP photo is megabytes. Uncapped that means multi-megabyte
+    # spans on every upload, which burns quota and risks the span being dropped whole.
+    #
+    # The image is not worthless to have: a keying failure is much easier to see than to
+    # describe. But a trace is the wrong place to carry the pixels at that cost, and the
+    # cheap half of the signal is kept anyway — the alpha-key span records dimensions and
+    # megapixels, which is what actually explains a slow build. Raise this if you're
+    # chasing something that needs more of the body; don't raise it by default.
     os.environ.setdefault("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT", "4096")
 
     import logfire
 
     logfire.configure(
         service_name="ode-to-stick-figures",
-        # Separates production traces from preview ones, which matters because a
-        # preview deploy exercises the same expensive upload path against the same
-        # Blob store. VERCEL_ENV is populated once system env vars are enabled.
-        environment=os.environ.get("VERCEL_ENV", "local"),
+        # Worth getting right: production, preview and a laptop all exercise the same
+        # expensive upload path against the same Blob store, so without this they are
+        # indistinguishable in Logfire. See deployment_environment().
+        environment=deployment_environment(),
         send_to_logfire="if-token-present",
         # Vercel already writes one log line per request, and console spans would
         # interleave a second, much noisier copy into the same stream.
