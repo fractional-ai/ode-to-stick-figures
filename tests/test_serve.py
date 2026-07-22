@@ -194,6 +194,9 @@ def test_upload_route_calls_the_real_build_and_returns_its_result(monkeypatch):
         return FakeResult(id="fake0001", refused=None)
 
     monkeypatch.setattr(serve.upload_build, "build_from_upload", fake_build_from_upload)
+    # Pinned, not inherited: HAVE_KEY comes from whether the machine running the suite
+    # has an ANTHROPIC_API_KEY, and this test is about the route's shape, not the key.
+    monkeypatch.setattr(serve, "HAVE_KEY", True)
     client = TestClient(serve.app)
 
     r = client.post("/api/upload", files={"file": ("drawing.png", _TINY_PNG, "image/png")})
@@ -217,6 +220,7 @@ def test_upload_route_rejects_before_calling_build_from_upload(monkeypatch):
         raise AssertionError("build_from_upload() must not run for a rejected upload")
 
     monkeypatch.setattr(serve.upload_build, "build_from_upload", fail_if_called)
+    monkeypatch.setattr(serve, "HAVE_KEY", True)  # the 415 must come from the extension
     client = TestClient(serve.app)
 
     r = client.post("/api/upload", files={"file": ("not-an-image.txt", b"hello", "text/plain")})
@@ -451,6 +455,7 @@ def test_upload_route_requires_auth_when_configured(monkeypatch):
         raise AssertionError("build_from_upload() must not run for an unauthenticated upload")
 
     monkeypatch.setattr(serve.upload_build, "build_from_upload", fail_if_called)
+    monkeypatch.setattr(serve, "HAVE_KEY", True)  # the 401 must come from the auth gate
 
     r = client.post("/api/upload", files={"file": ("drawing.png", _TINY_PNG, "image/png")})
     assert r.status_code == 401, r.text
