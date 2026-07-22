@@ -36,7 +36,7 @@ It's Like" section below.
 | fly | Open sky-reliant biomes: canopy, cliffs, open grassland/desert | Deep cave interior, dense enclosed burrow |
 | roll | Open flat terrain: desert, grassland, tundra ice | Dense forest understory, cluttered terrain |
 | float | Aquatic (fresh or marine), wetland | Any fully terrestrial biome |
-| stationary | Attached/sessile biomes: reef, tide pool, forest floor | Anywhere requiring active relocation to escape a threat — flag it as a vulnerability |
+| stumble | Flat open ground it can rock itself across: hardpan, salt flat, forest floor, a kitchen counter | Anywhere needing a quick escape, or climbing — flag that as a vulnerability |
 
 ## Range
 
