@@ -5,242 +5,393 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ode to Stick Figures</title>
 <style>
+  /* Design language from the "Gallery Today redesign" pass: a specimen catalogue.
+     Warm paper ground, cola-brown ink, hairline rules doing the structural work
+     instead of shadows, mono uppercase for anything that labels rather than speaks.
+     The drawings are the only saturated things on the page. */
   :root{
-    --sky1:#eaf6ff; --sky2:#fdf3e7; --card:#fff; --ink:#40514b; --dim:#68786f; /* 4.66:1 on --card; #8b9a93 was 2.94:1 */
-    --line:#e4ece8; --accent:#ff5964; --ok:#5ac85a; --shadow:0 4px 20px rgba(60,70,90,.10);
-    --paper:#fbfcfb;
+    --paper:#FBFBF8;      /* the page */
+    --plate:#FFFFFF;      /* the white card a drawing sits on */
+    --ink:#3C2E2A;
+    --ink-62:rgba(60,46,42,.62);
+    --ink-40:rgba(60,46,42,.40);
+    --rule:rgba(60,46,42,.20);
+    --flag:#CD3E1D;       /* refusals and asides — never large areas */
+    --tea:#E8EBD7;        /* the one filled button */
+    --pad:48px;
+    /* ABC Diatype is what the design specifies, and it is a licensed face — named
+       first, then the stack falls through to system faces. Shipping the .otf files
+       is a licensing question, not a build one; see the PR. */
+    --sans:'ABC Diatype',-apple-system,'Segoe UI',system-ui,Helvetica,Arial,sans-serif;
+    --mono:'ABC Diatype Semi-Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   @media (prefers-color-scheme:dark){
-    :root{ --sky1:#1a2430; --sky2:#241f31; --card:#232c33; --ink:#dce8e2; --dim:#8fa39a;
-           --line:#33403a; --shadow:0 4px 20px rgba(0,0,0,.35);
-           --paper:#f2f4f2; /* deliberately NOT dark — see .shot */ }
+    :root{
+      --paper:#1B1917; --ink:#EDE7E0;
+      --ink-62:rgba(237,231,224,.62); --ink-40:rgba(237,231,224,.40);
+      --rule:rgba(237,231,224,.22); --flag:#FF7A55; --tea:#3A4030;
+    }
+    /* --plate deliberately stays white: the drawings are ink on paper, and a dark
+       plate behind a photographed white page reads as a rendering bug. */
   }
+  @media (max-width:720px){ :root{ --pad:20px } }
+
   *{box-sizing:border-box}
   body{
-    margin:0; min-height:100vh; color:var(--ink);
-    font-family:ui-rounded,-apple-system,"Segoe UI",system-ui,sans-serif;
-    background:linear-gradient(160deg,var(--sky1),var(--sky2));
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.4;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1100px; margin:0 auto; padding:2.2rem 1.2rem 4rem}
-  h1{margin:0 0 .2rem; font-size:1.9rem; letter-spacing:-.01em}
-  .sub{color:var(--dim); margin:0 0 1.6rem; font-size:.95rem}
+  a{color:inherit; text-decoration:none}
+  h1,h2{font-weight:400; margin:0; letter-spacing:-.025em; line-height:1.1; text-wrap:pretty}
+  h1{font-size:clamp(28px,5vw,43px)}
+  h2{font-size:clamp(21px,3.2vw,28px)}
+  p{margin:0; text-wrap:pretty}
+  img{max-width:100%}
 
-  /* display:block is load-bearing — a <label> is inline, so without it the drop
-     zone collapses to a sliver and the grid flows up over it. */
-  #drop{
-    display:block; width:100%;
-    border:2.5px dashed var(--line); border-radius:18px; padding:1.6rem;
-    text-align:center; color:var(--dim); background:var(--card);
-    transition:border-color .15s, transform .15s, background .15s; cursor:pointer;
-    margin-bottom:1.8rem;
-  }
-  #drop.hot{border-color:var(--accent); color:var(--ink); transform:scale(1.01)}
-  #drop b{color:var(--ink)}
-  #drop .hint{font-size:.8rem; margin-top:.3rem}
-/* NOT display:none. That drops the input out of the tab order, and since the whole
-     drop zone is a <label> wrapping it, the upload became unreachable without a mouse.
-     Visually hidden but still focusable is the standard trick: the label stays clickable
-     AND Enter/Space on the focused input opens the picker. */
-  #drop input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none}
-  /* the zone is a label, so show focus on it when its input has focus */
-  #drop:focus-within{border-color:var(--accent); color:var(--ink)}
-  #drop:focus-within, .acts button:focus-visible, .acts a.btn:focus-visible,
-  .dlg-bar button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  /* the recurring "this is metadata, not prose" signal */
+  .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-62)}
+  .lbl-ink{color:var(--ink)}
+  .rule-b{border-bottom:1px solid var(--rule)}
+  .dim{color:var(--ink-62)}
+  .s14{font-size:14px}
+  .s15{font-size:15px}
 
-  /* stretch keeps every row the same height; without it cards jag by caption length */
-  .grid{
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-    gap:1.1rem; align-items:stretch;
+  .bar{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:22px var(--pad); flex-wrap:wrap}
+  .brand{display:flex; align-items:baseline; gap:14px}
+  .brand svg{height:15px; width:auto; display:block; color:var(--ink)}
+  .nav{display:flex; align-items:center; gap:22px}
+
+  .btn{
+    font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+    white-space:nowrap; border:1px solid var(--rule); border-radius:999px;
+    padding:9px 18px; background:transparent; color:var(--ink); cursor:pointer;
+    transition:opacity .2s linear;
   }
+  .btn:hover{opacity:.62}
+  .btn-tea{background:var(--tea)}
+  .btn:focus-visible,.card:focus-visible,#drop:focus-within{outline:2px solid var(--flag); outline-offset:2px}
+
+  .hero{padding:56px var(--pad) 44px}
+  .hero-in{display:flex; flex-direction:column; gap:24px; max-width:640px}
+  .chip{
+    width:25px; height:25px; flex:none; border:1px solid var(--rule);
+    display:grid; place-items:center; font-family:var(--mono); font-size:11px;
+  }
+  .hero-sub{font-size:18px; color:var(--ink-62); max-width:46ch}
+
+  .status{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px var(--pad)}
+
+  /* Masonry via columns. The drawings are wildly different shapes — a millipede is
+     very wide, others are tall — and a row grid either crops them or leaves white
+     bands under the short ones. Columns let every plate keep its own aspect ratio. */
+  .grid{padding:34px var(--pad) 56px; column-count:4; column-gap:26px}
+  @media (max-width:1100px){ .grid{column-count:3} }
+  @media (max-width:780px){ .grid{column-count:2} }
+  @media (max-width:520px){ .grid{column-count:1} }
+
   .card{
-    background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow);
-    display:flex; flex-direction:column; transition:transform .15s;
+    break-inside:avoid; margin:0 0 26px; display:inline-block; width:100%;
+    border:0; padding:0; background:none; text-align:left; font:inherit; color:inherit;
   }
-  .card .meta{margin-top:auto}
   .card.live{cursor:pointer}
-  .card.live:hover{transform:translateY(-3px)}
-  /* flex:1 rather than a fixed aspect-ratio. The grid stretches every card to its
-     row's height; a fixed-ratio shot refuses to grow, so the slack fell through as a
-     white band under short/wide drawings (a bee, a very long millipede). Growing the
-     shot means the transparency checkerboard fills the card and the drawing stays
-     centred in it. min-height keeps tall drawings from squashing the row. */
-/* No checkerboard: the thumbnail is the original photo now, so there's no
-     transparency to advertise. It keeps a light ground in both themes because the
-     drawings are ink on paper and their own paper should sit on something neutral
-     rather than clash with a dark card. */
-  .shot{
-    flex:1; min-height:200px; display:grid; place-items:center; padding:.7rem;
-    background: var(--paper);
+  .card.live:hover .plate{opacity:.82}
+  .plate{
+    background:var(--plate); border:1px solid var(--rule); border-radius:8px;
+    padding:14px; display:block; transition:opacity .25s linear;
   }
-  .shot img{max-width:100%; max-height:100%; object-fit:contain}
-  .meta{padding:.7rem .85rem .85rem; border-top:1px solid var(--line)}
-  /* Let names and taglines WRAP. They were nowrap+ellipsis, which truncated 12 of 14
-     taglines — and the tagline is the joke ("far too much bee for these legs, und…").
-     Clamp to a couple of lines so cards stay tidy without eating the punchline. */
-  .nm{
-    font-weight:650; font-size:.94rem; line-height:1.25;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-    overflow:hidden; overflow-wrap:anywhere;
+  .plate img{display:block; width:100%; height:auto}
+  .meta{padding:12px 2px 0; display:flex; flex-direction:column; gap:7px}
+  /* Names and taglines wrap. The tagline is the joke and it is usually back-loaded,
+     so truncating it throws away the punchline. */
+  .nm{font-size:18px; line-height:1.25; letter-spacing:-.01em; text-wrap:pretty}
+  .vb{font-size:14px; letter-spacing:.015em; color:var(--ink-62); text-wrap:pretty}
+  .acts{display:flex; gap:16px; margin-top:10px}
+  .refused{display:flex; gap:8px; align-items:flex-start; font-size:14px; color:var(--ink-62)}
+  .dot{color:var(--flag); flex:none; line-height:1.4}
+
+  .panels{padding:var(--pad); display:flex; gap:26px; align-items:flex-start; flex-wrap:wrap}
+  .panel{border:1px solid var(--rule); padding:40px; display:flex; flex-direction:column; gap:20px}
+  .panel-narrow{width:520px; max-width:100%; flex:none}
+  .panel-wide{flex:1; min-width:320px}
+  .row{display:flex; gap:14px; padding:12px 0; border-top:1px solid var(--rule)}
+
+  #drop{
+    display:block; width:100%; border:1px dashed var(--ink-40); border-radius:8px;
+    background:var(--plate); color:var(--ink); padding:40px 28px; text-align:center; cursor:pointer;
+    transition:border-color .15s;
   }
-  .vb{
-    color:var(--dim); font-size:.79rem; font-style:italic; margin-top:.2rem;
-    line-height:1.35;
-    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
-    overflow:hidden; overflow-wrap:anywhere;
-  }
-  .tag{
-    display:inline-block; margin-top:.5rem; font-size:.68rem; font-weight:700;
-    letter-spacing:.04em; text-transform:uppercase; padding:.16rem .5rem; border-radius:99px;
-  }
-  .tag.on{background:color-mix(in srgb,var(--ok) 18%,transparent); color:var(--ok)}
-  .tag.off{background:color-mix(in srgb,var(--dim) 16%,transparent); color:var(--dim)}
-  .tag.no{background:color-mix(in srgb,var(--accent) 15%,transparent); color:var(--accent)}
-  .acts{display:flex; gap:.4rem; margin-top:.6rem}
-  .acts button, .acts a.btn{
-    flex:1; border:1px solid var(--line); background:transparent; color:var(--ink);
-    border-radius:8px; padding:.32rem .3rem; font-size:.74rem; font-weight:650;
-    cursor:pointer; font-family:inherit; text-align:center; text-decoration:none;
-    display:block; line-height:1.5;
-  }
-  .acts button:hover, .acts a.btn:hover{background:var(--line)}
+  #drop.hot{border-color:var(--flag)}
+  #drop .big{font-size:18px; color:#3C2E2A}
+  #drop .small{font-size:15px; color:rgba(60,46,42,.62); margin-top:8px}
+  /* Visually hidden but still focusable. display:none drops it out of the tab order,
+     and because the whole zone is a <label> wrapping it, that made uploading
+     unreachable without a mouse. */
+  #drop input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none}
 
   dialog{
-    border:none; border-radius:20px; padding:0; width:min(94vw,920px);
-    background:var(--card); box-shadow:0 20px 70px rgba(0,0,0,.4);
+    border:1px solid var(--rule); border-radius:8px; padding:0; background:var(--paper);
+    color:var(--ink); width:min(1100px,92vw); max-width:none;
   }
-  dialog::backdrop{background:rgba(20,28,26,.55); backdrop-filter:blur(3px)}
-  dialog iframe{width:100%; height:min(62vh,540px); border:0; display:block}
-  .dlg-bar{display:flex; justify-content:space-between; align-items:center;
-           padding:.7rem 1rem; border-bottom:1px solid var(--line)}
-  .dlg-bar button{
-    border:none; background:var(--line); color:var(--ink); border-radius:9px;
-    padding:.35rem .7rem; cursor:pointer; font-size:.85rem; font-weight:600;
-  }
-  #log{margin-top:1rem; font-size:.83rem; color:var(--dim); white-space:pre-wrap; line-height:1.5}
+  dialog::backdrop{background:rgba(27,25,23,.55)}
+  .dlg-bar{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 18px}
+  dialog iframe{display:block; width:100%; height:min(70vh,620px); border:0; background:var(--plate)}
+
+  .aside{display:flex; gap:8px; align-items:flex-start; font-size:14px; color:var(--ink-62)}
+  .hidden{display:none !important}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Ode to Stick Figures</h1>
-  <p class="sub">Children's drawings, brought to life. Watch one walk, or open its field
-    guide: a swarm of specialists studies the drawing and writes the creature up in
-    complete seriousness.</p>
 
-  <label id="drop">
-    <input type="file" accept="image/*" multiple>
-    <div><b>Drop a drawing here</b>, or click to pick a file</div>
-    <div class="hint">We'll cut the paper away and report what we found. Rigging it for
-      animation still needs a hand.</div>
-  </label>
+<header class="bar rule-b">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 215 69" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ode">
+      <path d="M160.582 67.7991V1.12805H214.576V12.0208H173.165V27.233H204.983V38.2197H173.165V56.6246H214.576V67.7991H160.582Z" fill="currentColor"/>
+      <path d="M83.9102 67.7991V1.12805H110.86C132.176 1.12805 146.543 13.3354 146.543 34.4636C146.543 55.2161 132.27 67.7991 110.86 67.7991H83.9102ZM110.672 12.2086H96.4931V56.7185H110.672C124.664 56.7185 133.679 48.1734 133.679 34.4636C133.679 20.2842 124.664 12.2086 110.672 12.2086Z" fill="currentColor"/>
+      <path d="M34.9356 68.9247C14.9343 68.9247 0.00372314 54.4637 0.00372314 34.4623C0.00372314 14.461 15.1221 0 34.9356 0C54.7491 0 69.8674 14.461 69.8674 34.4623C69.8674 54.3698 54.7491 68.9247 34.9356 68.9247ZM34.9356 57.4686C48.2698 57.4686 57.0028 47.2331 57.0028 34.4623C57.0028 21.7855 48.2698 11.4562 34.9356 11.4562C21.6953 11.4562 12.9623 21.7855 12.9623 34.4623C12.9623 47.327 21.6014 57.4686 34.9356 57.4686Z" fill="currentColor"/>
+    </svg>
+    <span class="s15 dim">to stick figures</span>
+  </a>
+  <nav class="nav">
+    <a class="lbl lbl-ink" href="/">Gallery</a>
+    <button class="btn" id="jump-add">Add a drawing</button>
+  </nav>
+</header>
 
-  <div class="grid" id="grid"></div>
-  <div id="log"></div>
+<section class="hero rule-b">
+  <div class="hero-in">
+    <div style="display:flex; align-items:center; gap:12px">
+      <div class="chip" id="hero-count">–</div>
+      <div class="s14 dim">Drawn by children</div>
+    </div>
+    <h1>Animals that don't exist, out for a walk.</h1>
+    <p class="hero-sub">Pick one and it walks. Each has a field guide too — where it lives,
+      what it eats, what people say about it after dark.</p>
+  </div>
+</section>
+
+<div class="status rule-b">
+  <div class="lbl" style="display:flex; gap:26px">
+    <span class="lbl-ink" id="n-walking">Loading…</span>
+    <span id="n-declined"></span>
+  </div>
+  <div class="lbl">Walking ones first</div>
 </div>
 
+<main class="grid" id="grid" aria-busy="true"></main>
+
+<section class="panels" id="submit" style="border-top:1px solid var(--rule)">
+  <div class="panel panel-narrow">
+    <div style="display:flex; align-items:center; gap:12px">
+      <div class="chip">01</div>
+      <div class="s14 dim">Add a drawing</div>
+    </div>
+    <h2>Photograph it flat, in daylight.</h2>
+    <label id="drop">
+      <input type="file" accept="image/*" multiple>
+      <div class="big">Drop a drawing here</div>
+      <div class="small">or <span style="border-bottom:1px solid rgba(60,46,42,.4)">choose a file</span>
+        — JPG, PNG or WebP. More than one is fine.</div>
+    </label>
+    <p class="s15 dim">It takes about a minute per drawing. You can stay and watch, or come back
+      later — nothing is lost either way.</p>
+    <div class="aside" style="padding-top:18px; border-top:1px solid var(--rule)">
+      <span class="dot">•</span>
+      <span><span style="color:var(--ink)">Adding needs a sign-in.</span> Looking around never does.</span>
+    </div>
+  </div>
+
+  <!-- Progress, and deliberately NOT a per-step "done" ticker. The build is one
+       blocking request that reports nothing until it returns, so ticking steps off on
+       a timer would be inventing state we do not have. The clock is real; the list
+       says what the work is. A truthful ticker needs a server change — see the PR. -->
+  <div class="panel panel-wide" id="waiting">
+    <div class="lbl" style="display:flex; justify-content:space-between; gap:16px">
+      <span class="lbl-ink" id="w-title">What happens to it</span>
+      <span id="w-meter">About a minute</span>
+    </div>
+    <div class="plate hidden" id="w-thumbwrap" style="max-width:190px"><img id="w-thumb" alt="the drawing being worked on"></div>
+    <div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">01</span><span>Looking at the drawing</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">02</span><span>Giving it a name</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">03</span><span>Writing the biology</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">04</span><span>Deciding where it lives</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">05</span><span>Collecting the stories people tell about it</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">06</span><span>Hinging the parts and teaching it to walk</span></div>
+    </div>
+    <p class="s14 dim">Six specialists, one after another. None of them guesses — if there's no
+      animal in the drawing, the first one says so and the rest stop.</p>
+  </div>
+
+  <div class="panel panel-wide hidden" id="result"></div>
+</section>
+
 <dialog id="dlg">
-  <div class="dlg-bar"><button id="dlg-x" style="margin-left:auto">Close</button></div>
+  <div class="dlg-bar rule-b">
+    <span class="lbl lbl-ink" id="dlg-name"></span>
+    <button class="btn" id="dlg-x">Close</button>
+  </div>
   <iframe id="dlg-f" title="walk cycle"></iframe>
 </dialog>
 
 <script>
 const grid = document.getElementById('grid');
-const log  = document.getElementById('log');
-const dlg  = document.getElementById('dlg');
-
-// Names, taglines and refusal reasons are model-authored and land in innerHTML.
-// Nothing hostile so far, but an apostrophe or a stray < shouldn't be able to break
-// the card, let alone the page.
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
   {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function load() {
   const items = await (await fetch('/api/creatures')).json();
   grid.innerHTML = '';
+  grid.setAttribute('aria-busy', 'false');
+
+  const walking = items.filter(c => c.animated).length;
+  const declined = items.filter(c => c.refused).length;
+  document.getElementById('hero-count').textContent = items.length;
+  document.getElementById('n-walking').textContent = `${walking} walking`;
+  document.getElementById('n-declined').textContent = declined ? `${declined} declined` : '';
+
   for (const c of items) {
-    const el = document.createElement('div');
+    // A <button> when it does something. The whole card is the click target for a
+    // walk, so it has to be focusable and activatable from the keyboard.
+    const el = document.createElement(c.animated ? 'button' : 'div');
     el.className = 'card' + (c.animated ? ' live' : '');
-    const tag = c.animated ? ['on','animated']
-              : c.refused  ? ['no',"won't animate"]
-              :              ['off','needs a rig'];
+    if (c.animated) el.type = 'button';
     el.innerHTML = `
-      <div class="shot"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
-             alt="${esc(c.name)} — the original drawing"></div>
-      <div class="meta">
-        <div class="nm">${esc(c.name)}</div>
-        <div class="vb">${esc(c.refused || c.vibe) || '&nbsp;'}</div>
-        <span class="tag ${tag[0]}">${tag[1]}</span>
-        ${c.animated ? `<div class="acts">
-          <button data-a="anim">▶ walk</button>
-          <a class="btn" target="_blank" rel="noopener"
-             href="/guide/${encodeURIComponent(c.stem)}">📖 field guide</a>
-        </div>` : ''}
-      </div>`;
+      <span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+            alt="${esc(c.name)} — the original drawing"></span>
+      <span class="meta">
+        <span class="nm">${esc(c.name)}</span>
+        ${c.animated ? `
+          <span class="vb">${esc(c.vibe) || '&nbsp;'}</span>
+          <span class="acts lbl">
+            <span class="lbl-ink">Watch it walk →</span>
+            <a class="lbl" href="/guide/${encodeURIComponent(c.stem)}"
+               target="_blank" rel="noopener">Field guide</a>
+          </span>` : ''}
+        ${c.refused ? `
+          <span class="refused"><span class="dot">•</span>
+            <span><span style="color:var(--ink)">We didn't animate this one:</span>
+              ${esc(c.refused)}</span></span>
+          <span class="lbl" style="color:var(--ink-40)">A considered call</span>` : ''}
+        ${!c.animated && !c.refused ? `
+          <span class="lbl">Still being built</span>` : ''}
+      </span>`;
     if (c.animated) {
-      el.querySelector('[data-a=anim]').onclick = e => { e.stopPropagation(); showWalk(c); };
-      // A real link, not window.open + document.write from a fetch callback — that
-      // reads as a popup and browsers block it, which is why this looked broken.
-      el.querySelector('a.btn').onclick = e => e.stopPropagation();
+      el.querySelector('a').onclick = e => e.stopPropagation();
       el.onclick = () => showWalk(c);
     }
-    if (c.refused) el.title = 'Refused: ' + c.refused;
     grid.appendChild(el);
   }
 }
 
 // Named showWalk, not open: a top-level `function open` shadows window.open, which is
 // a trap waiting for the next person who reaches for it.
+const dlg = document.getElementById('dlg');
 function showWalk(c) {
-  // The name isn't shown here — the animation itself captions the creature with the
-  // specialist agent's name, so the dialog would only duplicate it.
+  document.getElementById('dlg-name').textContent = c.name;
   document.getElementById('dlg-f').src = '/anim/' + encodeURIComponent(c.stem);
   dlg.showModal();
 }
-
 const closeDlg = () => dlg.close();
 document.getElementById('dlg-x').onclick = closeDlg;
-// clicking the backdrop closes too; the dialog element is the event target only when
-// the click lands outside its content box
 dlg.addEventListener('click', e => { if (e.target === dlg) closeDlg(); });
-// Blank the iframe on every close, however it happened (button, backdrop, Esc).
-// Otherwise the walk cycle keeps animating behind the scenes forever.
+// Blank the iframe on every close (button, backdrop, Esc), or the walk cycle keeps
+// animating out of sight forever.
 dlg.addEventListener('close', () => { document.getElementById('dlg-f').src = 'about:blank'; });
 
-// ---- drag & drop -----------------------------------------------------------
+document.getElementById('jump-add').onclick = () =>
+  document.getElementById('submit').scrollIntoView({behavior: 'smooth', block: 'start'});
+
+// ---- drop & upload -------------------------------------------------------
 const drop = document.getElementById('drop');
 const input = drop.querySelector('input');
+const waiting = document.getElementById('waiting');
+const result = document.getElementById('result');
 const hot = on => e => { e.preventDefault(); drop.classList.toggle('hot', on); };
 drop.addEventListener('dragover', hot(true));
 drop.addEventListener('dragleave', hot(false));
 drop.addEventListener('drop', e => { hot(false)(e); send([...e.dataTransfer.files]); });
 input.addEventListener('change', () => send([...input.files]));
 
+// The step list is always on screen — it doubles as "here is what adding one does"
+// before you add anything. A build only changes the header and reveals the thumbnail.
+let clockTimer = null;
+function startClock() {
+  const t0 = Date.now();
+  const el = document.getElementById('w-meter');
+  const paint = () => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · about a minute`;
+  };
+  paint();
+  clockTimer = setInterval(paint, 1000);
+}
+function stopClock() {
+  if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+  document.getElementById('w-title').textContent = 'What happens to it';
+  document.getElementById('w-meter').textContent = 'About a minute';
+  document.getElementById('w-thumbwrap').classList.add('hidden');
+}
+function panel(html) { result.innerHTML = html; result.classList.remove('hidden'); }
+
 async function send(files) {
-  for (const f of files) {
-    log.textContent += `\n${f.name} — keying…`;
+  for (const [i, f] of files.entries()) {
+    result.classList.add('hidden');
+    document.getElementById('w-title').textContent =
+      files.length > 1 ? `Working on it · drawing ${i + 1} of ${files.length}` : 'Working on it';
+    const thumb = document.getElementById('w-thumb');
+    thumb.src = URL.createObjectURL(f);
+    document.getElementById('w-thumbwrap').classList.remove('hidden');
+    startClock();
+    waiting.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+
     const fd = new FormData(); fd.append('file', f);
     try {
       const r = await fetch('/api/upload', { method: 'POST', body: fd });
-      const j = await r.json();
-      // 401 means uploads are gated and there's no session. Without this the next
-      // line reads j.stats off a {detail: ...} body and throws a TypeError at
-      // someone who just needed to sign in.
+      const j = await r.json().catch(() => ({}));
+      stopClock();
+      URL.revokeObjectURL(thumb.src);
+
+      // Not signed in: offer the sign-in rather than dereferencing j.stats off a
+      // {detail: ...} body, and come back to this page afterwards.
       if (r.status === 401) {
-        log.textContent += ` — sign in to upload`;
+        panel(`<div class="lbl">Before we can add it</div>
+          <h2>One sign-in, then we'll get started.</h2>
+          <p class="s15 dim">Adding a drawing is the only thing here that asks. We'll bring you
+            straight back — you won't have to find this again.</p>
+          <div><button class="btn btn-tea" id="go-login">Continue with Google</button></div>`);
         const next = encodeURIComponent(location.pathname + location.search);
-        location.href = `/login?next=${next}`;
+        document.getElementById('go-login').onclick = () => { location.href = `/login?next=${next}`; };
         return;
       }
-      if (!r.ok || j.error) { log.textContent += ` ✗ ${j.error || j.detail || r.status}`; continue; }
-      // A refusal is a 200 — the build ran and declined, which is a real verdict, not an
-      // error. Nothing was persisted, so falling through to the "kept ..." stats line
-      // would report success for a drawing that never entered the gallery.
-      if (j.refused) { log.textContent += `\n  — not animated: ${j.refused}`; continue; }
-      const s = j.stats;
-      log.textContent += ` kept ${(s.kept_frac*100).toFixed(0)}% · ${s.blobs} blob(s) · dominance ${s.dominance}`;
-      if (j.warning) log.textContent += `\n  ⚠ ${j.warning}`;
-      if (j.needs_rig) log.textContent += `\n  → in the gallery as "needs a rig": the vision pass that authors joints isn't wired up yet.`;
+      // A refusal is a 200 and a verdict, not a failure. Frame it that way.
+      if (j.refused) {
+        panel(`<div class="lbl">A verdict, not an error</div>
+          <h2>We looked, and we're not going to animate this one.</h2>
+          <div class="aside"><span class="dot">•</span><span>${esc(j.refused)}</span></div>
+          <p class="s14 dim">We'd rather say so than make paper slabs slide sideways and call it
+            an animal.</p>
+          <div><button class="btn" onclick="document.getElementById('drop').click()">Try another drawing</button></div>`);
+        continue;
+      }
+      if (!r.ok || j.error) {
+        panel(`<div class="lbl">A mistake, easily fixed</div>
+          <h2>That one didn't go in.</h2>
+          <p class="s15 dim">${esc(j.error || j.detail || `Error ${r.status}`)}</p>
+          <div><button class="btn" onclick="document.getElementById('drop').click()">Choose another file</button></div>`);
+        continue;
+      }
+      const s = j.stats || {};
+      panel(`<div class="lbl">It worked</div>
+        <h2>${esc(f.name)} is in the gallery.</h2>
+        <p class="s14 dim">Kept ${((s.kept_frac ?? 0) * 100).toFixed(0)}% of the paper ·
+          ${esc(s.blobs)} blob(s) · dominance ${esc(s.dominance)}</p>
+        ${j.warning ? `<div class="aside"><span class="dot">•</span><span>${esc(j.warning)}</span></div>` : ''}`);
     } catch (err) {
-      log.textContent += ` ✗ ${err}`;
+      stopClock();
+      panel(`<div class="lbl">That didn't reach us</div>
+        <h2>The upload failed on the way out.</h2>
+        <p class="s15 dim">${esc(err)}</p>`);
     }
   }
   load();
