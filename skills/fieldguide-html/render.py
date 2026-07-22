@@ -19,7 +19,12 @@ def _strip_leading_title(section_html: str) -> str:
     return _LEADING_H1.sub("", section_html, count=1)
 
 
-MODEL_VIEWER_CDN = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+# Pinned, not floating. Unversioned "@google/model-viewer" resolves to whatever unpkg
+# calls latest at view time, and a newer major stopped revealing the model here — the
+# element upgrades and the GLB loads, but the shadow-root <canvas> never gets the .show
+# class model-viewer's own stylesheet needs, so the specimen stayed a blank grey box.
+# Pinning to a known-good release freezes the behavior these guides were built against.
+MODEL_VIEWER_CDN = "https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"
 
 
 def _data_uri(path: str, mime: str) -> str:
