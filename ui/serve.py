@@ -340,7 +340,7 @@ def _norm_heading(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def _dedup_heading(m: "re.Match[str]") -> str:
+def _dedup_heading(m: re.Match[str]) -> str:
     section, following = _norm_heading(m.group(2)), _norm_heading(m.group("txt"))
     if section and (following == section or following.startswith(section)):
         return m.group(1)  # drop the repeated heading, keep the section <h2>
