@@ -21,6 +21,7 @@ about every dev machine.
 
 from __future__ import annotations
 
+import html
 import os
 
 from authlib.integrations.starlette_client import OAuth
@@ -28,17 +29,46 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-_CONFIGURED = bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET"))
+_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+_CONFIGURED = bool(_CLIENT_ID and _CLIENT_SECRET)
+
+# Exactly one of the two set. Not the same thing as "auth is off": all-empty is a dev
+# machine deliberately running without a login, but half-empty is a deployment someone
+# meant to gate and typo'd. Treating that as "off" would silently open uploads — so it
+# blocks uploads instead (see require_upload_auth), while leaving the public gallery up.
+_PARTIAL = bool(_CLIENT_ID or _CLIENT_SECRET) and not _CONFIGURED
 
 oauth = OAuth()
 if _CONFIGURED:
     oauth.register(
         name="google",
-        client_id=os.environ["GOOGLE_CLIENT_ID"],
-        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        client_id=_CLIENT_ID,
+        client_secret=_CLIENT_SECRET,
         server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
         client_kwargs={"scope": "openid email profile"},
     )
+
+
+def _callback_url(request: Request) -> str:
+    """The redirect_uri handed to Google, which must match a registered one exactly.
+
+    Vercel terminates TLS at the edge and forwards the request to the function over
+    plain HTTP, so request.url_for() builds an `http://` URI there — which Google
+    rejects for anything but localhost. Trust x-forwarded-proto when it's present;
+    with no proxy in front (a dev machine) there's no header and nothing changes.
+    """
+    url = request.url_for("auth_callback")
+    proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip()
+    return str(url.replace(scheme=proto) if proto else url)
+
+
+def _safe_next(raw: str | None) -> str:
+    """Only same-site relative paths. `?next=https://evil.example` would otherwise make
+    this an open redirect that borrows the gallery's domain for a phishing hop."""
+    if raw and raw.startswith("/") and not raw.startswith("//"):
+        return raw
+    return "/"
 
 
 def allowed_domains() -> set[str]:
@@ -59,8 +89,7 @@ def install(app: FastAPI) -> None:
 
     @app.get("/login")
     async def login(request: Request):
-        redirect_uri = request.url_for("auth_callback")
-        return await oauth.google.authorize_redirect(request, redirect_uri)
+        return await oauth.google.authorize_redirect(request, _callback_url(request))
 
     @app.get("/auth/callback")
     async def auth_callback(request: Request):
@@ -70,14 +99,13 @@ def install(app: FastAPI) -> None:
         userinfo = token.get("userinfo") or {}
         domain = str(userinfo.get("hd") or "").lower()
         if domain not in allowed_domains():
+            who = html.escape(str(userinfo.get("email") or "That account"))
             return HTMLResponse(
-                f"<p>{userinfo.get('email', 'That account')} isn't on an allowed "
-                "domain for uploading.</p>",
+                f"<p>{who} isn't on an allowed domain for uploading.</p>",
                 status_code=403,
             )
         request.session["user"] = {"email": userinfo.get("email"), "name": userinfo.get("name")}
-        next_url = request.query_params.get("next") or "/"
-        return RedirectResponse(next_url)
+        return RedirectResponse(_safe_next(request.query_params.get("next")))
 
     @app.get("/logout")
     async def logout(request: Request):
@@ -93,6 +121,11 @@ def require_upload_auth(request: Request) -> dict | None:
     never installed (auth not configured) — so check _CONFIGURED first rather than
     let that surface as an opaque 500 for every upload on an unconfigured deployment.
     """
+    if _PARTIAL:
+        raise HTTPException(
+            status_code=503,
+            detail="Upload auth is misconfigured on this deployment; uploads are disabled.",
+        )
     if not _CONFIGURED:
         return None
     user = request.session.get("user")

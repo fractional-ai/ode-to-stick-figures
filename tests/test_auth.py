@@ -9,6 +9,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 UI = Path(__file__).resolve().parents[1] / "ui"
 if str(UI) not in sys.path:
     sys.path.insert(0, str(UI))
@@ -91,3 +93,85 @@ def test_require_upload_auth_accepts_a_real_session_when_configured(monkeypatch)
     request = _FakeRequest({"user": {"email": "kid@fractional.ai", "name": "Test Kid"}})
     user = auth.require_upload_auth(request)
     assert user == {"email": "kid@fractional.ai", "name": "Test Kid"}
+
+
+@pytest.mark.parametrize("present,missing", [("ID", "SECRET"), ("SECRET", "ID")])
+def test_half_configured_blocks_uploads_instead_of_opening_them(monkeypatch, present, missing):
+    """A typo'd secret in the dashboard must not read as "no auth wanted"."""
+    monkeypatch.setenv(f"GOOGLE_CLIENT_{present}", "only-one-of-the-pair")
+    monkeypatch.delenv(f"GOOGLE_CLIENT_{missing}", raising=False)
+    auth = _fresh_auth(monkeypatch)
+
+    assert auth._CONFIGURED is False
+    assert auth._PARTIAL is True
+
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        auth.require_upload_auth(_FakeRequest())
+    assert exc_info.value.status_code == 503
+
+
+def test_no_credentials_at_all_is_not_partial(monkeypatch):
+    monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
+    monkeypatch.delenv("GOOGLE_CLIENT_SECRET", raising=False)
+    auth = _fresh_auth(monkeypatch)
+    assert auth._PARTIAL is False
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("/guide/shark-dog", "/guide/shark-dog"),
+        (None, "/"),
+        ("", "/"),
+        ("https://evil.example/phish", "/"),
+        ("//evil.example/phish", "/"),
+        ("javascript:alert(1)", "/"),
+    ],
+)
+def test_safe_next_only_allows_same_site_paths(monkeypatch, raw, expected):
+    auth = _fresh_auth(monkeypatch)
+    assert auth._safe_next(raw) == expected
+
+
+class _FakeURL:
+    """Starlette's URL.replace(scheme=...) is the only bit _callback_url uses."""
+
+    def __init__(self, url: str):
+        self.url = url
+
+    def replace(self, scheme: str) -> _FakeURL:
+        return _FakeURL(self.url.replace("http://", f"{scheme}://", 1))
+
+    def __str__(self) -> str:
+        return self.url
+
+
+class _FakeCallbackRequest:
+    def __init__(self, headers: dict[str, str]):
+        self.headers = headers
+
+    def url_for(self, name: str) -> _FakeURL:
+        assert name == "auth_callback"
+        return _FakeURL("http://stick-figures.example/auth/callback")
+
+
+def test_callback_url_upgrades_to_https_behind_a_proxy(monkeypatch):
+    """Vercel forwards to the function over plain HTTP; Google rejects an http
+    redirect_uri, so the forwarded proto has to win."""
+    auth = _fresh_auth(monkeypatch)
+    request = _FakeCallbackRequest({"x-forwarded-proto": "https"})
+    assert auth._callback_url(request) == "https://stick-figures.example/auth/callback"
+
+
+def test_callback_url_handles_a_comma_joined_proto_chain(monkeypatch):
+    auth = _fresh_auth(monkeypatch)
+    request = _FakeCallbackRequest({"x-forwarded-proto": "https, http"})
+    assert auth._callback_url(request) == "https://stick-figures.example/auth/callback"
+
+
+def test_callback_url_left_alone_with_no_proxy(monkeypatch):
+    auth = _fresh_auth(monkeypatch)
+    request = _FakeCallbackRequest({})
+    assert auth._callback_url(request) == "http://stick-figures.example/auth/callback"
