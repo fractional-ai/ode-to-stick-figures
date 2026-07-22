@@ -532,12 +532,19 @@ def api_creatures():
     for stem, p in stems.items():
         raw_rig = rig_bytes_for(stem)
         name, vibe, why = stem.replace("-", " "), "", None
+        w = h = None
         if raw_rig is not None:
             try:
                 spec = json.loads(raw_rig)
                 name = spec.get("name") or name
                 vibe = spec.get("vibe") or ""
                 why = refusal(spec)
+                # The rig records the source drawing's pixel size; hand it to the card so
+                # the plate reserves the right box before the thumb loads (see #69). The
+                # thumbnail keeps this aspect ratio, so w/h double as the img's.
+                img = spec.get("image")
+                if isinstance(img, dict):
+                    w, h = img.get("w"), img.get("h")
             except json.JSONDecodeError:
                 why = "rig file is not valid JSON"
         # The specialist agent's spec.json is the canonical creature name; align
@@ -565,6 +572,11 @@ def api_creatures():
                 and (p is not None or UPLOAD_STORAGE.exists(f"{stem}.html")),
                 "refused": why,
                 "uploaded": p is None or p.parent == UPLOADS,
+                # Source drawing dimensions when the rig recorded them, else null. The
+                # card sets them on the <img> so the grid reserves space and stops
+                # reflowing as thumbs arrive (#69).
+                "w": w,
+                "h": h,
             }
         )
     items.sort(key=lambda i: (not i["animated"], bool(i["refused"]), i["stem"]))

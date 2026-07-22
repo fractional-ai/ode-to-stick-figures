@@ -267,16 +267,20 @@ async function load() {
     // The two real controls are siblings now: the plate, and the guide link.
     const el = document.createElement('div');
     el.className = 'card' + (c.animated ? ' live' : '');
+    // width/height from the source drawing (via /api/creatures) let the browser reserve
+    // the plate's box from its aspect ratio before the thumb loads, so the masonry stops
+    // reflowing cards across columns as images arrive. Omitted when dimensions are unknown.
+    const dims = c.w && c.h ? ` width="${c.w}" height="${c.h}"` : '';
     el.innerHTML = `
       ${c.animated
         // aria-hidden + tabindex=-1: this is a redundant mouse target for the same
         // action as "Watch it move" below, so it must not be a second tab stop or a
         // second announcement of the same thing.
         ? `<button class="plate-btn" type="button" aria-hidden="true" tabindex="-1">
-             <span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+             <span class="plate"><img loading="lazy"${dims} src="/thumb/${encodeURIComponent(c.stem)}"
                    alt="${esc(c.name)} — the original drawing"></span>
            </button>`
-        : `<span class="plate"><img loading="lazy" src="/thumb/${encodeURIComponent(c.stem)}"
+        : `<span class="plate"><img loading="lazy"${dims} src="/thumb/${encodeURIComponent(c.stem)}"
                  alt="${esc(c.name)} — the original drawing"></span>`}
       <div class="meta">
         <div class="nm">${esc(c.name)}</div>
