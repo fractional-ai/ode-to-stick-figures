@@ -161,11 +161,14 @@ def thumb(raw: bytes) -> bytes:
 
     The keyed cutout is still what gets animated; it just isn't the poster frame.
 
-    Computed fresh on every request rather than cached to disk. A PIL resize on an
-    image this size costs low-single-digit milliseconds — cheap enough that a
-    persistent cache bought nothing but a write path, and Vercel's filesystem is
-    read-only outside /tmp, so that write path would need its own storage backend for
-    something this cheap to not have at all.
+    Encoded as WebP, not PNG: these are photographs of paper, and PNG is the worst
+    choice available for a photo — WebP is roughly an order of magnitude smaller for the
+    same visible quality. 440px is plenty for a card that renders around 310px, so it's
+    a notable step down from the old 560. The real cost was never the per-image resize
+    (a few milliseconds); it was fourteen 200 KB PNGs over the wire with nothing cached
+    in front. get_thumb() now sends a long immutable Cache-Control so the CDN serves
+    repeats — honest here because a bundled drawing never changes and an upload gets a
+    new stem, so a given /thumb/{stem} URL's bytes are fixed forever.
 
     Takes bytes rather than a Path so it works the same whether the source is a
     bundled local file or an uploaded creature's drawing fetched from Storage — see
@@ -173,9 +176,9 @@ def thumb(raw: bytes) -> bytes:
     """
     img = Image.open(io.BytesIO(raw))
     img = img.convert("RGB") if img.mode not in ("RGB", "L") else img
-    img.thumbnail((560, 560), Image.LANCZOS)
+    img.thumbnail((440, 440), Image.LANCZOS)
     buf = io.BytesIO()
-    img.save(buf, "PNG", optimize=True)
+    img.save(buf, "WEBP", quality=82, method=6)
     return buf.getvalue()
 
 
@@ -245,7 +248,14 @@ def get_thumb(stem: str):
     raw = drawing_bytes_for(stem)
     if raw is None:
         return Response(status_code=404)
-    return Response(thumb(raw), media_type="image/png")
+    # Immutable: a bundled drawing never changes and an upload gets a fresh stem, so the
+    # bytes at this URL are fixed — let the CDN serve repeats instead of re-invoking the
+    # function and re-encoding on every pageview (see thumb()).
+    return Response(
+        thumb(raw),
+        media_type="image/webp",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 @app.get("/anim/{stem}", response_class=HTMLResponse)

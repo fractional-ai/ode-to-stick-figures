@@ -296,7 +296,8 @@ def test_uploaded_creature_is_fully_servable(monkeypatch, tmp_path):
 
     thumb_r = client.get("/thumb/up-abc123")
     assert thumb_r.status_code == 200, thumb_r.text
-    assert thumb_r.headers["content-type"] == "image/png"
+    assert thumb_r.headers["content-type"] == "image/webp"
+    assert "immutable" in thumb_r.headers["cache-control"]
 
     creatures = client.get("/api/creatures").json()
     card = next((c for c in creatures if c["stem"] == "up-abc123"), None)
