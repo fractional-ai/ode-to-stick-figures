@@ -138,6 +138,29 @@ def test_unknown_stem_404s(client):
     assert client.get("/thumb/no-such-creature").status_code == 404
 
 
+def test_error_paths_are_styled_pages_with_a_way_back(creatures, client):
+    """Non-happy paths return a full styled page, not a bare <p> on a blank page: a
+    doctype, the stylesheet, and a link back to the gallery. Covers a 404 (unknown
+    stem), the catch-all 404 (no route at all), and a refusal (422)."""
+    refused = next((c["stem"] for c in creatures if c["refused"]), None)
+    routes = ["/guide/no-such-creature", "/nope/not/a/route"]
+    if refused:
+        routes.append(f"/guide/{refused}")
+    for route in routes:
+        body = client.get(route).text
+        assert body.lstrip().lower().startswith("<!doctype"), f"{route}: no doctype"
+        assert "Back to gallery" in body, f"{route}: no way back"
+        assert "<style" in body, f"{route}: unstyled"
+
+
+def test_catch_all_404_is_html_not_fastapi_json(client):
+    """An unknown path used to fall through to FastAPI's JSON {"detail":"Not Found"}."""
+    r = client.get("/definitely-not-a-real-path")
+    assert r.status_code == 404
+    assert r.headers["content-type"].startswith("text/html")
+    assert "Not Found" not in r.text or "<h1>" in r.text  # styled page, not the JSON body
+
+
 def test_on_vercel_a_prebuild_miss_degrades_instead_of_writing(monkeypatch, tmp_path):
     """On Vercel, a cache miss for a bundled creature must never attempt run_swarm().
 

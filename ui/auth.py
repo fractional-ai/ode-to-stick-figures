@@ -26,7 +26,8 @@ import os
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
+from pages import error_page
 from starlette.middleware.sessions import SessionMiddleware
 
 oauth = OAuth()
@@ -120,9 +121,11 @@ def install(app: FastAPI) -> None:
         domain = str(userinfo.get("hd") or "").lower()
         if domain not in allowed_domains():
             who = html.escape(str(userinfo.get("email") or "That account"))
-            return HTMLResponse(
-                f"<p>{who} isn't on an allowed domain for uploading.</p>",
-                status_code=403,
+            return error_page(
+                status=403,
+                heading="Not an allowed domain",
+                body=f"<p>{who} isn't on an allowed domain for uploading. "
+                "Browsing the gallery never needs a sign-in.</p>",
             )
         request.session["user"] = {"email": userinfo.get("email"), "name": userinfo.get("name")}
         # Re-checked on the way out, not just on the way in: the session is signed, but
