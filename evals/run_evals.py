@@ -159,22 +159,40 @@ def run_case(case: Case, target: str, use_llm: bool) -> list[CheckResult]:
 
 
 def print_report(all_results: dict[str, list[CheckResult]]) -> bool:
-    """Print a per-case table. Return True if every deterministic check passed."""
+    """Print a per-case table. Return True unless a check really failed.
+
+    A SKIP (a check that couldn't run — no API key, a missing dependency) is neither a
+    pass nor a fail: it's counted on its own and never reds the suite, but it also never
+    counts toward the pass total, so a run that skipped the judge no longer looks like
+    one that ran it.
+    """
     all_passed = True
     for case_id, results in all_results.items():
         n_pass = sum(r.passed for r in results)
-        print(f"\n=== {case_id}  ({n_pass}/{len(results)} passed) ===")
+        n_skip = sum(r.skipped for r in results)
+        header = f"{n_pass}/{len(results)} passed"
+        if n_skip:
+            header += f", {n_skip} skipped"
+        print(f"\n=== {case_id}  ({header}) ===")
         for r in results:
             line = f"  [{r.symbol}] {r.name}"
-            if not r.passed:
+            if r.failed:
                 all_passed = False
+            if r.detail and (r.failed or r.skipped):
                 line += f"  — {r.detail}"
             print(line)
 
     total = sum(len(r) for r in all_results.values())
     passed = sum(sum(x.passed for x in r) for r in all_results.values())
+    skipped = sum(sum(x.skipped for x in r) for r in all_results.values())
+    failed = total - passed - skipped
     print(f"\n{'-' * 48}")
-    print(f"TOTAL: {passed}/{total} checks passed across {len(all_results)} case(s)")
+    summary = f"TOTAL: {passed}/{total} checks passed"
+    if skipped:
+        summary += f", {skipped} skipped"
+    if failed:
+        summary += f", {failed} failed"
+    print(f"{summary} across {len(all_results)} case(s)")
     print("RESULT:", "GREEN ✅" if all_passed else "RED ❌")
     return all_passed
 

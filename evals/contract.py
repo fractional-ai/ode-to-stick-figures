@@ -68,15 +68,31 @@ VALID_SYMMETRIES = ("bilateral", "radial")
 # --------------------------------------------------------------------------- #
 @dataclass
 class CheckResult:
-    """Result of a single check against one creature spec."""
+    """Result of a single check against one creature spec.
+
+    Three states, not two. `skipped` marks a check that could not run at all (no API
+    key, an unavailable dependency) — neither a pass nor a fail. It stays out of the
+    pass count and, crucially, never reds the suite (see `failed`), so a green run that
+    skipped the judge is distinguishable from one that actually judged. A skipped result
+    always has passed=False; use the symbol/`failed` helpers rather than reading `passed`
+    directly when a skip and a fail must be told apart.
+    """
 
     name: str  # short check id, e.g. "valid-json" or "palette-is-hex"
     passed: bool
-    detail: str = ""  # human-readable reason, shown on failure
+    detail: str = ""  # human-readable reason, shown on failure or skip
+    skipped: bool = False  # the check couldn't run; neither pass nor fail
 
     @property
     def symbol(self) -> str:
+        if self.skipped:
+            return "SKIP"
         return "PASS" if self.passed else "FAIL"
+
+    @property
+    def failed(self) -> bool:
+        """A real failure — not passed and not skipped. Only this reds the suite."""
+        return not self.passed and not self.skipped
 
 
 # A deterministic check is any callable with this signature. Case is defined below;

@@ -14,7 +14,8 @@ schema at import time, so they can never drift from the contract.
 Every check has signature `def check(spec: dict, case: Case) -> CheckResult`
 and NEVER raises on a malformed spec — it catches the problem and returns a
 failing CheckResult instead. The judge is the exception: it degrades to a
-*passing* skip whenever it cannot run, so a missing API key never reds the suite.
+SKIP (neither pass nor fail) whenever it cannot run, so a missing API key never
+reds the suite — and, unlike a pass, never masquerades as a check that ran.
 """
 
 from __future__ import annotations
@@ -75,19 +76,19 @@ def check_schema_valid(spec: dict, case: Case) -> CheckResult:
     """Authoritative: validate the spec against the frozen JSON Schema.
 
     This is the check that guarantees parity with what the live Field Interpreter
-    is contractually allowed to emit. Skips to a PASS only if the schema file or
-    the jsonschema package is unavailable (never a false red).
+    is contractually allowed to emit. Returns a SKIP (not a PASS) only if the schema
+    file or the jsonschema package is unavailable (never a false red).
     """
     name = "schema-valid"
     if _SCHEMA is None:
         return CheckResult(
-            name=name, passed=True, detail=f"skipped: schema not found at {_SCHEMA_PATH}"
+            name=name, passed=False, skipped=True, detail=f"schema not found at {_SCHEMA_PATH}"
         )
     try:
         from jsonschema import Draft202012Validator
     except Exception as exc:  # noqa: BLE001
         return CheckResult(
-            name=name, passed=True, detail=f"skipped: jsonschema unavailable ({exc})"
+            name=name, passed=False, skipped=True, detail=f"jsonschema unavailable ({exc})"
         )
 
     validator = Draft202012Validator(_SCHEMA)
@@ -274,14 +275,16 @@ def llm_judge_check(spec: dict, case: Case) -> CheckResult:
     name = "llm-judge"
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        return CheckResult(name=name, passed=True, detail="skipped: ANTHROPIC_API_KEY not set")
+        return CheckResult(
+            name=name, passed=False, skipped=True, detail="ANTHROPIC_API_KEY not set"
+        )
 
     # Import inside the function so the deterministic path never needs anthropic.
     try:
         from anthropic import Anthropic
     except Exception as exc:  # noqa: BLE001 - any import failure means skip.
         return CheckResult(
-            name=name, passed=True, detail=f"skipped: anthropic import failed ({exc})"
+            name=name, passed=False, skipped=True, detail=f"anthropic import failed ({exc})"
         )
 
     try:
@@ -307,4 +310,4 @@ def llm_judge_check(spec: dict, case: Case) -> CheckResult:
         reason = str(verdict.get("reason", "")).strip()
         return CheckResult(name=name, passed=plausible, detail=reason)
     except Exception as exc:  # noqa: BLE001 - any API/parse failure means skip.
-        return CheckResult(name=name, passed=True, detail=f"skipped: judge error ({exc})")
+        return CheckResult(name=name, passed=False, skipped=True, detail=f"judge error ({exc})")

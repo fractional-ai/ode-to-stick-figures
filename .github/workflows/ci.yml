@@ -66,12 +66,19 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       # jsonschema is a locked runtime dependency, but the check it powers degrades to
-      # a silent pass if the import ever fails again — assert it here so that specific
+      # a silent SKIP if the import ever fails again — assert it here so that specific
       # regression shows up as a red CI step instead of a suite that still says GREEN.
       - run: uv run python -c "import jsonschema"
-      # The key is scoped to this step alone, not the job or the workflow. The other
-      # jobs are deliberately offline (see tests/test_serve.py's docstring), and a key
-      # in their environment is how an offline suite quietly starts making live calls.
-      - run: uv run evals/run_evals.py
+      # On a PR: deterministic checks only, no model calls (the judge would spend tokens
+      # on every push to every branch). On a merge to main: also run the LLM judge. The
+      # key is scoped to these steps alone, not the job or the workflow — the other jobs
+      # are deliberately offline (see tests/test_serve.py's docstring), and a key in
+      # their environment is how an offline suite quietly starts making live calls.
+      - name: Evals (deterministic, on pull requests)
+        if: github.event_name == 'pull_request'
+        run: uv run evals/run_evals.py
+      - name: Evals (with LLM judge, on merge to main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: uv run evals/run_evals.py --llm
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
