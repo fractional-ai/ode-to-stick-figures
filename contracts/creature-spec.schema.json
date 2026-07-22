@@ -95,8 +95,8 @@
     },
     "locomotion": {
       "type": "string",
-      "enum": ["waddle", "hop", "slither", "walk", "crawl", "swim", "fly", "roll", "float", "stationary"],
-      "description": "How the creature moves. Text agents use it for behavioural flavour; the Animator uses it to pick the parametric walk-cycle model."
+      "enum": ["walk", "waddle", "hop", "slither", "crawl", "swim", "fly", "float", "roll", "stumble"],
+      "description": "How the creature moves. Text agents use it for behavioural flavour; the Animator uses it to pick the parametric walk-cycle model, so this stays a closed set — free text silently falls through to the default gait. 'stumble' is a rigid, limbless thing rocking itself forward in lurches; the renderer has always been able to draw it but the schema couldn't ask for it. There is deliberately no 'stationary': everything in this gallery moves somehow, and a slab with no limbs drawn stumbles rather than sitting there."
     },
     "vibe": {
       "type": "string",

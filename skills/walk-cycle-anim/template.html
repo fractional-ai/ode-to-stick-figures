@@ -87,7 +87,18 @@
   //   slither a travelling wave down a segment chain — the body                (millipede)
   //           itself bends. Needs real hierarchical transforms;
   //           see chain() above.
-  const LOCO = RIG.locomotion || 'walk';
+  // The Spec's vocabulary is wider than the set of models implemented here, so map the
+  // rest onto the nearest one that exists. Without this they fell through to the `??`
+  // defaults below and quietly came out as an ordinary walk — five of the ten Spec
+  // values did, including everything that most needed to look unusual.
+  const LOCO_MODEL = {
+    waddle: 'walk',      // a walk with the cadence already slowed by BASE/CAD
+    crawl: 'slither',    // low and undulating beats a stiff upright cycle
+    swim: 'float',       // no ground contact, drifts — closer than 'fly' flapping
+    roll: 'hop',         // repeated ground contact with squash on landing
+    stationary: 'stumble', // legacy Specs only; the enum no longer offers it
+  };
+  const LOCO = LOCO_MODEL[RIG.locomotion] || RIG.locomotion || 'walk';
   const SPEED_MUL = RIG.speed ?? 1;
   const AIRBORNE = LOCO === 'fly' || LOCO === 'float';
 

@@ -327,6 +327,50 @@ def choose_environment(habitat_md: str, spec: dict) -> str:
     return pick if pick in ENVIRONMENTS else "meadow"
 
 
+# The renderer dispatches on locomotion to pick a gait model, and it matches exact
+# keys. Every committed Spec carries prose there instead ("buzzing flight powered by the
+# single large wing"), which matched nothing — so all thirteen creatures rendered with
+# the default walk model and the whole dispatch was dead. The Interpreter is asked for a
+# single enum value now, but Specs already on disk are prose and re-running them costs
+# real model calls, so resolve it here instead.
+#
+# Order matters, because these descriptions mention several kinds of movement at once
+# and the first match wins.
+#
+# Gait verbs come first: if the child drew legs and the Spec says it walks on them, it
+# walks — a wing mentioned afterwards for balance doesn't make it a flyer, and "tail fin
+# used for swimming bursts" doesn't stop a shark-dog walking on four clawed legs. Both
+# of those were miscategorised when flight and swimming were tested first.
+#
+# Note the absence of a bare "legs" hint: nearly every description mentions legs
+# somewhere, including the bee's ("dangling legs used for landing on flowers"), so it
+# identifies nothing. The verb is the signal.
+_GAIT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("walk", ("walk", "waddle", "trot", "amble", "stride", "skitter", "march", "crawl")),
+    ("fly", ("fly", "flying", "flight", "buzz", "flap", "airborne")),
+    ("slither", ("slither", "undulat", "serpent", "ribbon", "sinuous", "wriggle")),
+    ("hop", ("hop", "bounce", "bound", "leap", "spring", "roll")),
+    # Before float, and this ordering is the point of the whole exercise. A Spec that
+    # states the creature is immobile and then hedges ("presumed to lie flat and
+    # immobile, possibly sliding or DRIFTING along flat surfaces") is describing a slab,
+    # not a balloon: it should rock itself forward in lurches, not serenely drift.
+    # Tested after the real gait verbs, so a creature that actually walks still walks.
+    ("stumble", ("stationary", "immobile", "motionless", "no visible", "lie flat", "drag", "inch")),
+    ("float", ("float", "drift", "hover", "bob", "glide", "swim")),
+)
+
+
+def resolve_gait(locomotion: str | None) -> str:
+    """One of the renderer's gait models, from an enum value or from free prose."""
+    text = (locomotion or "").strip().lower()
+    if not text:
+        return "stumble"
+    for model, hints in _GAIT_HINTS:
+        if any(h in text for h in hints):
+            return model
+    return "stumble"
+
+
 def anim_overrides(spec: dict, env: str, stem: str) -> dict:
     """The Spec-derived arguments the walk cycle is built with.
 
@@ -339,7 +383,7 @@ def anim_overrides(spec: dict, env: str, stem: str) -> dict:
     return {
         "name": flat(spec.get("name")) or stem,
         "vibe": flat(spec.get("vibe")),
-        "locomotion": flat(spec.get("locomotion")),
+        "locomotion": resolve_gait(flat(spec.get("locomotion"))),
         "palette": spec["palette"],
         "environment": env,
     }
