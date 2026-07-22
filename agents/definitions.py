@@ -73,7 +73,9 @@ INTERPRETER = {
         "one — this is where nuance, exceptions, and hedges belong.\n"
         f'  - "locomotion": exactly one value from {_LOCOMOTIONS}. Pick the closest '
         "single verb — do not describe the motion in prose.\n"
-        '  - "vibe": one short free-text string.\n\n'
+        '  - "vibe": one short free-text string. Write it as grammatical English '
+        'with correct articles ("an impossibly", not "a impossibly") — it prints '
+        "verbatim on the card and guide.\n\n"
         "Here is a real, valid Creature Spec showing the exact shape and typing "
         f"expected (content is illustrative only, not a template to copy):\n\n"
         f"{_EXAMPLE_TEXT}\n\n"
