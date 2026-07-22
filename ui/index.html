@@ -164,18 +164,18 @@
       <div class="chip" id="hero-count">–</div>
       <div class="s14 dim">Drawn by children</div>
     </div>
-    <h1>Animals that don't exist, out for a walk.</h1>
-    <p class="hero-sub">Pick one and it walks. Each has a field guide too — where it lives,
+    <h1>Animals that don't exist, in motion.</h1>
+    <p class="hero-sub">Pick one and it moves. Each has a field guide too — where it lives,
       what it eats, what people say about it after dark.</p>
   </div>
 </section>
 
 <div class="status rule-b">
   <div class="lbl" style="display:flex; gap:26px">
-    <span class="lbl-ink" id="n-walking">Loading…</span>
+    <span class="lbl-ink" id="n-moving">Loading…</span>
     <span id="n-declined"></span>
   </div>
-  <div class="lbl">Walking ones first</div>
+  <div class="lbl">Moving ones first</div>
 </div>
 
 <main class="grid" id="grid" aria-busy="true"></main>
@@ -217,7 +217,7 @@
       <div class="row"><span class="lbl" style="width:24px; flex:none">03</span><span>Writing the biology</span></div>
       <div class="row"><span class="lbl" style="width:24px; flex:none">04</span><span>Deciding where it lives</span></div>
       <div class="row"><span class="lbl" style="width:24px; flex:none">05</span><span>Collecting the stories people tell about it</span></div>
-      <div class="row"><span class="lbl" style="width:24px; flex:none">06</span><span>Hinging the parts and teaching it to walk</span></div>
+      <div class="row"><span class="lbl" style="width:24px; flex:none">06</span><span>Hinging the parts and setting it moving</span></div>
     </div>
     <p class="s14 dim">Six specialists, one after another. None of them guesses — if there's no
       animal in the drawing, the first one says so and the rest stop.</p>
@@ -231,7 +231,10 @@
     <span class="lbl lbl-ink" id="dlg-name"></span>
     <button class="btn" id="dlg-x">Close</button>
   </div>
-  <iframe id="dlg-f" title="walk cycle"></iframe>
+  <!-- "animation", not "walk cycle": a screen reader announces this, and most of these
+       creatures buzz, undulate, slither or sit still. The artifact keeps its internal
+       name; the label a person hears should not claim a gait the creature hasn't got. -->
+  <iframe id="dlg-f" title="animation"></iframe>
 </dialog>
 
 <script>
@@ -244,15 +247,15 @@ async function load() {
   grid.innerHTML = '';
   grid.setAttribute('aria-busy', 'false');
 
-  const walking = items.filter(c => c.animated).length;
+  const moving = items.filter(c => c.animated).length;
   const declined = items.filter(c => c.refused).length;
   document.getElementById('hero-count').textContent = items.length;
-  document.getElementById('n-walking').textContent = `${walking} walking`;
+  document.getElementById('n-moving').textContent = `${moving} in motion`;
   document.getElementById('n-declined').textContent = declined ? `${declined} declined` : '';
 
   for (const c of items) {
     // A <button> when it does something. The whole card is the click target for a
-    // walk, so it has to be focusable and activatable from the keyboard.
+    // animation, so it has to be focusable and activatable from the keyboard.
     const el = document.createElement(c.animated ? 'button' : 'div');
     el.className = 'card' + (c.animated ? ' live' : '');
     if (c.animated) el.type = 'button';
@@ -264,7 +267,7 @@ async function load() {
         ${c.animated ? `
           <span class="vb">${esc(c.vibe) || '&nbsp;'}</span>
           <span class="acts lbl">
-            <span class="lbl-ink">Watch it walk →</span>
+            <span class="lbl-ink">Watch it move →</span>
             <a class="lbl" href="/guide/${encodeURIComponent(c.stem)}"
                target="_blank" rel="noopener">Field guide</a>
           </span>` : ''}
