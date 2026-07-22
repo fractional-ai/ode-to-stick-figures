@@ -51,6 +51,7 @@ sys.path.insert(0, str(UI))
 import auth  # noqa: E402
 import upload_build  # noqa: E402
 from build_walk_cycle import build, key  # noqa: E402
+from pages import error_page  # noqa: E402
 from pipeline import IMG_EXT, anim_overrides, load_env, normalize_spec  # noqa: E402
 from pipeline import run as run_swarm  # noqa: E402
 
@@ -252,27 +253,35 @@ def get_thumb(stem: str):
 def get_anim(stem: str):
     why = refusal_for(stem)
     if why:
-        return HTMLResponse(
-            f"<p>We won't animate this one: {html_mod.escape(why)}</p>", status_code=422
+        return error_page(
+            status=422,
+            code="A considered call",
+            heading="We won't animate this one",
+            body=f"<p>{html_mod.escape(why)}</p>",
         )
     html = animation(stem)
     if html is None:
         if ON_VERCEL and rig_for(stem) is not None:
-            return HTMLResponse(
-                "<p>This creature hasn't been built into this deployment yet. It "
-                "needs a <code>./prewarm.py</code> run and a redeploy.</p>",
-                status_code=503,
+            return error_page(
+                status=503,
+                heading="Not built into this deployment yet",
+                body="<p>This creature needs a <code>./prewarm.py</code> run and a redeploy.</p>",
             )
         if rig_bytes_for(stem) is not None:
             # A rig exists (an upload, since a bundled miss was just handled above)
             # but nothing built yet — the build is still running, failed partway, or
             # a concurrent request is mid-build. Distinct from "no rig at all."
-            return HTMLResponse(
-                "<p>This creature is still being built, or the build didn't finish. "
+            return error_page(
+                status=503,
+                heading="Still being built",
+                body="<p>This creature is still being built, or the build didn't finish. "
                 "Try again in a moment.</p>",
-                status_code=503,
             )
-        return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+        return error_page(
+            status=404,
+            heading="No rig for this drawing yet",
+            body="<p>There's nothing to animate here — this drawing has no rig.</p>",
+        )
     return HTMLResponse(html)
 
 
@@ -340,7 +349,7 @@ def _norm_heading(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def _dedup_heading(m: "re.Match[str]") -> str:
+def _dedup_heading(m: re.Match[str]) -> str:
     section, following = _norm_heading(m.group(2)), _norm_heading(m.group("txt"))
     if section and (following == section or following.startswith(section)):
         return m.group(1)  # drop the repeated heading, keep the section <h2>
@@ -410,32 +419,45 @@ def get_guide(stem: str):
     if rig is None:
         raw_rig = UPLOAD_STORAGE.read_bytes(f"{stem}.rig.json")
         if raw_rig is None:
-            return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+            return error_page(
+                status=404,
+                heading="No rig for this drawing yet",
+                body="<p>There's nothing to write up here — this drawing has no rig.</p>",
+            )
         why = refusal_for(stem)
         if why:
-            return HTMLResponse(
-                f"<p>We won't write a field guide for this one: {html_mod.escape(why)}</p>",
-                status_code=422,
+            return error_page(
+                status=422,
+                code="A considered call",
+                heading="We won't write a field guide for this one",
+                body=f"<p>{html_mod.escape(why)}</p>",
             )
         if not UPLOAD_STORAGE.exists(f"{stem}.guide.html"):
-            return HTMLResponse(
-                "<p>This creature is still being built, or the build didn't finish. "
+            return error_page(
+                status=503,
+                heading="Still being built",
+                body="<p>This creature is still being built, or the build didn't finish. "
                 "Try again in a moment.</p>",
-                status_code=503,
             )
         # Never the guide's own HTML at this URL — see _sandboxed_guide_page.
         return HTMLResponse(_sandboxed_guide_page(stem))
 
     src = find(stem)
     if not src:
-        return HTMLResponse("<p>No rig for this drawing yet.</p>", status_code=404)
+        return error_page(
+            status=404,
+            heading="No rig for this drawing yet",
+            body="<p>There's nothing to write up here — this drawing has no rig.</p>",
+        )
     why = refusal_for(stem)
     if why:
         # Before the cache check, and before HAVE_KEY: a refusal must never reach the
         # swarm. This route used to fabricate a creature for a drawing that has none.
-        return HTMLResponse(
-            f"<p>We won't write a field guide for this one: {html_mod.escape(why)}</p>",
-            status_code=422,
+        return error_page(
+            status=422,
+            code="A considered call",
+            heading="We won't write a field guide for this one",
+            body=f"<p>{html_mod.escape(why)}</p>",
         )
     out = PREBUILT / f"{stem}.guide.html"
     if out.exists():
@@ -444,16 +466,18 @@ def get_guide(stem: str):
         # Never attempt run_swarm() here: PREBUILT is a read-only bundle on Vercel, and
         # writing into it is exactly what run_swarm() does. A miss means a prewarm was
         # skipped, not a cache to fill on demand.
-        return HTMLResponse(
-            "<p>This creature's field guide hasn't been built into this deployment "
-            "yet. It needs a <code>./prewarm.py</code> run and a redeploy.</p>",
-            status_code=503,
+        return error_page(
+            status=503,
+            heading="Not built into this deployment yet",
+            body="<p>This creature's field guide needs a <code>./prewarm.py</code> run "
+            "and a redeploy.</p>",
         )
     if not HAVE_KEY:
-        return HTMLResponse(
-            "<p>No ANTHROPIC_API_KEY found, so the text lanes can't run. "
-            "The walk cycle still works at <code>/anim/" + stem + "</code>.</p>",
-            status_code=503,
+        return error_page(
+            status=503,
+            heading="Text lanes unavailable",
+            body="<p>No <code>ANTHROPIC_API_KEY</code> found, so the text lanes can't run. "
+            f"The walk cycle still works at <code>/anim/{html_mod.escape(stem)}</code>.</p>",
         )
     try:
         return HTMLResponse(_present_guide(run_swarm(stem, src, rig, PREBUILT).read_text()))
@@ -627,6 +651,18 @@ async def api_upload(
 @app.get("/", response_class=HTMLResponse)
 def index():
     return HTMLResponse((UI / "index.html").read_text())
+
+
+# Registered last so it only catches paths no real route matched. Without it an unknown
+# path fell through to FastAPI's default JSON {"detail":"Not Found"}; now it gets the
+# same styled page as every other dead end.
+@app.get("/{_path:path}", response_class=HTMLResponse)
+def not_found(_path: str):
+    return error_page(
+        status=404,
+        heading="Page not found",
+        body="<p>There's nothing at this address. The gallery is the place to start.</p>",
+    )
 
 
 if __name__ == "__main__":
