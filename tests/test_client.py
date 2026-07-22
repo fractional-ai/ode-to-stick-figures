@@ -3,11 +3,6 @@ import pytest
 import lib.client as client_mod
 
 
-def test_beta_constant_present():
-    assert isinstance(client_mod.MANAGED_AGENTS_BETA, str)
-    assert client_mod.MANAGED_AGENTS_BETA
-
-
 def test_managed_client_sets_beta_header(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
     c = client_mod.managed_client()

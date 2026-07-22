@@ -8,11 +8,11 @@ implementation is one answer, not the requirement.
 
 A child draws an animal that doesn't exist. The site takes that drawing and returns two
 things: the creature **in motion**, animated from the drawing's own pixels, and a
-**straight-faced field guide entry** about it — biology, anatomy, diet, habitat,
-folklore — written as though the animal were real and well studied.
+**field guide entry** about it — biology, anatomy, diet, habitat, folklore — written
+as though the animal were real and well studied.
 
 The joke, and the whole appeal, is the collision of a wobbly crayon drawing with the
-register of a natural history reference. Both halves have to land. If the drawing gets
+form of a natural history reference — taken completely seriously, and delighted about it. Both halves have to land. If the drawing gets
 smoothed, corrected, or redrawn into something more polished, the piece stops working:
 the animation is the child's own marks, hinged and set moving, and it must stay
 recognisably theirs.
@@ -30,8 +30,10 @@ Three groups, in descending order of volume:
    driving. They care about one thing: seeing their animal move. They are not
    necessarily reading anything.
 
-The reading level of the field guide text is adult-ish and dry on purpose. The
-*interface* around it should not assume an adult reader.
+The field guide reads like an encyclopedia written for children — the form is a
+reference book, but the voice is warm, curious and openly delighted by the animal,
+and it explains its own hard words. Not dry, and not adult. The *interface* around
+it should not assume an adult reader either.
 
 ## Content model
 
