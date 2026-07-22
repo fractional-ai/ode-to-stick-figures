@@ -69,4 +69,9 @@ jobs:
       # a silent pass if the import ever fails again — assert it here so that specific
       # regression shows up as a red CI step instead of a suite that still says GREEN.
       - run: uv run python -c "import jsonschema"
+      # The key is scoped to this step alone, not the job or the workflow. The other
+      # jobs are deliberately offline (see tests/test_serve.py's docstring), and a key
+      # in their environment is how an offline suite quietly starts making live calls.
       - run: uv run evals/run_evals.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
