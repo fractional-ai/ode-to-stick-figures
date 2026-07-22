@@ -1,11 +1,14 @@
 # Ode to Stick Figures
 
-Hand a child's drawing of a made-up animal to a swarm of agents and get back a
-straight-faced field guide entry: the biology, the habitat, the folklore, and the
-creature itself walking around.
+Hand a child's drawing of a made-up animal to a swarm of agents and get back a field
+guide entry written like an encyclopedia for children — the biology, the habitat, the
+folklore — and the creature itself up and moving.
 
 The animation is the drawing's own pixels, not a reconstruction. We cut the paper
-away, hinge the parts the child drew, and walk them. It stays recognisably theirs.
+away, hinge the parts the child drew, and set them moving. It stays recognisably
+theirs. Only three of the thirteen actually walk: the rest buzz, undulate, hop, or
+rock themselves forward in lurches, because a flat cracker-shaped creature deserves
+better than standing still.
 
 ## Run the gallery
 

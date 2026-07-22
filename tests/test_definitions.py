@@ -1,31 +1,36 @@
+"""Contracts around the agent definitions — not their wording.
+
+This file used to assert that particular words appeared in particular prompts
+("literal", "shark", each lane's name in the coordinator prompt). Those are deleted: a
+substring check on a prompt only restates what the file already says, it passes whether
+or not the prompt works, and it fails on a reword that changed nothing. Whether a
+prompt actually produces a good Creature Spec is an eval — see evals/ — and that is
+where any assertion about prompt quality belongs.
+
+What is left is the stuff a prompt or schema edit can genuinely break somewhere else.
+"""
+
+import json
+import re
+from pathlib import Path
+
 from agents import definitions as d
 
+REPO = Path(__file__).resolve().parents[1]
 
-def test_specialists_have_required_keys():
+
+def test_specialist_keys_match_what_the_pipeline_fans_out_to():
+    """pipeline.py selects text lanes by exact key (`a["key"] in ("biologist",
+    "habitat", "society")`). Rename one here and that filter silently drops a lane — the
+    guide loses a whole section and nothing errors. Replaces a test that only asserted
+    the keys this file visibly defines."""
     keys = {s["key"] for s in d.SPECIALISTS}
     assert {"biologist", "habitat", "society", "modeler"} <= keys
-    for s in d.SPECIALISTS:
-        assert s["name"] and s["model"] and s["system"]
 
-
-def test_interpreter_defined():
-    assert d.INTERPRETER["key"] == "interpreter"
-    assert "spec" in d.INTERPRETER["system"].lower()
-
-
-def test_interpreter_prompt_demands_literal_transcription():
-    system = d.INTERPRETER["system"].lower()
-    # The governing rule: transcribe what's actually drawn, don't genericize it away.
-    assert "literal" in system
-    assert "shark" in system and "dog" in system  # the canonical example case
-    # Never bail on weird/ambiguous input — always produce a full spec.
-    assert "never refuse" in system or "always commit" in system
-
-
-def test_coordinator_prompt_mentions_all_lanes():
-    text = d.COORDINATOR_SYSTEM.lower()
-    for word in ("biolog", "habitat", "society", "3d", "field-guide"):
-        assert word in text
+    fan_out = (REPO / "ui" / "pipeline.py").read_text()
+    selected = re.search(r'a\["key"\] in \(([^)]*)\)', fan_out).group(1)
+    for key in re.findall(r'"(\w+)"', selected):
+        assert key in keys, f"pipeline.py fans out to {key!r}, which no specialist defines"
 
 
 # --- the gait dispatch -------------------------------------------------------
@@ -33,12 +38,6 @@ def test_coordinator_prompt_mentions_all_lanes():
 # happened here: the renderer implemented a gait the schema couldn't ask for, the
 # schema offered five the renderer had never heard of, and every committed Spec
 # carried prose that matched none of them.
-
-import json  # noqa: E402
-import re  # noqa: E402
-from pathlib import Path  # noqa: E402
-
-REPO = Path(__file__).resolve().parents[1]
 
 
 def _implemented_gaits() -> set[str]:
