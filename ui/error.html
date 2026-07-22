@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{heading}} — Ode to Stick Figures</title>
+<style>
+  /* Same variables and intent as index.html: paper ground, cola-brown ink, hairline
+     rules. Paper stays light in both themes. So a dead end still looks like the gallery. */
+  :root{
+    --paper:#FBFBF8; --ink:#3C2E2A; --ink-62:rgba(60,46,42,.62);
+    --rule:rgba(60,46,42,.20); --flag:#CD3E1D; --tea:#E8EBD7;
+    --sans:'ABC Diatype',-apple-system,'Segoe UI',system-ui,Helvetica,Arial,sans-serif;
+    --mono:'ABC Diatype Semi-Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#1B1917; --ink:#EDE7E0; --ink-62:rgba(237,231,224,.62);
+      --rule:rgba(237,231,224,.22); --flag:#FF7A55; --tea:#3A4030;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; display:flex; flex-direction:column;
+    background:var(--paper); color:var(--ink); font-family:var(--sans);
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none}
+  .bar{display:flex; align-items:baseline; gap:14px; padding:22px 48px; border-bottom:1px solid var(--rule)}
+  .bar svg{height:15px; width:auto; align-self:center; color:var(--ink)}
+  .bar .sub{font-size:15px; color:var(--ink-62)}
+  main{
+    flex:1; display:flex; flex-direction:column; justify-content:center; gap:16px;
+    max-width:640px; width:100%; margin:0 auto; padding:64px 48px;
+  }
+  .code{font-family:var(--mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--flag)}
+  h1{font-weight:400; font-size:clamp(24px,4vw,34px); letter-spacing:-.025em; line-height:1.15; margin:0; text-wrap:pretty}
+  p{margin:0; color:var(--ink-62); text-wrap:pretty}
+  code{font-family:var(--mono); font-size:.92em}
+  .back{
+    align-self:flex-start; margin-top:10px; font-family:var(--mono); font-size:12px;
+    letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--rule);
+    border-radius:999px; padding:9px 18px; background:var(--tea);
+  }
+  .back:hover{opacity:.62}
+  @media (max-width:720px){ .bar,main{padding-left:20px; padding-right:20px} }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="/" style="display:flex; align-items:baseline; gap:14px">
+    <svg viewBox="0 0 215 69" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ode">
+      <path d="M160.582 67.7991V1.12805H214.576V12.0208H173.165V27.233H204.983V38.2197H173.165V56.6246H214.576V67.7991H160.582Z" fill="currentColor"/>
+      <path d="M83.9102 67.7991V1.12805H110.86C132.176 1.12805 146.543 13.3354 146.543 34.4636C146.543 55.2161 132.27 67.7991 110.86 67.7991H83.9102ZM110.672 12.2086H96.4931V56.7185H110.672C124.664 56.7185 133.679 48.1734 133.679 34.4636C133.679 20.2842 124.664 12.2086 110.672 12.2086Z" fill="currentColor"/>
+      <path d="M34.9356 68.9247C14.9343 68.9247 0.00372314 54.4637 0.00372314 34.4623C0.00372314 14.461 15.1221 0 34.9356 0C54.7491 0 69.8674 14.461 69.8674 34.4623C69.8674 54.3698 54.7491 68.9247 34.9356 68.9247ZM34.9356 57.4686C48.2698 57.4686 57.0028 47.2331 57.0028 34.4623C57.0028 21.7855 48.2698 11.4562 34.9356 11.4562C21.6953 11.4562 12.9623 21.7855 12.9623 34.4623C12.9623 47.327 21.6014 57.4686 34.9356 57.4686Z" fill="currentColor"/>
+    </svg>
+    <span class="sub">to stick figures</span>
+  </a>
+</header>
+<main>
+  <div class="code">{{code}}</div>
+  <h1>{{heading}}</h1>
+  {{body}}
+  <a class="back" href="/">&larr; Back to gallery</a>
+</main>
+</body>
+</html>
