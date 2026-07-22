@@ -88,7 +88,9 @@ INTERPRETER = {
         "travels and bobs, 'hop' arcs and squashes on landing, 'slither' sends a wave "
         "down the body. There is no option for not moving. If legs are drawn, it "
         "walks (or waddles) on them.\n"
-        '  - "vibe": one short free-text string.\n\n'
+        '  - "vibe": one short free-text string. Write it as grammatical English '
+        'with correct articles ("an impossibly", not "a impossibly") — it prints '
+        "verbatim on the card and guide.\n\n"
         "Here is a real, valid Creature Spec showing the exact shape and typing "
         f"expected (content is illustrative only, not a template to copy):\n\n"
         f"{_EXAMPLE_TEXT}\n\n"
